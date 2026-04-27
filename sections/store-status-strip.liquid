@@ -1,0 +1,243 @@
+{% comment %}
+  Store Status Strip — thin "Open now / Closed / Address" indicator.
+  Computes open/closed via JS using the visitor's local clock
+  (assumes most BSB visitors are in or near Chicago Central Time).
+{% endcomment %}
+
+{% if section.settings.enable %}
+  <div
+    id="store-status-strip-{{ section.id }}"
+    class="store-status-strip"
+    style="background-color: {{ section.settings.background_color }}; color: {{ section.settings.text_color }};"
+    data-mon="{{ section.settings.hours_mon | escape }}"
+    data-tue="{{ section.settings.hours_tue | escape }}"
+    data-wed="{{ section.settings.hours_wed | escape }}"
+    data-thu="{{ section.settings.hours_thu | escape }}"
+    data-fri="{{ section.settings.hours_fri | escape }}"
+    data-sat="{{ section.settings.hours_sat | escape }}"
+    data-sun="{{ section.settings.hours_sun | escape }}"
+    role="note"
+  >
+    <span class="store-status-strip__dot" aria-hidden="true"></span>
+    <span class="store-status-strip__status">Checking hours…</span>
+    <span class="store-status-strip__sep" aria-hidden="true">•</span>
+    {% if section.settings.address_link != blank %}
+      <a href="{{ section.settings.address_link }}" class="store-status-strip__address" target="_blank" rel="noopener">
+        {{ section.settings.address | escape }}
+      </a>
+    {% else %}
+      <span class="store-status-strip__address">{{ section.settings.address | escape }}</span>
+    {% endif %}
+    {% if section.settings.phone != blank %}
+      <span class="store-status-strip__sep" aria-hidden="true">•</span>
+      <a href="tel:{{ section.settings.phone | replace: '-', '' | replace: ' ', '' }}" class="store-status-strip__phone">
+        {{ section.settings.phone | escape }}
+      </a>
+    {% endif %}
+  </div>
+
+  <style>
+    .store-status-strip {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 8px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      line-height: 1.4;
+      letter-spacing: 0.01em;
+      text-align: center;
+    }
+    .store-status-strip a {
+      color: inherit;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+    .store-status-strip__dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: #888;
+      flex-shrink: 0;
+      transition: background-color 200ms ease;
+    }
+    .store-status-strip.is-open .store-status-strip__dot {
+      background-color: #2ea043;
+      box-shadow: 0 0 0 3px rgba(46, 160, 67, 0.20);
+    }
+    .store-status-strip.is-closed .store-status-strip__dot {
+      background-color: #d82c0d;
+    }
+    .store-status-strip__sep {
+      opacity: 0.5;
+    }
+    @media screen and (max-width: 480px) {
+      .store-status-strip {
+        font-size: 11px;
+        padding: 7px 10px;
+        gap: 6px;
+      }
+    }
+  </style>
+
+  <script>
+    (function() {
+      var strip = document.getElementById('store-status-strip-{{ section.id }}');
+      if (!strip) return;
+      var statusEl = strip.querySelector('.store-status-strip__status');
+      if (!statusEl) return;
+      var dayKeys = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+      var now = new Date();
+      var todayKey = dayKeys[now.getDay()];
+      var hoursStr = strip.getAttribute('data-' + todayKey) || '';
+
+      function parseRange(str) {
+        if (!str) return null;
+        var s = str.toLowerCase().replace(/\s+/g, '').replace(/–|—/g, '-');
+        if (s === 'closed') return null;
+        var parts = s.split('-');
+        if (parts.length !== 2) return null;
+        return { open: parseTime(parts[0]), close: parseTime(parts[1]) };
+      }
+      function parseTime(t) {
+        var m = t.match(/^(\d{1,2})(?::(\d{2}))?(am|pm)?$/);
+        if (!m) return null;
+        var h = parseInt(m[1], 10);
+        var min = parseInt(m[2] || '0', 10);
+        var meridian = m[3];
+        if (meridian === 'pm' && h < 12) h += 12;
+        if (meridian === 'am' && h === 12) h = 0;
+        return h * 60 + min;
+      }
+      function fmt(mins) {
+        var h = Math.floor(mins / 60);
+        var m = mins % 60;
+        var meridian = h >= 12 ? 'pm' : 'am';
+        var hr = ((h + 11) % 12) + 1;
+        return hr + (m ? ':' + (m < 10 ? '0' + m : m) : '') + meridian;
+      }
+
+      var range = parseRange(hoursStr);
+      var nowMins = now.getHours() * 60 + now.getMinutes();
+
+      if (range && nowMins >= range.open && nowMins < range.close) {
+        strip.classList.add('is-open');
+        statusEl.textContent = 'Open now • Closes ' + fmt(range.close);
+      } else {
+        strip.classList.add('is-closed');
+        statusEl.textContent = 'Closed today';
+        // find next open day
+        for (var i = 1; i <= 7; i++) {
+          var nextKey = dayKeys[(now.getDay() + i) % 7];
+          var nextRange = parseRange(strip.getAttribute('data-' + nextKey) || '');
+          if (nextRange) {
+            var dayName = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][(now.getDay() + i) % 7];
+            statusEl.textContent = 'Closed • Opens ' + dayName + ' ' + fmt(nextRange.open);
+            break;
+          }
+        }
+      }
+    })();
+  </script>
+{% endif %}
+
+{% schema %}
+{
+  "name": "Store Status Strip",
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "enable",
+      "label": "Show status strip",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "address",
+      "label": "Address",
+      "default": "328 E 75th St, Chicago"
+    },
+    {
+      "type": "url",
+      "id": "address_link",
+      "label": "Address link (Google Maps)"
+    },
+    {
+      "type": "text",
+      "id": "phone",
+      "label": "Phone",
+      "default": "773-570-7676"
+    },
+    {
+      "type": "header",
+      "content": "Hours (use format \"10am-6pm\" or \"Closed\")"
+    },
+    {
+      "type": "text",
+      "id": "hours_mon",
+      "label": "Monday",
+      "default": "Closed"
+    },
+    {
+      "type": "text",
+      "id": "hours_tue",
+      "label": "Tuesday",
+      "default": "10am-6pm"
+    },
+    {
+      "type": "text",
+      "id": "hours_wed",
+      "label": "Wednesday",
+      "default": "10am-6pm"
+    },
+    {
+      "type": "text",
+      "id": "hours_thu",
+      "label": "Thursday",
+      "default": "10am-6pm"
+    },
+    {
+      "type": "text",
+      "id": "hours_fri",
+      "label": "Friday",
+      "default": "10am-6pm"
+    },
+    {
+      "type": "text",
+      "id": "hours_sat",
+      "label": "Saturday",
+      "default": "10am-6pm"
+    },
+    {
+      "type": "text",
+      "id": "hours_sun",
+      "label": "Sunday",
+      "default": "12pm-5pm"
+    },
+    {
+      "type": "header",
+      "content": "Colors"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background",
+      "default": "#FFF8F0"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text",
+      "default": "#570522"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Store Status Strip",
+      "category": "Promotional"
+    }
+  ]
+}
+{% endschema %}

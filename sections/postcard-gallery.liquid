@@ -1,0 +1,1000 @@
+{% comment %}
+  Chicago Postcard Gallery - Customizable Section
+  
+  Features:
+  - Custom width and height for each postcard box
+  - Padding controls for each image
+  - Images fill their containers completely
+  - Magnify effect on hover
+  - Click to enlarge lightbox
+{% endcomment %}
+
+<style>
+  .postcard-gallery {
+    --cream: #FFF8F0;
+    --brown-dark: #4A2C2A;
+    --brown-text: #2C1810;
+    --caramel: #D4A574;
+    --rose: #E8B4B8;
+    
+    font-family: 'Playfair Display', Georgia, serif;
+    background: {{ section.settings.background_color }};
+    padding: {{ section.settings.padding_top }}px {{ section.settings.padding_horizontal }}px {{ section.settings.padding_bottom }}px;
+  }
+
+  .postcard-gallery__header {
+    text-align: center;
+    margin-bottom: 50px;
+  }
+
+  .postcard-gallery__title {
+    color: var(--brown-dark);
+    font-size: {{ section.settings.title_size }}px;
+    font-weight: 700;
+    margin: 0 0 15px 0;
+  }
+
+  .postcard-gallery__subtitle {
+    color: var(--brown-text);
+    font-size: 20px;
+    font-style: italic;
+    margin: 0 0 20px 0;
+  }
+
+  .postcard-gallery__divider {
+    width: 100px;
+    height: 4px;
+    background: var(--caramel);
+    margin: 0 auto;
+  }
+
+  /* Flexible Grid - items size themselves */
+  .postcard-gallery__grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: {{ section.settings.grid_gap }}px;
+    max-width: {{ section.settings.max_width }}px;
+    margin: 0 auto;
+    justify-content: {{ section.settings.grid_alignment }};
+  }
+
+  /* Card Styles - size determined by block settings */
+  .postcard-item {
+    position: relative;
+    overflow: hidden;
+    border-radius: {{ section.settings.border_radius }}px;
+    box-shadow: 0 4px 15px rgba(74, 44, 42, 0.15);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: zoom-in;
+    flex-shrink: 0;
+  }
+
+  .postcard-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(74, 44, 42, 0.25);
+  }
+
+  .postcard-item__image-container {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--cream);
+  }
+
+  .postcard-item__image {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  .postcard-item__image--cover {
+    object-fit: cover;
+  }
+
+  .postcard-item__image--contain {
+    object-fit: contain;
+  }
+
+  .postcard-item__image--fill {
+    object-fit: fill;
+  }
+
+  /* Placeholder for empty blocks */
+  .postcard-item__placeholder {
+    width: 100%;
+    height: 100%;
+    min-height: 200px;
+    background: linear-gradient(135deg, #e0e0e0 0%, #c0c0c0 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #666;
+    font-size: 14px;
+    text-align: center;
+    padding: 20px;
+    border: 2px dashed #999;
+    box-sizing: border-box;
+  }
+
+  .postcard-item__placeholder svg {
+    width: 48px;
+    height: 48px;
+    margin-bottom: 10px;
+    opacity: 0.5;
+  }
+
+  /* Magnify Lens */
+  .magnify-lens {
+    position: absolute;
+    width: {{ section.settings.lens_size }}px;
+    height: {{ section.settings.lens_size }}px;
+    border-radius: 50%;
+    border: 3px solid var(--caramel);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), inset 0 0 20px rgba(255, 255, 255, 0.1);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    z-index: 10;
+    background-repeat: no-repeat;
+    cursor: none;
+  }
+
+  .postcard-item:hover .magnify-lens {
+    opacity: 1;
+  }
+
+  /* Overlay */
+  .postcard-item__overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(to top, rgba(44, 24, 16, 0.9) 0%, rgba(44, 24, 16, 0.6) 50%, transparent 100%);
+    padding: 30px 20px 20px;
+    transform: translateY(100%);
+    transition: transform 0.3s ease;
+    z-index: 5;
+  }
+
+  .postcard-item:hover .postcard-item__overlay {
+    transform: translateY(0);
+  }
+
+  .postcard-item__name {
+    color: var(--cream);
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0 0 8px 0;
+  }
+
+  .postcard-item__hint {
+    color: var(--caramel);
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* Badge */
+  .postcard-item__badge {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    background: var(--caramel);
+    color: var(--brown-dark);
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-radius: 4px;
+    z-index: 6;
+  }
+
+  /* Lightbox */
+  .postcard-lightbox-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(44, 24, 16, 0.95);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+    cursor: zoom-out;
+  }
+
+  .postcard-lightbox-overlay.active {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .postcard-lightbox-content {
+    position: relative;
+    max-width: 90vw;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: default;
+    animation: postcardLightboxZoomIn 0.3s ease;
+  }
+
+  @keyframes postcardLightboxZoomIn {
+    from { transform: scale(0.8); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+
+  .postcard-lightbox-image {
+    max-width: 100%;
+    max-height: 70vh;
+    object-fit: contain;
+    border-radius: 8px;
+    box-shadow: 0 10px 50px rgba(0, 0, 0, 0.5);
+  }
+
+  .postcard-lightbox-info {
+    margin-top: 25px;
+    text-align: center;
+  }
+
+  .postcard-lightbox-title {
+    color: #FFF8F0;
+    font-size: 28px;
+    font-weight: 700;
+    margin: 0 0 20px 0;
+    font-family: 'Playfair Display', Georgia, serif;
+  }
+
+  .postcard-lightbox-btn {
+    display: inline-block;
+    background: #D4A574;
+    color: #4A2C2A;
+    padding: 14px 35px;
+    font-size: 16px;
+    font-weight: 600;
+    text-decoration: none;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+    font-family: 'Playfair Display', Georgia, serif;
+  }
+
+  .postcard-lightbox-btn:hover {
+    background: #FFF8F0;
+    transform: translateY(-2px);
+  }
+
+  .postcard-lightbox-close {
+    position: absolute;
+    top: -50px;
+    right: 0;
+    background: none;
+    border: none;
+    color: #FFF8F0;
+    font-size: 40px;
+    cursor: pointer;
+    padding: 10px;
+    line-height: 1;
+    transition: color 0.3s ease, transform 0.3s ease;
+  }
+
+  .postcard-lightbox-close:hover {
+    color: #D4A574;
+    transform: rotate(90deg);
+  }
+
+  .postcard-lightbox-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: #4A2C2A;
+    border: 2px solid #D4A574;
+    color: #D4A574;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    z-index: 10;
+  }
+
+  .postcard-lightbox-nav:hover {
+    background: #D4A574;
+    color: #4A2C2A;
+  }
+
+  .postcard-lightbox-nav--prev { left: -70px; }
+  .postcard-lightbox-nav--next { right: -70px; }
+
+  /* CTA Button */
+  .postcard-gallery__cta {
+    text-align: center;
+    margin-top: 50px;
+  }
+
+  .postcard-gallery__btn {
+    display: inline-block;
+    background: #4A2C2A;
+    color: #D4A574;
+    padding: 18px 40px;
+    font-size: 18px;
+    font-weight: 600;
+    text-decoration: none;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+    font-family: 'Playfair Display', Georgia, serif;
+  }
+
+  .postcard-gallery__btn:hover {
+    background: #D4A574;
+    color: #4A2C2A;
+  }
+
+  /* Responsive */
+  @media (max-width: 1024px) {
+    .postcard-lightbox-nav--prev { left: 10px; }
+    .postcard-lightbox-nav--next { right: 10px; }
+    .magnify-lens { width: 120px; height: 120px; }
+  }
+
+  @media (max-width: 768px) {
+    .postcard-gallery { padding: 40px 20px; }
+    .postcard-gallery__title { font-size: 32px; }
+    .postcard-gallery__grid {
+      justify-content: center;
+    }
+    .postcard-item__overlay {
+      transform: translateY(0);
+      background: linear-gradient(to top, rgba(44, 24, 16, 0.8) 0%, transparent 100%);
+      padding: 30px 15px 12px;
+    }
+    .postcard-item__name { font-size: 14px; }
+    .magnify-lens { display: none !important; }
+    .postcard-lightbox-title { font-size: 22px; }
+    .postcard-lightbox-nav { width: 40px; height: 40px; }
+  }
+
+  @media (max-width: 480px) {
+    .postcard-item {
+      width: 100% !important;
+      height: auto !important;
+    }
+    .postcard-item__image-container {
+      height: auto;
+      aspect-ratio: attr(data-aspect-ratio);
+    }
+  }
+</style>
+
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+
+<section class="postcard-gallery" id="postcard-gallery-{{ section.id }}">
+  {% if section.settings.show_header %}
+  <div class="postcard-gallery__header">
+    {% if section.settings.title != blank %}
+      <h2 class="postcard-gallery__title">{{ section.settings.title }}</h2>
+    {% endif %}
+    {% if section.settings.subtitle != blank %}
+      <p class="postcard-gallery__subtitle">{{ section.settings.subtitle }}</p>
+    {% endif %}
+    <div class="postcard-gallery__divider"></div>
+  </div>
+  {% endif %}
+
+  <div class="postcard-gallery__grid">
+    {% for block in section.blocks %}
+      {% case block.type %}
+        {% when 'postcard' %}
+          {% comment %} Calculate dimensions {% endcomment %}
+          {% assign box_width = block.settings.box_width | default: 300 %}
+          {% assign box_height = block.settings.box_height | default: 300 %}
+          {% assign padding_top = block.settings.padding_top | default: 0 %}
+          {% assign padding_right = block.settings.padding_right | default: 0 %}
+          {% assign padding_bottom = block.settings.padding_bottom | default: 0 %}
+          {% assign padding_left = block.settings.padding_left | default: 0 %}
+          {% assign image_fit = block.settings.image_fit | default: 'cover' %}
+          {% assign bg_color = block.settings.background_color | default: '#FFF8F0' %}
+
+          {% comment %} Get product URL {% endcomment %}
+          {% assign product_url = block.settings.product_link %}
+          {% if block.settings.product != blank %}
+            {% assign product_url = block.settings.product.url %}
+          {% endif %}
+
+          {% comment %} Get image URLs {% endcomment %}
+          {% if block.settings.image != blank %}
+            {% assign lightbox_image = block.settings.image | image_url: width: 1600 %}
+            {% assign thumbnail_image = block.settings.image | image_url: width: 800 %}
+          {% else %}
+            {% assign lightbox_image = '' %}
+            {% assign thumbnail_image = '' %}
+          {% endif %}
+
+          <div class="postcard-item"
+               style="width: {{ box_width }}px; height: {{ box_height }}px; background-color: {{ bg_color }};"
+               data-product-url="{{ product_url }}"
+               data-title="{{ block.settings.title | escape }}"
+               data-image="{{ lightbox_image }}"
+               {{ block.shopify_attributes }}>
+            
+            {% if block.settings.badge != blank %}
+              <span class="postcard-item__badge">{{ block.settings.badge }}</span>
+            {% endif %}
+
+            <div class="postcard-item__image-container" style="padding: {{ padding_top }}px {{ padding_right }}px {{ padding_bottom }}px {{ padding_left }}px;">
+              {% if block.settings.image != blank %}
+                <img 
+                  src="{{ thumbnail_image }}" 
+                  alt="{{ block.settings.title | escape }}" 
+                  class="postcard-item__image postcard-item__image--{{ image_fit }}"
+                  loading="lazy"
+                >
+                <div class="magnify-lens"></div>
+              {% else %}
+                <div class="postcard-item__placeholder">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                    <circle cx="8.5" cy="8.5" r="1.5"/>
+                    <polyline points="21 15 16 10 5 21"/>
+                  </svg>
+                  <span>Upload Image<br>{{ box_width }}×{{ box_height }}px</span>
+                </div>
+              {% endif %}
+            </div>
+
+            <div class="postcard-item__overlay">
+              <h3 class="postcard-item__name">{{ block.settings.title | default: 'Postcard Title' }}</h3>
+              <span class="postcard-item__hint">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                </svg>
+                Click to enlarge
+              </span>
+            </div>
+          </div>
+      {% endcase %}
+    {% endfor %}
+  </div>
+
+  {% if section.settings.show_cta and section.settings.cta_link != blank %}
+  <div class="postcard-gallery__cta">
+    <a href="{{ section.settings.cta_link }}" class="postcard-gallery__btn">
+      {{ section.settings.cta_text | default: 'View Collection' }}
+    </a>
+  </div>
+  {% endif %}
+</section>
+
+<!-- Lightbox Modal -->
+<div class="postcard-lightbox-overlay" id="lightboxOverlay-{{ section.id }}">
+  <div class="postcard-lightbox-content">
+    <button class="postcard-lightbox-close" aria-label="Close">&times;</button>
+    <button class="postcard-lightbox-nav postcard-lightbox-nav--prev" aria-label="Previous">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M15 18l-6-6 6-6"/>
+      </svg>
+    </button>
+    <button class="postcard-lightbox-nav postcard-lightbox-nav--next" aria-label="Next">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M9 18l6-6-6-6"/>
+      </svg>
+    </button>
+    <img src="" alt="" class="postcard-lightbox-image">
+    <div class="postcard-lightbox-info">
+      <h3 class="postcard-lightbox-title"></h3>
+      <a href="" class="postcard-lightbox-btn">{{ section.settings.lightbox_button_text | default: 'Shop This Design' }}</a>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  const sectionId = '{{ section.id }}';
+  const gallery = document.getElementById('postcard-gallery-' + sectionId);
+  const postcards = gallery.querySelectorAll('.postcard-item');
+  const lightbox = document.getElementById('lightboxOverlay-' + sectionId);
+  const lightboxImage = lightbox.querySelector('.postcard-lightbox-image');
+  const lightboxTitle = lightbox.querySelector('.postcard-lightbox-title');
+  const lightboxBtn = lightbox.querySelector('.postcard-lightbox-btn');
+  const lightboxClose = lightbox.querySelector('.postcard-lightbox-close');
+  const lightboxPrev = lightbox.querySelector('.postcard-lightbox-nav--prev');
+  const lightboxNext = lightbox.querySelector('.postcard-lightbox-nav--next');
+  
+  let currentIndex = 0;
+  const postcardArray = Array.from(postcards);
+  const zoomLevel = parseFloat('{{ section.settings.zoom_level | default: "2.5" }}');
+
+  // Magnify Effect
+  postcards.forEach((card) => {
+    const container = card.querySelector('.postcard-item__image-container');
+    const img = card.querySelector('.postcard-item__image');
+    const lens = card.querySelector('.magnify-lens');
+    
+    if (!container || !img || !lens) return;
+
+    container.addEventListener('mouseenter', function(e) {
+      lens.style.backgroundImage = 'url("' + img.src + '")';
+    });
+
+    container.addEventListener('mousemove', function(e) {
+      const rect = container.getBoundingClientRect();
+      let x = e.clientX - rect.left;
+      let y = e.clientY - rect.top;
+      
+      const lensRadius = lens.offsetWidth / 2;
+      let lensX = x - lensRadius;
+      let lensY = y - lensRadius;
+      
+      lens.style.left = lensX + 'px';
+      lens.style.top = lensY + 'px';
+      
+      const bgX = (x / rect.width) * 100;
+      const bgY = (y / rect.height) * 100;
+      
+      lens.style.backgroundSize = (rect.width * zoomLevel) + 'px ' + (rect.height * zoomLevel) + 'px';
+      lens.style.backgroundPosition = bgX + '% ' + bgY + '%';
+    });
+
+    container.addEventListener('mouseleave', function() {
+      lens.style.opacity = '0';
+    });
+  });
+
+  // Lightbox Functions
+  function openLightbox(index) {
+    const card = postcardArray[index];
+    const image = card.dataset.image;
+    const title = card.dataset.title;
+    const productUrl = card.dataset.productUrl;
+
+    if (!image) return;
+
+    lightboxImage.src = image;
+    lightboxImage.alt = title;
+    lightboxTitle.textContent = title;
+    lightboxBtn.href = productUrl || '#';
+    lightboxBtn.style.display = productUrl ? 'inline-block' : 'none';
+    
+    lightbox.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    currentIndex = index;
+  }
+
+  function closeLightbox() {
+    lightbox.classList.remove('active');
+    document.body.style.overflow = '';
+  }
+
+  function navigateLightbox(direction) {
+    let newIndex = currentIndex + direction;
+    if (newIndex < 0) newIndex = postcardArray.length - 1;
+    if (newIndex >= postcardArray.length) newIndex = 0;
+    
+    let attempts = 0;
+    while (!postcardArray[newIndex].dataset.image && attempts < postcardArray.length) {
+      newIndex += direction;
+      if (newIndex < 0) newIndex = postcardArray.length - 1;
+      if (newIndex >= postcardArray.length) newIndex = 0;
+      attempts++;
+    }
+    
+    openLightbox(newIndex);
+  }
+
+  // Event Listeners
+  postcards.forEach((card, index) => {
+    card.addEventListener('click', function(e) {
+      e.preventDefault();
+      if (card.dataset.image) {
+        openLightbox(index);
+      }
+    });
+  });
+
+  lightboxClose.addEventListener('click', closeLightbox);
+  
+  lightbox.addEventListener('click', function(e) {
+    if (e.target === lightbox) {
+      closeLightbox();
+    }
+  });
+
+  lightboxPrev.addEventListener('click', function(e) {
+    e.stopPropagation();
+    navigateLightbox(-1);
+  });
+
+  lightboxNext.addEventListener('click', function(e) {
+    e.stopPropagation();
+    navigateLightbox(1);
+  });
+
+  document.addEventListener('keydown', function(e) {
+    if (!lightbox.classList.contains('active')) return;
+    if (e.key === 'Escape') closeLightbox();
+    if (e.key === 'ArrowLeft') navigateLightbox(-1);
+    if (e.key === 'ArrowRight') navigateLightbox(1);
+  });
+})();
+</script>
+
+{% schema %}
+{
+  "name": "Postcard Gallery",
+  "tag": "section",
+  "class": "postcard-gallery-section",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Header Settings"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_header",
+      "label": "Show header",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Title",
+      "default": "Chicago Postcard Collection"
+    },
+    {
+      "type": "text",
+      "id": "subtitle",
+      "label": "Subtitle",
+      "default": "\"Chicago is more than a city—it's a feeling\""
+    },
+    {
+      "type": "range",
+      "id": "title_size",
+      "label": "Title size",
+      "min": 24,
+      "max": 60,
+      "step": 2,
+      "default": 42,
+      "unit": "px"
+    },
+    {
+      "type": "header",
+      "content": "Grid Settings"
+    },
+    {
+      "type": "range",
+      "id": "grid_gap",
+      "label": "Gap between items",
+      "min": 0,
+      "max": 50,
+      "step": 5,
+      "default": 0,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "max_width",
+      "label": "Max width",
+      "min": 800,
+      "max": 1800,
+      "step": 100,
+      "default": 1400,
+      "unit": "px"
+    },
+    {
+      "type": "select",
+      "id": "grid_alignment",
+      "label": "Grid alignment",
+      "options": [
+        { "value": "flex-start", "label": "Left" },
+        { "value": "center", "label": "Center" },
+        { "value": "flex-end", "label": "Right" },
+        { "value": "space-between", "label": "Space between" },
+        { "value": "space-around", "label": "Space around" }
+      ],
+      "default": "center"
+    },
+    {
+      "type": "range",
+      "id": "border_radius",
+      "label": "Image corner radius",
+      "min": 0,
+      "max": 30,
+      "step": 2,
+      "default": 8,
+      "unit": "px"
+    },
+    {
+      "type": "header",
+      "content": "Section Spacing"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "label": "Padding top",
+      "min": 0,
+      "max": 100,
+      "step": 10,
+      "default": 60,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "label": "Padding bottom",
+      "min": 0,
+      "max": 100,
+      "step": 10,
+      "default": 60,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "padding_horizontal",
+      "label": "Padding horizontal",
+      "min": 0,
+      "max": 80,
+      "step": 10,
+      "default": 40,
+      "unit": "px"
+    },
+    {
+      "type": "header",
+      "content": "Colors"
+    },
+    {
+      "type": "color_background",
+      "id": "background_color",
+      "label": "Background",
+      "default": "linear-gradient(180deg, #FFF8F0 0%, rgba(232, 180, 184, 0.2) 100%)"
+    },
+    {
+      "type": "header",
+      "content": "Magnify Effect"
+    },
+    {
+      "type": "range",
+      "id": "lens_size",
+      "label": "Magnify lens size",
+      "min": 80,
+      "max": 200,
+      "step": 10,
+      "default": 150,
+      "unit": "px"
+    },
+    {
+      "type": "select",
+      "id": "zoom_level",
+      "label": "Zoom level",
+      "options": [
+        { "value": "1.5", "label": "1.5x" },
+        { "value": "2", "label": "2x" },
+        { "value": "2.5", "label": "2.5x" },
+        { "value": "3", "label": "3x" },
+        { "value": "3.5", "label": "3.5x" },
+        { "value": "4", "label": "4x" }
+      ],
+      "default": "2.5"
+    },
+    {
+      "type": "header",
+      "content": "Call to Action"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_cta",
+      "label": "Show CTA button",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "cta_text",
+      "label": "Button text",
+      "default": "View Entire Collection"
+    },
+    {
+      "type": "url",
+      "id": "cta_link",
+      "label": "Button link"
+    },
+    {
+      "type": "header",
+      "content": "Lightbox"
+    },
+    {
+      "type": "text",
+      "id": "lightbox_button_text",
+      "label": "Lightbox button text",
+      "default": "Shop This Design"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "postcard",
+      "name": "Postcard",
+      "settings": [
+        {
+          "type": "header",
+          "content": "Image"
+        },
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Image"
+        },
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Title",
+          "default": "Postcard Title"
+        },
+        {
+          "type": "header",
+          "content": "Box Dimensions"
+        },
+        {
+          "type": "range",
+          "id": "box_width",
+          "label": "Box width",
+          "min": 150,
+          "max": 800,
+          "step": 10,
+          "default": 400,
+          "unit": "px"
+        },
+        {
+          "type": "range",
+          "id": "box_height",
+          "label": "Box height",
+          "min": 150,
+          "max": 800,
+          "step": 10,
+          "default": 400,
+          "unit": "px"
+        },
+        {
+          "type": "header",
+          "content": "Image Fit"
+        },
+        {
+          "type": "select",
+          "id": "image_fit",
+          "label": "Image fit mode",
+          "options": [
+            { "value": "cover", "label": "Cover (fill box, crop if needed)" },
+            { "value": "contain", "label": "Contain (show entire image)" },
+            { "value": "fill", "label": "Fill (stretch to fit)" }
+          ],
+          "default": "cover",
+          "info": "Cover fills the box and crops. Contain shows the full image. Fill stretches to fit exactly."
+        },
+        {
+          "type": "color",
+          "id": "background_color",
+          "label": "Box background color",
+          "default": "#FFF8F0",
+          "info": "Visible when using Contain mode"
+        },
+        {
+          "type": "header",
+          "content": "Image Padding"
+        },
+        {
+          "type": "range",
+          "id": "padding_top",
+          "label": "Padding top",
+          "min": 0,
+          "max": 50,
+          "step": 5,
+          "default": 0,
+          "unit": "px"
+        },
+        {
+          "type": "range",
+          "id": "padding_right",
+          "label": "Padding right",
+          "min": 0,
+          "max": 50,
+          "step": 5,
+          "default": 0,
+          "unit": "px"
+        },
+        {
+          "type": "range",
+          "id": "padding_bottom",
+          "label": "Padding bottom",
+          "min": 0,
+          "max": 50,
+          "step": 5,
+          "default": 0,
+          "unit": "px"
+        },
+        {
+          "type": "range",
+          "id": "padding_left",
+          "label": "Padding left",
+          "min": 0,
+          "max": 50,
+          "step": 5,
+          "default": 0,
+          "unit": "px"
+        },
+        {
+          "type": "header",
+          "content": "Link & Badge"
+        },
+        {
+          "type": "product",
+          "id": "product",
+          "label": "Link to product"
+        },
+        {
+          "type": "url",
+          "id": "product_link",
+          "label": "Or custom link",
+          "info": "Use this if not linking to a product"
+        },
+        {
+          "type": "text",
+          "id": "badge",
+          "label": "Badge text (optional)",
+          "info": "e.g., Featured, New, Best Seller"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Postcard Gallery",
+      "blocks": [
+        {
+          "type": "postcard",
+          "settings": {
+            "title": "Art Institute Lions",
+            "box_width": 350,
+            "box_height": 500,
+            "badge": "Featured"
+          }
+        },
+        {
+          "type": "postcard",
+          "settings": {
+            "title": "Cloud Gate (The Bean)",
+            "box_width": 500,
+            "box_height": 300
+          }
+        },
+        {
+          "type": "postcard",
+          "settings": {
+            "title": "Buckingham Fountain",
+            "box_width": 500,
+            "box_height": 300
+          }
+        },
+        {
+          "type": "postcard",
+          "settings": {
+            "title": "Chicago L Train",
+            "box_width": 500,
+            "box_height": 300
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}
+

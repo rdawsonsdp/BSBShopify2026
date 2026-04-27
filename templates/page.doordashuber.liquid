@@ -1,0 +1,76 @@
+{% layout 'theme.liquid' %}
+
+<div class="page-width">
+  <div class="section-header text-center">
+    <h1 class="delivery-partners-heading">Same Day Pick Up Available through our Partners</h1>
+  </div>
+
+  <div class="delivery-partners-container">
+    <div class="delivery-partner-card">
+      <a href="https://www.doordash.com/store/brown-sugar-bakery-chicago-29665600/" target="_blank" rel="noopener">
+        <img 
+          src="{{ 'doordash-logo.png' | asset_url }}" 
+          alt="Order on DoorDash" 
+          class="delivery-logo"
+          width="200"
+          height="auto"
+        >
+      </a>
+    </div>
+    
+    <div class="delivery-partner-card">
+      <a href="https://www.ubereats.com/store/brown-sugar-bakery/ySzBtyyBX1epFsF6kz1U3A?diningMode=PICKUP&pl=JTdCJTIyYWRkcmVzcyUyMiUzQSUyMjY5MDElMjBTJTIwUHJhaXJpZSUyMEF2ZSUyMiUyQyUyMnJlZmVyZW5jZSUyMiUzQSUyMjI1Zjc3NjZmLWQzNWYtNTFiYi0yZTVjLTMxN2FiM2MxNGFhYiUyMiUyQyUyMnJlZmVyZW5jZVR5cGUlMjIlM0ElMjJ1YmVyX3BsYWNlcyUyMiUyQyUyMmxhdGl0dWRlJTIyJTNBNDEuNzY4OTMlMkMlMjJsb25naXR1ZGUlMjIlM0EtODcuNjE4MTgyJTdE&ps=1&sc=SEARCH_SUGGESTION" target="_blank" rel="noopener">
+        <img 
+          src="{{ 'ubereats-logo.png' | asset_url }}" 
+          alt="Order on Uber Eats" 
+          class="delivery-logo"
+          width="200"
+          height="auto"
+        >
+      </a>
+    </div>
+  </div>
+</div>
+
+<style>
+  .delivery-partner-card {
+    padding: 30px;
+    margin: 15px;
+    border-radius: 8px;
+    background-color: transparent;
+    transition: transform 0.3s ease;
+  }
+
+  .delivery-partner-card:hover {
+    transform: translateY(-5px);
+  }
+
+  .delivery-logo {
+    max-width: 200px;
+    margin-bottom: 15px;
+  }
+
+  .delivery-partner-card a {
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .delivery-partner-card p {
+    font-size: 1.2em;
+    font-weight: 500;
+    margin-top: 10px;
+  }
+  
+  .delivery-partners-heading {
+    font-size: 1.8em; /* Smaller than the default h1 size */
+  }
+  
+  .delivery-partners-container {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 30px;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+</style>

@@ -1,0 +1,203 @@
+{% comment %}
+  Renders gift card recipient form.
+  Accepts:
+  - product: {Object} product object.
+  - form: {Object} the product form object.
+  - section: {Object} section to which this snippet belongs.
+
+  Usage:
+  {% render 'gift-card-recipient-form', product: product, form: form, section: section %}
+{% endcomment %}
+
+{% style %}
+  recipient-form {
+    display: block;
+    position: relative;
+    font-size: var(--body-font-size);
+  }
+
+  #Recipient-Checkbox-{{ section.id }} {
+    position: relative;
+    top: 5px;
+    margin-bottom: 10px;
+    display: block;
+    width: 16px;
+    height: 16px;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+
+  .recipient-checkbox {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: grid;
+    grid-template-columns: minmax(0, auto) 1fr;
+    grid-template-rows: 1fr;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .recipient-checkbox svg.icon-checkmark {
+    opacity: 0;
+    justify-self: center;
+    transition: opacity 0.2s ease-in-out;
+  }
+
+  .recipient-checkbox svg.icon-checkbox,
+  .recipient-checkbox svg.icon-checkmark {
+    grid-column-start: 1;
+    grid-column-end: 2;
+    grid-row-start: 1;
+    grid-row-end: 2;
+  }
+
+  #Recipient-Checkbox-{{ section.id }}:checked ~ .recipient-checkbox svg.icon-checkmark {
+    opacity: 1;
+  }
+
+  .recipient-checkbox span.label-text {
+    display: inline-block;
+    grid-column-start: 2;
+    grid-column-end: 3;
+    grid-row-start: 1;
+    grid-row-end: 2;
+    margin-left: 8px;
+  }
+
+  .recipient-fields {
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(20px);
+    transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
+    height: 0;
+    overflow: hidden;
+  }
+
+  #Recipient-Checkbox-{{ section.id }}:checked ~ .recipient-fields {
+    margin-top: 20px;
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    height: auto;
+  }
+
+  #Recipient-Checkbox-{{ section.id }}:checked:after {
+    display: none;
+  }
+
+  recipient-form .form-group .form-control {
+    background: 0 0;
+    border-color: var(--border-color);
+    border-radius: 0;
+    color: var(--color-primary);
+  }
+
+  .product-form recipient-form .form-group textarea {
+    margin-bottom: 8px;
+  }
+
+  .js recipient-form .recipient-email-label.optional {
+    display: none;
+  }
+
+  .no-js recipient-form .recipient-email-label.optional {
+    display: inline;
+  }
+
+  .no-js recipient-form .recipient-email-label.required {
+    display: none;
+  }
+{% endstyle %}
+
+{%- assign gift_card_recipient_control_flag = 'properties[__shopify_send_gift_card_to_recipient]' -%}
+<script src="{{ 'component-recipient-form.js' | asset_url }}" defer="defer"></script>
+
+<recipient-form
+  class="recipient-form"
+  data-section-id="{{ section.id }}"
+  data-product-variant-id="{{ product.selected_or_first_available_variant.id }}"
+>
+  <input
+    id="Recipient-Checkbox-{{ section.id }}"
+    type="checkbox"
+    name="{{ gift_card_recipient_control_flag }}"
+    disabled
+    unchecked
+  >
+  
+  <label class="recipient-checkbox" for="Recipient-Checkbox-{{ section.id }}">
+    <svg class="icon-checkbox" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      <rect width="16" height="16" stroke="currentColor" fill="none" stroke-width="1"></rect>
+    </svg>
+
+    <svg class="icon-checkmark" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 9" fill="none" width="10px" height="10px">
+      <path fill-rule="evenodd" clip-rule="evenodd" d="M11.35.643a.5.5 0 01.006.707l-6.77 6.886a.5.5 0 01-.719-.006L.638 4.845a.5.5 0 11.724-.69l2.872 3.011 6.41-6.517a.5.5 0 01.707-.006h-.001z" fill="currentColor"/>
+    </svg>
+
+    <span class="label-text">{{ 'gift_cards.recipient.form.checkbox' | t }}</span>
+  </label>
+
+  <div class="recipient-fields">
+    <div class="form-group">
+      <label class="form-field-title" for="Recipient-email-{{ section.id }}">
+        <span class="recipient-email-label required">{{ 'gift_cards.recipient.form.recipient_email' | t }}</span>
+        <span class="recipient-email-label optional">
+          {{- 'gift_cards.recipient.form.email_label_optional_for_no_js_behavior' | t -}}
+        </span>
+      </label>
+
+      <input
+        class="form-control"
+        id="Recipient-email-{{ section.id }}"
+        type="email"
+        name="properties[Recipient email]"
+        value="{{ form.email }}"
+      >
+    </div>
+
+    <div class="form-group">
+      <label class="form-field-title" for="Recipient-name-{{ section.id }}">
+        {{- 'gift_cards.recipient.form.recipient_name' | t -}}
+      </label>
+
+      <input
+        class="form-control"
+        autocomplete="name"
+        type="text"
+        id="Recipient-name-{{ section.id }}"
+        name="properties[Recipient name]"
+        value="{{ form.name }}"
+      >
+    </div>
+
+    {%- assign max_chars_message = 200 -%}
+    {%- assign max_chars_message_rendered = 'gift_cards.recipient.form.max_characters' | t: max_chars: max_chars_message -%}
+    {%- assign message_label_rendered = 'gift_cards.recipient.form.message_placeholder' | t -%}
+
+    <div class="form-group">
+      <label class="form-field-title" for="Recipient-message-{{ section.id }}">
+        {{ message_label_rendered }}
+      </label>
+
+      <textarea
+        rows="10"
+        id="Recipient-message-{{ section.id }}"
+        class="form-control"
+        name="properties[Message]"
+        maxlength="{{ max_chars_message }}"
+        aria-label="{{ message_label_rendered }} {{ max_chars_message_rendered }}"
+      >{{ form.message }}</textarea>
+    </div>
+
+    <label>
+      <span>{{ max_chars_message_rendered }}</span>
+    </label>
+  </div>
+  <input
+    type="hidden"
+    name="{{ gift_card_recipient_control_flag }}"
+    value="if_present"
+    id="Recipient-Control-{{ section.id }}"
+  >
+</recipient-form>

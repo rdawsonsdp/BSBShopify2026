@@ -1,0 +1,6 @@
+ <script>
+      document.addEventListener("gpoRenderCompleted", () => {
+        GPOConfigs.theme.product.variantSelector = '[data-gpo-product-variant-selector]';
+        queueMicrotask(() => GPOConfigs.initialize());
+      }, { once: true });
+    </script>

@@ -1,0 +1,82 @@
+{
+  "type": "footer",
+  "name": "Footer",
+  "sections": {
+    "footer-main": {
+      "type": "footer-main",
+      "blocks": {
+        "footer-1": {
+          "type": "social",
+          "disabled": true,
+          "settings": {
+            "menu_title": "Get connected"
+          }
+        }
+      },
+      "block_order": [
+        "footer-1"
+      ],
+      "disabled": false,
+      "settings": {
+        "show_back_to_top": true,
+        "back_to_top_text": "Back to top",
+        "show_borders": true
+      }
+    },
+    "footer-bottom": {
+      "type": "footer-bottom",
+      "disabled": false,
+      "settings": {
+        "show_methods_of_payment": true,
+        "show_currency_selector": true,
+        "show_locale_selector": true,
+        "show_ebt": true,
+        "ebt_text": "We proudly accept EBT / SNAP in our store"
+      }
+    },
+    "store_location_map_main": {
+      "type": "store-location-map",
+      "blocks": {
+        "hours_mon": {
+          "type": "hours",
+          "settings": {
+            "day": "Monday",
+            "hours": "Closed"
+          }
+        },
+        "hours_tue_sat": {
+          "type": "hours",
+          "settings": {
+            "day": "Tue \u2013 Sat",
+            "hours": "10:00 am \u2013 6:00 pm"
+          }
+        },
+        "hours_sun": {
+          "type": "hours",
+          "settings": {
+            "day": "Sunday",
+            "hours": "12:00 pm \u2013 5:00 pm"
+          }
+        }
+      },
+      "block_order": [
+        "hours_mon",
+        "hours_tue_sat",
+        "hours_sun"
+      ],
+      "settings": {
+        "heading": "Visit us",
+        "address": "328 E 75th Street\nChicago, IL 60619",
+        "maps_link": "https://maps.app.goo.gl/YQq2u5v4H5NH6EG6A",
+        "phone": "773-570-7676",
+        "background_color": "#5b2512",
+        "text_color": "#ffffff"
+      }
+    }
+  },
+  "order": [
+    "store_location_map_main",
+    "footer-main",
+    "footer-bottom"
+  ]
+}

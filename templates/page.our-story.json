@@ -1,0 +1,53 @@
+{
+  "sections": {
+    "main": {
+      "type": "template--page",
+      "disabled": true,
+      "settings": {}
+    },
+    "image_image_with_text_overlay_yfBr8z": {
+      "type": "image--image-with-text-overlay",
+      "settings": {
+        "image": "shopify://shop_images/About.png",
+        "subheading": "",
+        "title": "",
+        "text": "",
+        "parallax": false,
+        "hero_size": "x-large",
+        "text-over-image-width": "full-width",
+        "button_link": "",
+        "button_label": ""
+      }
+    },
+    "text_rich_text_haeTEi": {
+      "type": "text--rich-text",
+      "settings": {
+        "width": "medium",
+        "subheading": "",
+        "title": "Life Is Sweeter W\ufeffith A Little Brown Sugar.",
+        "text": "<p>Established in 2002, Brown Sugar Bakery embodies the soulful essence of Southern desserts, a tribute to cherished family recipes that evoke warmth and nostalgia. With each delightful creation, the bakery weaves a tale of tradition and innovation, channeling the spirit of those who have crafted these flavors for generations. From classic cakes to cobblers, pies, and cupcakes, the bakery's menu is a symphony of delectable treats. Notably, The Obama Cake stands as a testament to the bakery's artistry, harmonizing layers of red velvet, chocolate, and yellow cake with cream cheese frosting, chocolate drizzle, and pecans. Beyond its exquisite offerings, Brown Sugar Bakery serves as a pillar of community engagement, fostering employment opportunities and contributing to sustainable growth models. With its roots deeply embedded in the Grand Crossing neighborhood of Chicago, the bakery is not merely a culinary destination but a hub of inspiration, echoing the dedication of its founders and the aspirations of a thriving community.<br/><br/>As Brown Sugar Bakery continues to flourish, its future holds exciting prospects that embrace innovation and history-making endeavors. Building upon its legacy of crafting delectable desserts, the bakery envisions itself as a trailblazer, solidifying its position as the first and only Black woman-owned chocolate manufacturer in the United States. This monumental step not only amplifies the bakery's commitment to excellence but also paves the way for new horizons in the confectionery industry. With a forward-looking vision, Brown Sugar Bakery is on the brink of a groundbreaking milestone \u2013 shipping its renowned cakes and irresistible candies nationwide. This expansion not only shares the bakery's unparalleled flavors with the entire country but also establishes it as a beacon of creativity and entrepreneurship. As Brown Sugar Bakery continues to evolve, its future is one of boundless possibilities, honoring tradition while shaping a remarkable journey that resonates far beyond its Chicago roots.</p>",
+        "button_link": "",
+        "button_label": ""
+      }
+    },
+    "image_gallery_ykEfhE": {
+      "type": "image--gallery",
+      "blocks": {},
+      "block_order": [],
+      "settings": {}
+    },
+    "image_gallery_Na4mXr": {
+      "type": "image--gallery",
+      "blocks": {},
+      "block_order": [],
+      "settings": {}
+    }
+  },
+  "order": [
+    "main",
+    "image_image_with_text_overlay_yfBr8z",
+    "text_rich_text_haeTEi",
+    "image_gallery_ykEfhE",
+    "image_gallery_Na4mXr"
+  ]
+}

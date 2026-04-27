@@ -1,0 +1,577 @@
+{% doc %}
+  @prompt
+    i want a grid that will hold the postcard images and each image points to a product. , The images and landscape. The images must fit inside each container. Allow for image customization. 
+{% enddoc %}
+{% assign ai_gen_id = block.id | replace: '_', '' | downcase %}
+
+{% style %}
+  .ai-postcard-grid-{{ ai_gen_id }} {
+    display: block;
+    width: 100%;
+    padding: 40px 20px;
+  }
+
+  .ai-postcard-grid__container-{{ ai_gen_id }} {
+    display: grid;
+    grid-template-columns: repeat({{ block.settings.columns_desktop }}, 1fr);
+    gap: {{ block.settings.grid_gap }}px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  .ai-postcard-grid__item-{{ ai_gen_id }} {
+    position: relative;
+    overflow: hidden;
+    border-radius: {{ block.settings.border_radius }}px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    {% if block.settings.enable_border %}
+      border: {{ block.settings.border_width }}px solid {{ block.settings.border_color }};
+    {% endif %}
+  }
+
+  .ai-postcard-grid__item-{{ ai_gen_id }}:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  }
+
+  .ai-postcard-grid__link-{{ ai_gen_id }} {
+    display: block;
+    position: relative;
+    width: 100%;
+    height: 100%;
+    text-decoration: none;
+  }
+
+  .ai-postcard-grid__image-wrapper-{{ ai_gen_id }} {
+    position: relative;
+    width: 100%;
+    padding-bottom: 66.67%;
+    overflow: hidden;
+    background-color: {{ block.settings.image_background_color }};
+  }
+
+  .ai-postcard-grid__image-{{ ai_gen_id }} {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    {% if block.settings.image_fit == 'contain' %}
+      object-fit: contain;
+      padding: {{ block.settings.image_padding }}px;
+    {% else %}
+      object-fit: cover;
+    {% endif %}
+  }
+
+  .ai-postcard-grid__placeholder-{{ ai_gen_id }} {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: {{ block.settings.image_background_color }};
+  }
+
+  .ai-postcard-grid__placeholder-{{ ai_gen_id }} svg {
+    width: 60%;
+    height: 60%;
+    opacity: 0.3;
+  }
+
+  .ai-postcard-grid__overlay-{{ ai_gen_id }} {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(to top, rgba(0, 0, 0, {{ block.settings.overlay_opacity }}), transparent);
+    padding: 20px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .ai-postcard-grid__item-{{ ai_gen_id }}:hover .ai-postcard-grid__overlay-{{ ai_gen_id }} {
+    opacity: 1;
+  }
+
+  .ai-postcard-grid__product-title-{{ ai_gen_id }} {
+    color: {{ block.settings.overlay_text_color }};
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0 0 5px;
+  }
+
+  .ai-postcard-grid__product-price-{{ ai_gen_id }} {
+    color: {{ block.settings.overlay_text_color }};
+    font-size: 14px;
+    margin: 0;
+  }
+
+  .ai-postcard-grid__empty-state-{{ ai_gen_id }} {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 12px 20px;
+    font-size: 14px;
+    color: #666;
+    text-align: center;
+    pointer-events: none;
+  }
+
+  @media screen and (max-width: 989px) {
+    .ai-postcard-grid__container-{{ ai_gen_id }} {
+      grid-template-columns: repeat({{ block.settings.columns_tablet }}, 1fr);
+    }
+  }
+
+  @media screen and (max-width: 749px) {
+    .ai-postcard-grid-{{ ai_gen_id }} {
+      padding: 30px 15px;
+    }
+
+    .ai-postcard-grid__container-{{ ai_gen_id }} {
+      grid-template-columns: repeat({{ block.settings.columns_mobile }}, 1fr);
+      gap: {{ block.settings.grid_gap | times: 0.7 }}px;
+    }
+
+    .ai-postcard-grid__product-title-{{ ai_gen_id }} {
+      font-size: 14px;
+    }
+
+    .ai-postcard-grid__product-price-{{ ai_gen_id }} {
+      font-size: 12px;
+    }
+  }
+{% endstyle %}
+
+<postcard-grid-{{ ai_gen_id }}
+  class="ai-postcard-grid-{{ ai_gen_id }}"
+  {{ block.shopify_attributes }}
+>
+  <div class="ai-postcard-grid__container-{{ ai_gen_id }}">
+    {% for i in (1..12) %}
+      {% liquid
+        assign product_key = 'product_' | append: i
+        assign image_key = 'image_' | append: i
+        assign product = block.settings[product_key]
+        assign image = block.settings[image_key]
+      %}
+
+      {% if product != blank or image != blank %}
+        <div class="ai-postcard-grid__item-{{ ai_gen_id }}">
+          {% if product != blank %}
+            <a href="{{ product.url }}" class="ai-postcard-grid__link-{{ ai_gen_id }}">
+              <div class="ai-postcard-grid__image-wrapper-{{ ai_gen_id }}">
+                {% if image != blank %}
+                  <img
+                    src="{{ image | image_url: width: 800 }}"
+                    alt="{{ image.alt | escape }}"
+                    loading="lazy"
+                    width="{{ image.width }}"
+                    height="{{ image.height }}"
+                    class="ai-postcard-grid__image-{{ ai_gen_id }}"
+                  >
+                {% elsif product.featured_image %}
+                  <img
+                    src="{{ product.featured_image | image_url: width: 800 }}"
+                    alt="{{ product.featured_image.alt | escape }}"
+                    loading="lazy"
+                    width="{{ product.featured_image.width }}"
+                    height="{{ product.featured_image.height }}"
+                    class="ai-postcard-grid__image-{{ ai_gen_id }}"
+                  >
+                {% else %}
+                  <div class="ai-postcard-grid__placeholder-{{ ai_gen_id }}">
+                    {{ 'product-1' | placeholder_svg_tag }}
+                  </div>
+                {% endif %}
+              </div>
+
+              {% if block.settings.show_product_info %}
+                <div class="ai-postcard-grid__overlay-{{ ai_gen_id }}">
+                  <h3 class="ai-postcard-grid__product-title-{{ ai_gen_id }}">{{ product.title }}</h3>
+                  <p class="ai-postcard-grid__product-price-{{ ai_gen_id }}">{{ product.price | money }}</p>
+                </div>
+              {% endif %}
+            </a>
+          {% else %}
+            <div class="ai-postcard-grid__link-{{ ai_gen_id }}">
+              <div class="ai-postcard-grid__image-wrapper-{{ ai_gen_id }}">
+                {% if image != blank %}
+                  <img
+                    src="{{ image | image_url: width: 800 }}"
+                    alt="{{ image.alt | escape }}"
+                    loading="lazy"
+                    width="{{ image.width }}"
+                    height="{{ image.height }}"
+                    class="ai-postcard-grid__image-{{ ai_gen_id }}"
+                  >
+                {% else %}
+                  <div class="ai-postcard-grid__placeholder-{{ ai_gen_id }}">
+                    {{ 'image' | placeholder_svg_tag }}
+                    <div class="ai-postcard-grid__empty-state-{{ ai_gen_id }}">
+                      Add a product or image
+                    </div>
+                  </div>
+                {% endif %}
+              </div>
+            </div>
+          {% endif %}
+        </div>
+      {% endif %}
+    {% endfor %}
+  </div>
+</postcard-grid-{{ ai_gen_id }}>
+
+<script>
+  (function() {
+    class PostcardGrid{{ ai_gen_id }} extends HTMLElement {
+      constructor() {
+        super();
+      }
+
+      connectedCallback() {
+        this.setupAccessibility();
+      }
+
+      setupAccessibility() {
+        const links = this.querySelectorAll('.ai-postcard-grid__link-{{ ai_gen_id }}');
+        links.forEach((link) => {
+          if (link.href) {
+            link.setAttribute('aria-label', 'View product details');
+          }
+        });
+      }
+    }
+
+    customElements.define('postcard-grid-{{ ai_gen_id }}', PostcardGrid{{ ai_gen_id }});
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "Postcard product grid",
+  "tag": null,
+  "settings": [
+    {
+      "type": "header",
+      "content": "Layout"
+    },
+    {
+      "type": "range",
+      "id": "columns_desktop",
+      "label": "Columns on desktop",
+      "min": 2,
+      "max": 6,
+      "step": 1,
+      "default": 4
+    },
+    {
+      "type": "range",
+      "id": "columns_tablet",
+      "label": "Columns on tablet",
+      "min": 2,
+      "max": 4,
+      "step": 1,
+      "default": 3
+    },
+    {
+      "type": "select",
+      "id": "columns_mobile",
+      "label": "Columns on mobile",
+      "options": [
+        {
+          "value": "1",
+          "label": "1"
+        },
+        {
+          "value": "2",
+          "label": "2"
+        }
+      ],
+      "default": "2"
+    },
+    {
+      "type": "range",
+      "id": "grid_gap",
+      "label": "Gap between items",
+      "min": 10,
+      "max": 50,
+      "step": 5,
+      "unit": "px",
+      "default": 20
+    },
+    {
+      "type": "header",
+      "content": "Image style"
+    },
+    {
+      "type": "select",
+      "id": "image_fit",
+      "label": "Image fit",
+      "options": [
+        {
+          "value": "cover",
+          "label": "Fill container"
+        },
+        {
+          "value": "contain",
+          "label": "Fit inside container"
+        }
+      ],
+      "default": "contain"
+    },
+    {
+      "type": "range",
+      "id": "image_padding",
+      "label": "Image padding",
+      "min": 0,
+      "max": 40,
+      "step": 5,
+      "unit": "px",
+      "default": 10,
+      "info": "Only applies when 'Fit inside container' is selected"
+    },
+    {
+      "type": "color",
+      "id": "image_background_color",
+      "label": "Background color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "range",
+      "id": "border_radius",
+      "label": "Corner radius",
+      "min": 0,
+      "max": 30,
+      "step": 2,
+      "unit": "px",
+      "default": 8
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_border",
+      "label": "Enable border",
+      "default": false
+    },
+    {
+      "type": "range",
+      "id": "border_width",
+      "label": "Border width",
+      "min": 1,
+      "max": 5,
+      "step": 1,
+      "unit": "px",
+      "default": 2
+    },
+    {
+      "type": "color",
+      "id": "border_color",
+      "label": "Border color",
+      "default": "#5b2512"
+    },
+    {
+      "type": "header",
+      "content": "Product info overlay"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_product_info",
+      "label": "Show product info on hover",
+      "default": true
+    },
+    {
+      "type": "range",
+      "id": "overlay_opacity",
+      "label": "Overlay opacity",
+      "min": 0,
+      "max": 1,
+      "step": 0.1,
+      "default": 0.7
+    },
+    {
+      "type": "color",
+      "id": "overlay_text_color",
+      "label": "Text color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "header",
+      "content": "Postcard 1"
+    },
+    {
+      "type": "product",
+      "id": "product_1",
+      "label": "Product"
+    },
+    {
+      "type": "image_picker",
+      "id": "image_1",
+      "label": "Postcard image"
+    },
+    {
+      "type": "header",
+      "content": "Postcard 2"
+    },
+    {
+      "type": "product",
+      "id": "product_2",
+      "label": "Product"
+    },
+    {
+      "type": "image_picker",
+      "id": "image_2",
+      "label": "Postcard image"
+    },
+    {
+      "type": "header",
+      "content": "Postcard 3"
+    },
+    {
+      "type": "product",
+      "id": "product_3",
+      "label": "Product"
+    },
+    {
+      "type": "image_picker",
+      "id": "image_3",
+      "label": "Postcard image"
+    },
+    {
+      "type": "header",
+      "content": "Postcard 4"
+    },
+    {
+      "type": "product",
+      "id": "product_4",
+      "label": "Product"
+    },
+    {
+      "type": "image_picker",
+      "id": "image_4",
+      "label": "Postcard image"
+    },
+    {
+      "type": "header",
+      "content": "Postcard 5"
+    },
+    {
+      "type": "product",
+      "id": "product_5",
+      "label": "Product"
+    },
+    {
+      "type": "image_picker",
+      "id": "image_5",
+      "label": "Postcard image"
+    },
+    {
+      "type": "header",
+      "content": "Postcard 6"
+    },
+    {
+      "type": "product",
+      "id": "product_6",
+      "label": "Product"
+    },
+    {
+      "type": "image_picker",
+      "id": "image_6",
+      "label": "Postcard image"
+    },
+    {
+      "type": "header",
+      "content": "Postcard 7"
+    },
+    {
+      "type": "product",
+      "id": "product_7",
+      "label": "Product"
+    },
+    {
+      "type": "image_picker",
+      "id": "image_7",
+      "label": "Postcard image"
+    },
+    {
+      "type": "header",
+      "content": "Postcard 8"
+    },
+    {
+      "type": "product",
+      "id": "product_8",
+      "label": "Product"
+    },
+    {
+      "type": "image_picker",
+      "id": "image_8",
+      "label": "Postcard image"
+    },
+    {
+      "type": "header",
+      "content": "Postcard 9"
+    },
+    {
+      "type": "product",
+      "id": "product_9",
+      "label": "Product"
+    },
+    {
+      "type": "image_picker",
+      "id": "image_9",
+      "label": "Postcard image"
+    },
+    {
+      "type": "header",
+      "content": "Postcard 10"
+    },
+    {
+      "type": "product",
+      "id": "product_10",
+      "label": "Product"
+    },
+    {
+      "type": "image_picker",
+      "id": "image_10",
+      "label": "Postcard image"
+    },
+    {
+      "type": "header",
+      "content": "Postcard 11"
+    },
+    {
+      "type": "product",
+      "id": "product_11",
+      "label": "Product"
+    },
+    {
+      "type": "image_picker",
+      "id": "image_11",
+      "label": "Postcard image"
+    },
+    {
+      "type": "header",
+      "content": "Postcard 12"
+    },
+    {
+      "type": "product",
+      "id": "product_12",
+      "label": "Product"
+    },
+    {
+      "type": "image_picker",
+      "id": "image_12",
+      "label": "Postcard image"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Postcard product grid"
+    }
+  ]
+}
+{% endschema %}

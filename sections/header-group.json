@@ -1,0 +1,107 @@
+{
+  "type": "header",
+  "name": "Header",
+  "sections": {
+    "header": {
+      "type": "header",
+      "blocks": {
+        "content_imbJfH": {
+          "type": "content",
+          "settings": {
+            "mega-menu": "",
+            "mega_image_header_1": "",
+            "mega_image_subheader_1": "",
+            "mega_image_link_1": "",
+            "mega_image_header_2": "",
+            "mega_image_subheader_2": "",
+            "mega_image_link_2": ""
+          }
+        }
+      },
+      "block_order": [
+        "content_imbJfH"
+      ],
+      "settings": {
+        "sticky_header": "disable",
+        "overlay_header": false,
+        "show_border": true,
+        "logo": "shopify://shop_images/bsb-horizontal-logo-full-color-rgb.svg",
+        "overlay_logo": "shopify://shop_images/bsb-horizontal-logo-full-color-rgb.svg",
+        "logo_max_width": 350,
+        "logo-placement": "center",
+        "sticky_header_logo": true,
+        "search-expand": false,
+        "search-message": "Search cakes, candy, gifts...",
+        "icon-enable": true,
+        "cart-number": "quantity",
+        "show_currency_selector": true,
+        "show_locale_selector": false,
+        "main_linklist": "main-menu",
+        "top_bar_linklist": "",
+        "show-sticky-top-bar": true
+      }
+    },
+    "announcement-bar": {
+      "type": "announcement-bar",
+      "settings": {
+        "enable": false,
+        "message_text": "",
+        "message_link": "",
+        "notification-bar--background-color": "#5b2512",
+        "notification-bar--text-color": "#ffffff",
+        "social-enable": false
+      }
+    },
+    "store_status_strip": {
+      "type": "store-status-strip",
+      "settings": {
+        "enable": true,
+        "address": "328 E 75th St, Chicago",
+        "address_link": "https://maps.app.goo.gl/YQq2u5v4H5NH6EG6A",
+        "phone": "773-570-7676",
+        "hours_mon": "Closed",
+        "hours_tue": "10am-6pm",
+        "hours_wed": "10am-6pm",
+        "hours_thu": "10am-6pm",
+        "hours_fri": "10am-6pm",
+        "hours_sat": "10am-6pm",
+        "hours_sun": "12pm-5pm",
+        "background_color": "#FFF8F0",
+        "text_color": "#570522"
+      }
+    },
+    "topical_announcement": {
+      "type": "topical-announcement",
+      "settings": {
+        "enable": true,
+        "eyebrow": "MOTHER'S DAY \u2014 MAY 10",
+        "heading": "Make Mom's Day Sweeter",
+        "body": "<p>Hand-crafted cakes shipped fresh from Chicago. Order ahead so it arrives in time.</p>",
+        "highlight": "Order by Wed, May 6 for guaranteed Mother's Day delivery",
+        "button_label": "Shop Mother's Day",
+        "button_link": "shopify://collections/nationwide-shipping",
+        "aria_label": "Mother's Day shipping reminder",
+        "background_color": "#facac1",
+        "text_color": "#570522",
+        "accent_color": "#570522",
+        "button_text_color": "#ffffff"
+      }
+    },
+    "176688911938324a4b": {
+      "type": "_blocks",
+      "settings": {}
+    },
+    "1774379499b21b53d0": {
+      "type": "_blocks",
+      "settings": {}
+    }
+  },
+  "order": [
+    "header",
+    "store_status_strip",
+    "announcement-bar",
+    "topical_announcement",
+    "176688911938324a4b",
+    "1774379499b21b53d0"
+  ]
+}

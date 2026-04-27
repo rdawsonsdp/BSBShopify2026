@@ -1,0 +1,41 @@
+{
+  "sections": {
+    "main": {
+      "type": "template--page",
+      "disabled": true,
+      "settings": {}
+    },
+    "image_image_with_text_overlay_DpNLyz": {
+      "type": "image--image-with-text-overlay",
+      "settings": {
+        "image": "shopify://shop_images/About.png",
+        "subheading": "",
+        "title": "Gallery",
+        "text": "<p><strong>ISN'T IT LOVELY?</strong></p>",
+        "parallax": false,
+        "hero_size": "x-large",
+        "text-over-image-width": "fixed",
+        "button_link": "",
+        "button_label": ""
+      }
+    },
+    "image_gallery_BPjYDc": {
+      "type": "image--gallery",
+      "blocks": {},
+      "block_order": [],
+      "settings": {}
+    },
+    "image_gallery_KKe6Yh": {
+      "type": "image--gallery",
+      "blocks": {},
+      "block_order": [],
+      "settings": {}
+    }
+  },
+  "order": [
+    "main",
+    "image_image_with_text_overlay_DpNLyz",
+    "image_gallery_BPjYDc",
+    "image_gallery_KKe6Yh"
+  ]
+}

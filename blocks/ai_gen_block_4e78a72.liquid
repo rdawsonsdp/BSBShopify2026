@@ -1,0 +1,1050 @@
+{% doc %}
+  @prompt
+    I want a product grid that will show all products from a collection in a table format. This will allow businesses to order multiple products at one time. The products should be in rows and the variants should be in drop down. This should also have a mobile view that follows the best practices from mobile devices. At the end of each row there will be a button that says "Add to Cart" , When you select the image. The image should zoom in and show all of the product images in a carosel. 
+{% enddoc %}
+{% assign ai_gen_id = block.id | replace: '_', '' | downcase %}
+
+{% style %}
+  .ai-bulk-order-grid-{{ ai_gen_id }} {
+    display: block;
+    width: 100%;
+    padding: 20px 0;
+  }
+
+  .ai-bulk-order-table-{{ ai_gen_id }} {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: {{ block.settings.table_background_color }};
+  }
+
+  .ai-bulk-order-table-{{ ai_gen_id }} thead {
+    background-color: {{ block.settings.header_background_color }};
+    color: {{ block.settings.header_text_color }};
+  }
+
+  .ai-bulk-order-table-{{ ai_gen_id }} th {
+    padding: 16px 12px;
+    text-align: left;
+    font-weight: 600;
+    font-size: {{ block.settings.header_font_size }}px;
+    border-bottom: 2px solid {{ block.settings.border_color }};
+  }
+
+  .ai-bulk-order-table-{{ ai_gen_id }} td {
+    padding: 16px 12px;
+    border-bottom: 1px solid {{ block.settings.border_color }};
+    vertical-align: middle;
+    color: {{ block.settings.text_color }};
+  }
+
+  .ai-bulk-order-table-{{ ai_gen_id }} tbody tr:hover {
+    background-color: {{ block.settings.row_hover_color }};
+  }
+
+  .ai-bulk-order-image-wrapper-{{ ai_gen_id }} {
+    cursor: pointer;
+    position: relative;
+    display: inline-block;
+  }
+
+  .ai-bulk-order-image-{{ ai_gen_id }} {
+    width: {{ block.settings.image_size }}px;
+    height: {{ block.settings.image_size }}px;
+    object-fit: cover;
+    border-radius: 4px;
+    transition: opacity 0.3s ease;
+  }
+
+  .ai-bulk-order-image-wrapper-{{ ai_gen_id }}:hover .ai-bulk-order-image-{{ ai_gen_id }} {
+    opacity: 0.8;
+  }
+
+  .ai-bulk-order-image-placeholder-{{ ai_gen_id }} {
+    width: {{ block.settings.image_size }}px;
+    height: {{ block.settings.image_size }}px;
+    background-color: #f4f4f4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+  }
+
+  .ai-bulk-order-image-placeholder-{{ ai_gen_id }} svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .ai-bulk-order-product-title-{{ ai_gen_id }} {
+    font-weight: 600;
+    font-size: {{ block.settings.product_title_size }}px;
+    margin-bottom: 4px;
+    color: {{ block.settings.text_color }};
+  }
+
+  .ai-bulk-order-product-vendor-{{ ai_gen_id }} {
+    font-size: 14px;
+    color: {{ block.settings.vendor_text_color }};
+  }
+
+  .ai-bulk-order-price-{{ ai_gen_id }} {
+    font-size: {{ block.settings.price_font_size }}px;
+    font-weight: 600;
+    color: {{ block.settings.text_color }};
+  }
+
+  .ai-bulk-order-compare-price-{{ ai_gen_id }} {
+    text-decoration: line-through;
+    color: {{ block.settings.vendor_text_color }};
+    margin-right: 8px;
+    font-size: {{ block.settings.price_font_size | minus: 2 }}px;
+  }
+
+  .ai-bulk-order-variant-select-{{ ai_gen_id }} {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid {{ block.settings.border_color }};
+    border-radius: 4px;
+    font-size: 14px;
+    background-color: #ffffff;
+    cursor: pointer;
+  }
+
+  .ai-bulk-order-quantity-input-{{ ai_gen_id }} {
+    width: 80px;
+    padding: 10px 12px;
+    border: 1px solid {{ block.settings.border_color }};
+    border-radius: 4px;
+    font-size: 14px;
+    text-align: center;
+  }
+
+  .ai-bulk-order-add-button-{{ ai_gen_id }} {
+    padding: 10px 20px;
+    background-color: {{ block.settings.button_background_color }};
+    color: {{ block.settings.button_text_color }};
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: background-color 0.3s ease;
+    white-space: nowrap;
+  }
+
+  .ai-bulk-order-add-button-{{ ai_gen_id }}:hover {
+    background-color: {{ block.settings.button_hover_color }};
+  }
+
+  .ai-bulk-order-add-button-{{ ai_gen_id }}:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .ai-bulk-order-unavailable-{{ ai_gen_id }} {
+    color: {{ block.settings.vendor_text_color }};
+    font-style: italic;
+  }
+
+  .ai-bulk-order-lightbox-{{ ai_gen_id }} {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.9);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .ai-bulk-order-lightbox-{{ ai_gen_id }}.active {
+    display: flex;
+  }
+
+  .ai-bulk-order-lightbox-content-{{ ai_gen_id }} {
+    position: relative;
+    max-width: 90%;
+    max-height: 90%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .ai-bulk-order-lightbox-image-{{ ai_gen_id }} {
+    max-width: 100%;
+    max-height: 70vh;
+    object-fit: contain;
+    border-radius: 8px;
+  }
+
+  .ai-bulk-order-lightbox-close-{{ ai_gen_id }} {
+    position: absolute;
+    top: -40px;
+    right: 0;
+    background: none;
+    border: none;
+    color: #ffffff;
+    font-size: 36px;
+    cursor: pointer;
+    padding: 0;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.3s ease;
+  }
+
+  .ai-bulk-order-lightbox-close-{{ ai_gen_id }}:hover {
+    opacity: 0.7;
+  }
+
+  .ai-bulk-order-lightbox-nav-{{ ai_gen_id }} {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: #ffffff;
+    font-size: 48px;
+    cursor: pointer;
+    padding: 20px;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background-color 0.3s ease;
+  }
+
+  .ai-bulk-order-lightbox-nav-{{ ai_gen_id }}:hover {
+    background-color: rgba(255, 255, 255, 0.3);
+  }
+
+  .ai-bulk-order-lightbox-nav-{{ ai_gen_id }}:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+
+  .ai-bulk-order-lightbox-prev-{{ ai_gen_id }} {
+    left: 20px;
+  }
+
+  .ai-bulk-order-lightbox-next-{{ ai_gen_id }} {
+    right: 20px;
+  }
+
+  .ai-bulk-order-lightbox-counter-{{ ai_gen_id }} {
+    color: #ffffff;
+    margin-top: 20px;
+    font-size: 16px;
+  }
+
+  .ai-bulk-order-lightbox-thumbnails-{{ ai_gen_id }} {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    overflow-x: auto;
+    max-width: 100%;
+    padding: 10px 0;
+  }
+
+  .ai-bulk-order-lightbox-thumbnail-{{ ai_gen_id }} {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 4px;
+    cursor: pointer;
+    opacity: 0.5;
+    transition: opacity 0.3s ease;
+    border: 2px solid transparent;
+  }
+
+  .ai-bulk-order-lightbox-thumbnail-{{ ai_gen_id }}:hover {
+    opacity: 0.8;
+  }
+
+  .ai-bulk-order-lightbox-thumbnail-{{ ai_gen_id }}.active {
+    opacity: 1;
+    border-color: #ffffff;
+  }
+
+  @media screen and (max-width: 749px) {
+    .ai-bulk-order-table-{{ ai_gen_id }} {
+      display: none;
+    }
+
+    .ai-bulk-order-mobile-{{ ai_gen_id }} {
+      display: block;
+    }
+
+    .ai-bulk-order-mobile-card-{{ ai_gen_id }} {
+      background-color: {{ block.settings.table_background_color }};
+      border: 1px solid {{ block.settings.border_color }};
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .ai-bulk-order-mobile-header-{{ ai_gen_id }} {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .ai-bulk-order-mobile-info-{{ ai_gen_id }} {
+      flex: 1;
+    }
+
+    .ai-bulk-order-mobile-title-{{ ai_gen_id }} {
+      font-weight: 600;
+      font-size: {{ block.settings.product_title_size }}px;
+      margin-bottom: 4px;
+      color: {{ block.settings.text_color }};
+    }
+
+    .ai-bulk-order-mobile-vendor-{{ ai_gen_id }} {
+      font-size: 14px;
+      color: {{ block.settings.vendor_text_color }};
+      margin-bottom: 8px;
+    }
+
+    .ai-bulk-order-mobile-price-{{ ai_gen_id }} {
+      font-size: {{ block.settings.price_font_size }}px;
+      font-weight: 600;
+      color: {{ block.settings.text_color }};
+    }
+
+    .ai-bulk-order-mobile-fields-{{ ai_gen_id }} {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .ai-bulk-order-mobile-field-{{ ai_gen_id }} {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .ai-bulk-order-mobile-label-{{ ai_gen_id }} {
+      font-size: 12px;
+      font-weight: 600;
+      color: {{ block.settings.text_color }};
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .ai-bulk-order-mobile-actions-{{ ai_gen_id }} {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .ai-bulk-order-mobile-quantity-{{ ai_gen_id }} {
+      flex: 1;
+    }
+
+    .ai-bulk-order-mobile-button-{{ ai_gen_id }} {
+      flex: 2;
+    }
+
+    .ai-bulk-order-lightbox-nav-{{ ai_gen_id }} {
+      width: 50px;
+      height: 50px;
+      font-size: 36px;
+      padding: 10px;
+    }
+
+    .ai-bulk-order-lightbox-prev-{{ ai_gen_id }} {
+      left: 10px;
+    }
+
+    .ai-bulk-order-lightbox-next-{{ ai_gen_id }} {
+      right: 10px;
+    }
+
+    .ai-bulk-order-lightbox-close-{{ ai_gen_id }} {
+      top: -50px;
+    }
+  }
+
+  @media screen and (min-width: 750px) {
+    .ai-bulk-order-mobile-{{ ai_gen_id }} {
+      display: none;
+    }
+
+    .ai-bulk-order-table-{{ ai_gen_id }} {
+      display: table;
+    }
+  }
+{% endstyle %}
+
+<bulk-order-grid-{{ ai_gen_id }}
+  class="ai-bulk-order-grid-{{ ai_gen_id }}"
+  {{ block.shopify_attributes }}
+>
+  {% if block.settings.collection != blank %}
+    {% assign products = block.settings.collection.products %}
+    
+    <table class="ai-bulk-order-table-{{ ai_gen_id }}">
+      <thead>
+        <tr>
+          {% if block.settings.show_image %}
+            <th>{{ block.settings.image_column_label }}</th>
+          {% endif %}
+          <th>{{ block.settings.product_column_label }}</th>
+          {% if block.settings.show_vendor %}
+            <th>{{ block.settings.vendor_column_label }}</th>
+          {% endif %}
+          <th>{{ block.settings.price_column_label }}</th>
+          <th>{{ block.settings.variant_column_label }}</th>
+          <th>{{ block.settings.quantity_column_label }}</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for product in products limit: block.settings.products_limit %}
+          <tr data-product-id="{{ product.id }}">
+            {% if block.settings.show_image %}
+              <td>
+                {% if product.featured_image %}
+                  <div
+                    class="ai-bulk-order-image-wrapper-{{ ai_gen_id }}"
+                    data-product-images="{{ product.id }}"
+                  >
+                    <img
+                      src="{{ product.featured_image | image_url: width: 200 }}"
+                      alt="{{ product.featured_image.alt | escape }}"
+                      class="ai-bulk-order-image-{{ ai_gen_id }}"
+                      loading="lazy"
+                      width="200"
+                      height="200"
+                    >
+                  </div>
+                  <div style="display: none;" data-images-data="{{ product.id }}">
+                    {% for image in product.images %}
+                      <div data-image-url="{{ image | image_url: width: 1200 }}" data-image-alt="{{ image.alt | escape }}"></div>
+                    {% endfor %}
+                  </div>
+                {% else %}
+                  <div class="ai-bulk-order-image-placeholder-{{ ai_gen_id }}">
+                    {{ 'product-1' | placeholder_svg_tag }}
+                  </div>
+                {% endif %}
+              </td>
+            {% endif %}
+            <td>
+              <div class="ai-bulk-order-product-title-{{ ai_gen_id }}">{{ product.title }}</div>
+            </td>
+            {% if block.settings.show_vendor %}
+              <td>
+                <div class="ai-bulk-order-product-vendor-{{ ai_gen_id }}">{{ product.vendor }}</div>
+              </td>
+            {% endif %}
+            <td>
+              <div class="ai-bulk-order-price-{{ ai_gen_id }}">
+                {% if product.compare_at_price > product.price %}
+                  <span class="ai-bulk-order-compare-price-{{ ai_gen_id }}">{{ product.compare_at_price | money }}</span>
+                {% endif %}
+                {{ product.price | money }}
+              </div>
+            </td>
+            <td>
+              {% if product.has_only_default_variant %}
+                <span>{{ block.settings.default_variant_label }}</span>
+              {% else %}
+                <select
+                  class="ai-bulk-order-variant-select-{{ ai_gen_id }}"
+                  data-product-select="{{ product.id }}"
+                >
+                  {% for variant in product.variants %}
+                    <option
+                      value="{{ variant.id }}"
+                      {% unless variant.available %}disabled{% endunless %}
+                    >
+                      {{ variant.title }}
+                      {% unless variant.available %} - {{ block.settings.sold_out_label }}{% endunless %}
+                    </option>
+                  {% endfor %}
+                </select>
+              {% endif %}
+            </td>
+            <td>
+              <input
+                type="number"
+                min="1"
+                value="1"
+                class="ai-bulk-order-quantity-input-{{ ai_gen_id }}"
+                data-quantity-input="{{ product.id }}"
+              >
+            </td>
+            <td>
+              {% if product.available %}
+                <button
+                  class="ai-bulk-order-add-button-{{ ai_gen_id }}"
+                  data-add-to-cart="{{ product.id }}"
+                  data-variant-id="{% if product.has_only_default_variant %}{{ product.selected_or_first_available_variant.id }}{% endif %}"
+                >
+                  {{ block.settings.add_to_cart_label }}
+                </button>
+              {% else %}
+                <span class="ai-bulk-order-unavailable-{{ ai_gen_id }}">{{ block.settings.unavailable_label }}</span>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <div class="ai-bulk-order-mobile-{{ ai_gen_id }}">
+      {% for product in products limit: block.settings.products_limit %}
+        <div class="ai-bulk-order-mobile-card-{{ ai_gen_id }}" data-product-id="{{ product.id }}">
+          <div class="ai-bulk-order-mobile-header-{{ ai_gen_id }}">
+            {% if block.settings.show_image %}
+              {% if product.featured_image %}
+                <div
+                  class="ai-bulk-order-image-wrapper-{{ ai_gen_id }}"
+                  data-product-images="{{ product.id }}"
+                >
+                  <img
+                    src="{{ product.featured_image | image_url: width: 200 }}"
+                    alt="{{ product.featured_image.alt | escape }}"
+                    class="ai-bulk-order-image-{{ ai_gen_id }}"
+                    loading="lazy"
+                    width="200"
+                    height="200"
+                  >
+                </div>
+                <div style="display: none;" data-images-data="{{ product.id }}">
+                  {% for image in product.images %}
+                    <div data-image-url="{{ image | image_url: width: 1200 }}" data-image-alt="{{ image.alt | escape }}"></div>
+                  {% endfor %}
+                </div>
+              {% else %}
+                <div class="ai-bulk-order-image-placeholder-{{ ai_gen_id }}">
+                  {{ 'product-1' | placeholder_svg_tag }}
+                </div>
+              {% endif %}
+            {% endif %}
+            <div class="ai-bulk-order-mobile-info-{{ ai_gen_id }}">
+              <div class="ai-bulk-order-mobile-title-{{ ai_gen_id }}">{{ product.title }}</div>
+              {% if block.settings.show_vendor %}
+                <div class="ai-bulk-order-mobile-vendor-{{ ai_gen_id }}">{{ product.vendor }}</div>
+              {% endif %}
+              <div class="ai-bulk-order-mobile-price-{{ ai_gen_id }}">
+                {% if product.compare_at_price > product.price %}
+                  <span class="ai-bulk-order-compare-price-{{ ai_gen_id }}">{{ product.compare_at_price | money }}</span>
+                {% endif %}
+                {{ product.price | money }}
+              </div>
+            </div>
+          </div>
+
+          <div class="ai-bulk-order-mobile-fields-{{ ai_gen_id }}">
+            <div class="ai-bulk-order-mobile-field-{{ ai_gen_id }}">
+              <label class="ai-bulk-order-mobile-label-{{ ai_gen_id }}">{{ block.settings.variant_column_label }}</label>
+              {% if product.has_only_default_variant %}
+                <span>{{ block.settings.default_variant_label }}</span>
+              {% else %}
+                <select
+                  class="ai-bulk-order-variant-select-{{ ai_gen_id }}"
+                  data-product-select="{{ product.id }}"
+                >
+                  {% for variant in product.variants %}
+                    <option
+                      value="{{ variant.id }}"
+                      {% unless variant.available %}disabled{% endunless %}
+                    >
+                      {{ variant.title }}
+                      {% unless variant.available %} - {{ block.settings.sold_out_label }}{% endunless %}
+                    </option>
+                  {% endfor %}
+                </select>
+              {% endif %}
+            </div>
+
+            <div class="ai-bulk-order-mobile-actions-{{ ai_gen_id }}">
+              <div class="ai-bulk-order-mobile-field-{{ ai_gen_id }} ai-bulk-order-mobile-quantity-{{ ai_gen_id }}">
+                <label class="ai-bulk-order-mobile-label-{{ ai_gen_id }}">{{ block.settings.quantity_column_label }}</label>
+                <input
+                  type="number"
+                  min="1"
+                  value="1"
+                  class="ai-bulk-order-quantity-input-{{ ai_gen_id }}"
+                  data-quantity-input="{{ product.id }}"
+                >
+              </div>
+
+              <div class="ai-bulk-order-mobile-field-{{ ai_gen_id }} ai-bulk-order-mobile-button-{{ ai_gen_id }}">
+                <label class="ai-bulk-order-mobile-label-{{ ai_gen_id }}">&nbsp;</label>
+                {% if product.available %}
+                  <button
+                    class="ai-bulk-order-add-button-{{ ai_gen_id }}"
+                    data-add-to-cart="{{ product.id }}"
+                    data-variant-id="{% if product.has_only_default_variant %}{{ product.selected_or_first_available_variant.id }}{% endif %}"
+                  >
+                    {{ block.settings.add_to_cart_label }}
+                  </button>
+                {% else %}
+                  <span class="ai-bulk-order-unavailable-{{ ai_gen_id }}">{{ block.settings.unavailable_label }}</span>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+    <div class="ai-bulk-order-lightbox-{{ ai_gen_id }}" data-lightbox>
+      <div class="ai-bulk-order-lightbox-content-{{ ai_gen_id }}">
+        <button class="ai-bulk-order-lightbox-close-{{ ai_gen_id }}" data-lightbox-close aria-label="Close">×</button>
+        <button class="ai-bulk-order-lightbox-nav-{{ ai_gen_id }} ai-bulk-order-lightbox-prev-{{ ai_gen_id }}" data-lightbox-prev aria-label="Previous">‹</button>
+        <img src="" alt="" class="ai-bulk-order-lightbox-image-{{ ai_gen_id }}" data-lightbox-image>
+        <button class="ai-bulk-order-lightbox-nav-{{ ai_gen_id }} ai-bulk-order-lightbox-next-{{ ai_gen_id }}" data-lightbox-next aria-label="Next">›</button>
+        <div class="ai-bulk-order-lightbox-counter-{{ ai_gen_id }}" data-lightbox-counter></div>
+        <div class="ai-bulk-order-lightbox-thumbnails-{{ ai_gen_id }}" data-lightbox-thumbnails></div>
+      </div>
+    </div>
+  {% else %}
+    <div style="padding: 40px; text-align: center; color: #999;">
+      Please select a collection to display products
+    </div>
+  {% endif %}
+</bulk-order-grid-{{ ai_gen_id }}>
+
+<script>
+  (function() {
+    class BulkOrderGrid{{ ai_gen_id }} extends HTMLElement {
+      constructor() {
+        super();
+        this.currentImages = [];
+        this.currentIndex = 0;
+      }
+
+      connectedCallback() {
+        this.setupEventListeners();
+        this.setupLightbox();
+      }
+
+      setupEventListeners() {
+        const addButtons = this.querySelectorAll('[data-add-to-cart]');
+        
+        addButtons.forEach((button) => {
+          button.addEventListener('click', (e) => {
+            this.handleAddToCart(e.currentTarget);
+          });
+        });
+
+        const imageWrappers = this.querySelectorAll('[data-product-images]');
+        imageWrappers.forEach((wrapper) => {
+          wrapper.addEventListener('click', (e) => {
+            const productId = wrapper.getAttribute('data-product-images');
+            this.openLightbox(productId);
+          });
+        });
+      }
+
+      setupLightbox() {
+        const lightbox = this.querySelector('[data-lightbox]');
+        const closeBtn = this.querySelector('[data-lightbox-close]');
+        const prevBtn = this.querySelector('[data-lightbox-prev]');
+        const nextBtn = this.querySelector('[data-lightbox-next]');
+
+        closeBtn.addEventListener('click', () => this.closeLightbox());
+        prevBtn.addEventListener('click', () => this.navigateLightbox(-1));
+        nextBtn.addEventListener('click', () => this.navigateLightbox(1));
+
+        lightbox.addEventListener('click', (e) => {
+          if (e.target === lightbox) {
+            this.closeLightbox();
+          }
+        });
+
+        document.addEventListener('keydown', (e) => {
+          if (!lightbox.classList.contains('active')) return;
+          
+          if (e.key === 'Escape') {
+            this.closeLightbox();
+          } else if (e.key === 'ArrowLeft') {
+            this.navigateLightbox(-1);
+          } else if (e.key === 'ArrowRight') {
+            this.navigateLightbox(1);
+          }
+        });
+      }
+
+      openLightbox(productId) {
+        const imagesData = this.querySelector(`[data-images-data="${productId}"]`);
+        if (!imagesData) return;
+
+        const imageElements = imagesData.querySelectorAll('[data-image-url]');
+        this.currentImages = Array.from(imageElements).map(el => ({
+          url: el.getAttribute('data-image-url'),
+          alt: el.getAttribute('data-image-alt')
+        }));
+
+        if (this.currentImages.length === 0) return;
+
+        this.currentIndex = 0;
+        this.showLightboxImage();
+
+        const lightbox = this.querySelector('[data-lightbox]');
+        lightbox.classList.add('active');
+        document.body.style.overflow = 'hidden';
+      }
+
+      closeLightbox() {
+        const lightbox = this.querySelector('[data-lightbox]');
+        lightbox.classList.remove('active');
+        document.body.style.overflow = '';
+      }
+
+      navigateLightbox(direction) {
+        this.currentIndex += direction;
+        
+        if (this.currentIndex < 0) {
+          this.currentIndex = this.currentImages.length - 1;
+        } else if (this.currentIndex >= this.currentImages.length) {
+          this.currentIndex = 0;
+        }
+
+        this.showLightboxImage();
+      }
+
+      showLightboxImage() {
+        const image = this.querySelector('[data-lightbox-image]');
+        const counter = this.querySelector('[data-lightbox-counter]');
+        const thumbnailsContainer = this.querySelector('[data-lightbox-thumbnails]');
+        const prevBtn = this.querySelector('[data-lightbox-prev]');
+        const nextBtn = this.querySelector('[data-lightbox-next]');
+
+        const currentImage = this.currentImages[this.currentIndex];
+        image.src = currentImage.url;
+        image.alt = currentImage.alt;
+
+        counter.textContent = `${this.currentIndex + 1} / ${this.currentImages.length}`;
+
+        prevBtn.disabled = this.currentImages.length <= 1;
+        nextBtn.disabled = this.currentImages.length <= 1;
+
+        thumbnailsContainer.innerHTML = '';
+        this.currentImages.forEach((img, index) => {
+          const thumbnail = document.createElement('img');
+          thumbnail.src = img.url;
+          thumbnail.alt = img.alt;
+          thumbnail.className = 'ai-bulk-order-lightbox-thumbnail-{{ ai_gen_id }}';
+          if (index === this.currentIndex) {
+            thumbnail.classList.add('active');
+          }
+          thumbnail.addEventListener('click', () => {
+            this.currentIndex = index;
+            this.showLightboxImage();
+          });
+          thumbnailsContainer.appendChild(thumbnail);
+        });
+      }
+
+      handleAddToCart(button) {
+        const productId = button.getAttribute('data-add-to-cart');
+        let variantId = button.getAttribute('data-variant-id');
+        
+        if (!variantId) {
+          const variantSelect = this.querySelector(`[data-product-select="${productId}"]`);
+          if (variantSelect) {
+            variantId = variantSelect.value;
+          }
+        }
+
+        const quantityInput = this.querySelector(`[data-quantity-input="${productId}"]`);
+        const quantity = quantityInput ? parseInt(quantityInput.value) : 1;
+
+        if (!variantId) {
+          return;
+        }
+
+        button.disabled = true;
+        const originalText = button.textContent;
+        button.textContent = '{{ block.settings.adding_label }}';
+
+        fetch('/cart/add.js', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            id: variantId,
+            quantity: quantity
+          })
+        })
+        .then(response => response.json())
+        .then(data => {
+          button.textContent = '{{ block.settings.added_label }}';
+          
+          setTimeout(() => {
+            button.textContent = originalText;
+            button.disabled = false;
+            if (quantityInput) {
+              quantityInput.value = 1;
+            }
+          }, 1500);
+
+          if (window.location.pathname === '/cart' || document.querySelector('[data-section-type="cart"]')) {
+            window.location.reload();
+          } else {
+            fetch('/cart.js')
+              .then(response => response.json())
+              .then(cart => {
+                document.dispatchEvent(new CustomEvent('cart:updated', { detail: cart }));
+              });
+          }
+        })
+        .catch((error) => {
+          console.error('Error:', error);
+          button.textContent = originalText;
+          button.disabled = false;
+        });
+      }
+    }
+
+    customElements.define('bulk-order-grid-{{ ai_gen_id }}', BulkOrderGrid{{ ai_gen_id }});
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "Bulk order grid",
+  "tag": null,
+  "settings": [
+    {
+      "type": "header",
+      "content": "Collection"
+    },
+    {
+      "type": "collection",
+      "id": "collection",
+      "label": "Collection"
+    },
+    {
+      "type": "range",
+      "id": "products_limit",
+      "min": 5,
+      "max": 50,
+      "step": 5,
+      "label": "Maximum products",
+      "default": 20
+    },
+    {
+      "type": "header",
+      "content": "Table columns"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_image",
+      "label": "Show product image",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_vendor",
+      "label": "Show vendor",
+      "default": false
+    },
+    {
+      "type": "header",
+      "content": "Column labels"
+    },
+    {
+      "type": "text",
+      "id": "image_column_label",
+      "label": "Image column",
+      "default": "Image"
+    },
+    {
+      "type": "text",
+      "id": "product_column_label",
+      "label": "Product column",
+      "default": "Product"
+    },
+    {
+      "type": "text",
+      "id": "vendor_column_label",
+      "label": "Vendor column",
+      "default": "Vendor"
+    },
+    {
+      "type": "text",
+      "id": "price_column_label",
+      "label": "Price column",
+      "default": "Price"
+    },
+    {
+      "type": "text",
+      "id": "variant_column_label",
+      "label": "Variant column",
+      "default": "Options"
+    },
+    {
+      "type": "text",
+      "id": "quantity_column_label",
+      "label": "Quantity column",
+      "default": "Qty"
+    },
+    {
+      "type": "header",
+      "content": "Button labels"
+    },
+    {
+      "type": "text",
+      "id": "add_to_cart_label",
+      "label": "Add to cart",
+      "default": "Add to Cart"
+    },
+    {
+      "type": "text",
+      "id": "adding_label",
+      "label": "Adding",
+      "default": "Adding..."
+    },
+    {
+      "type": "text",
+      "id": "added_label",
+      "label": "Added",
+      "default": "Added!"
+    },
+    {
+      "type": "text",
+      "id": "unavailable_label",
+      "label": "Unavailable",
+      "default": "Unavailable"
+    },
+    {
+      "type": "text",
+      "id": "sold_out_label",
+      "label": "Sold out",
+      "default": "Sold out"
+    },
+    {
+      "type": "text",
+      "id": "default_variant_label",
+      "label": "Default variant",
+      "default": "Default"
+    },
+    {
+      "type": "header",
+      "content": "Style"
+    },
+    {
+      "type": "range",
+      "id": "image_size",
+      "min": 40,
+      "max": 120,
+      "step": 10,
+      "unit": "px",
+      "label": "Image size",
+      "default": 80
+    },
+    {
+      "type": "range",
+      "id": "header_font_size",
+      "min": 12,
+      "max": 20,
+      "step": 1,
+      "unit": "px",
+      "label": "Header font size",
+      "default": 14
+    },
+    {
+      "type": "range",
+      "id": "product_title_size",
+      "min": 12,
+      "max": 20,
+      "step": 1,
+      "unit": "px",
+      "label": "Product title size",
+      "default": 16
+    },
+    {
+      "type": "range",
+      "id": "price_font_size",
+      "min": 12,
+      "max": 20,
+      "step": 1,
+      "unit": "px",
+      "label": "Price font size",
+      "default": 16
+    },
+    {
+      "type": "header",
+      "content": "Colors"
+    },
+    {
+      "type": "color",
+      "id": "table_background_color",
+      "label": "Table background",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "header_background_color",
+      "label": "Header background",
+      "default": "#f4f4f4"
+    },
+    {
+      "type": "color",
+      "id": "header_text_color",
+      "label": "Header text",
+      "default": "#000000"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text",
+      "default": "#000000"
+    },
+    {
+      "type": "color",
+      "id": "vendor_text_color",
+      "label": "Vendor text",
+      "default": "#666666"
+    },
+    {
+      "type": "color",
+      "id": "border_color",
+      "label": "Border",
+      "default": "#e0e0e0"
+    },
+    {
+      "type": "color",
+      "id": "row_hover_color",
+      "label": "Row hover",
+      "default": "#f9f9f9"
+    },
+    {
+      "type": "color",
+      "id": "button_background_color",
+      "label": "Button background",
+      "default": "#000000"
+    },
+    {
+      "type": "color",
+      "id": "button_text_color",
+      "label": "Button text",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "button_hover_color",
+      "label": "Button hover",
+      "default": "#333333"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Bulk order grid"
+    }
+  ]
+}
+{% endschema %}

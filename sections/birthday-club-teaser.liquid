@@ -1,0 +1,288 @@
+{% comment %}
+  Birthday Club Teaser — conversion-focused banner that drives traffic to /pages/birthday-club.
+  Keeps the form on a single dedicated page (single source of truth for submissions).
+{% endcomment %}
+
+{% if section.settings.enable %}
+  <section
+    class="birthday-club-teaser"
+    style="background-color: {{ section.settings.background_color }}; color: {{ section.settings.text_color }};"
+    aria-labelledby="birthday-club-teaser-heading-{{ section.id }}"
+  >
+    <div class="birthday-club-teaser__inner">
+      {% if section.settings.eyebrow != blank %}
+        <p class="birthday-club-teaser__eyebrow" style="color: {{ section.settings.accent_color }};">
+          {{ section.settings.eyebrow | escape }}
+        </p>
+      {% endif %}
+
+      <h2 id="birthday-club-teaser-heading-{{ section.id }}" class="birthday-club-teaser__heading">
+        {{ section.settings.heading | escape }}
+      </h2>
+
+      {% if section.settings.subheading != blank %}
+        <div class="birthday-club-teaser__sub">{{ section.settings.subheading }}</div>
+      {% endif %}
+
+      <ul class="birthday-club-teaser__perks" role="list">
+        {% if section.settings.perk_1 != blank %}
+          <li class="birthday-club-teaser__perk">
+            <span class="birthday-club-teaser__perk-icon" aria-hidden="true">{{ section.settings.perk_1_icon }}</span>
+            <span class="birthday-club-teaser__perk-text">{{ section.settings.perk_1 | escape }}</span>
+          </li>
+        {% endif %}
+        {% if section.settings.perk_2 != blank %}
+          <li class="birthday-club-teaser__perk">
+            <span class="birthday-club-teaser__perk-icon" aria-hidden="true">{{ section.settings.perk_2_icon }}</span>
+            <span class="birthday-club-teaser__perk-text">{{ section.settings.perk_2 | escape }}</span>
+          </li>
+        {% endif %}
+        {% if section.settings.perk_3 != blank %}
+          <li class="birthday-club-teaser__perk">
+            <span class="birthday-club-teaser__perk-icon" aria-hidden="true">{{ section.settings.perk_3_icon }}</span>
+            <span class="birthday-club-teaser__perk-text">{{ section.settings.perk_3 | escape }}</span>
+          </li>
+        {% endif %}
+      </ul>
+
+      <a
+        href="{{ section.settings.cta_link }}"
+        class="birthday-club-teaser__cta"
+        style="background-color: {{ section.settings.cta_bg }}; color: {{ section.settings.cta_text }};"
+      >
+        {{ section.settings.cta_label | escape }}
+      </a>
+
+      {% if section.settings.fine_print != blank %}
+        <p class="birthday-club-teaser__fine-print">{{ section.settings.fine_print | escape }}</p>
+      {% endif %}
+    </div>
+  </section>
+
+  <style>
+    .birthday-club-teaser {
+      padding: 40px 16px;
+      text-align: center;
+    }
+    .birthday-club-teaser__inner {
+      max-width: 720px;
+      margin: 0 auto;
+    }
+    .birthday-club-teaser__eyebrow {
+      font-size: 12px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      font-weight: 800;
+      margin: 0 0 8px;
+    }
+    .birthday-club-teaser__heading {
+      font-size: clamp(26px, 5vw, 40px);
+      line-height: 1.1;
+      font-weight: 800;
+      margin: 0 0 12px;
+      color: inherit;
+    }
+    .birthday-club-teaser__sub {
+      font-size: clamp(14px, 2.4vw, 17px);
+      line-height: 1.5;
+      margin: 0 0 22px;
+      opacity: 0.95;
+    }
+    .birthday-club-teaser__sub p {
+      margin: 0;
+    }
+    .birthday-club-teaser__perks {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      list-style: none;
+      padding: 0;
+      margin: 0 0 24px;
+    }
+    .birthday-club-teaser__perk {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      background-color: rgba(255, 255, 255, 0.16);
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+      line-height: 1.2;
+    }
+    .birthday-club-teaser__perk-icon {
+      font-size: 16px;
+      line-height: 1;
+    }
+    .birthday-club-teaser__cta {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 52px;
+      padding: 14px 32px;
+      border-radius: 8px;
+      font-weight: 800;
+      font-size: 15px;
+      letter-spacing: 0.02em;
+      text-decoration: none;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+      transition: transform 200ms ease, box-shadow 200ms ease, filter 200ms ease;
+    }
+    .birthday-club-teaser__cta:hover,
+    .birthday-club-teaser__cta:focus-visible {
+      transform: translateY(-2px);
+      filter: brightness(1.06);
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.24);
+      outline: none;
+    }
+    .birthday-club-teaser__fine-print {
+      font-size: 12px;
+      opacity: 0.7;
+      margin: 14px 0 0;
+    }
+    @media screen and (max-width: 575px) {
+      .birthday-club-teaser {
+        padding: 32px 14px;
+      }
+      .birthday-club-teaser__perk {
+        padding: 8px 12px;
+        font-size: 12px;
+      }
+    }
+  </style>
+{% endif %}
+
+{% schema %}
+{
+  "name": "Birthday Club Teaser",
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "enable",
+      "label": "Show teaser",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow tag",
+      "default": "FREE TO JOIN"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Join the Birthday Club"
+    },
+    {
+      "type": "richtext",
+      "id": "subheading",
+      "label": "Subheading",
+      "default": "<p>We celebrate everyone who walks through our door — and that includes you. Tell us when your birthday is and we'll make it sweeter.</p>"
+    },
+    {
+      "type": "header",
+      "content": "Perk pills (top 3 benefits — keep short)"
+    },
+    {
+      "type": "text",
+      "id": "perk_1_icon",
+      "label": "Perk 1 icon (emoji)",
+      "default": "\ud83c\udf81"
+    },
+    {
+      "type": "text",
+      "id": "perk_1",
+      "label": "Perk 1 text",
+      "default": "30% off on your birthday"
+    },
+    {
+      "type": "text",
+      "id": "perk_2_icon",
+      "label": "Perk 2 icon (emoji)",
+      "default": "\ud83d\udc9d"
+    },
+    {
+      "type": "text",
+      "id": "perk_2",
+      "label": "Perk 2 text",
+      "default": "20% off for family birthdays"
+    },
+    {
+      "type": "text",
+      "id": "perk_3_icon",
+      "label": "Perk 3 icon (emoji)",
+      "default": "\ud83e\uddc1"
+    },
+    {
+      "type": "text",
+      "id": "perk_3",
+      "label": "Perk 3 text",
+      "default": "Free birthday cupcake in store"
+    },
+    {
+      "type": "header",
+      "content": "Call to Action"
+    },
+    {
+      "type": "text",
+      "id": "cta_label",
+      "label": "CTA label",
+      "default": "Get My Birthday Perks"
+    },
+    {
+      "type": "url",
+      "id": "cta_link",
+      "label": "CTA link"
+    },
+    {
+      "type": "text",
+      "id": "fine_print",
+      "label": "Fine print",
+      "default": "Free to join. Unsubscribe anytime."
+    },
+    {
+      "type": "header",
+      "content": "Colors"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background",
+      "default": "#ba5b28"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text",
+      "default": "#FFF8F0"
+    },
+    {
+      "type": "color",
+      "id": "accent_color",
+      "label": "Eyebrow accent",
+      "default": "#FFF8F0"
+    },
+    {
+      "type": "color",
+      "id": "cta_bg",
+      "label": "CTA background",
+      "default": "#FFF8F0"
+    },
+    {
+      "type": "color",
+      "id": "cta_text",
+      "label": "CTA text",
+      "default": "#570522"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Birthday Club Teaser",
+      "category": "Promotional"
+    }
+  ]
+}
+{% endschema %}

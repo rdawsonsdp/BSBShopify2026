@@ -1,0 +1,165 @@
+{
+  "wrapper": "div.collection-wrapper",
+  "sections": {
+    "collection_header": {
+      "type": "template--collection-header",
+      "blocks": {
+        "collection_title": {
+          "type": "collection-title",
+          "disabled": true,
+          "settings": {}
+        },
+        "collection_description": {
+          "type": "collection-description",
+          "disabled": true,
+          "settings": {}
+        }
+      },
+      "block_order": [
+        "collection_title",
+        "collection_description"
+      ],
+      "disabled": true,
+      "settings": {
+        "collection_image_enable": false
+      }
+    },
+    "product_filtering": {
+      "type": "main-collection-filtering",
+      "disabled": true,
+      "settings": {
+        "desktop_position": "topbar",
+        "enable_filtering": false,
+        "enable_sorting": false
+      }
+    },
+    "text_rich_text_PiKpCw": {
+      "type": "text--rich-text",
+      "disabled": true,
+      "name": "Rich text",
+      "settings": {
+        "width": "medium",
+        "subheading": "",
+        "title": "",
+        "text": "<p><strong>Shipping Orders cannot be combined with local Pickup Orders. </strong></p><p>Brown Sugar Bakery ships their award-winning Caramel and German Chocolate Cakes on Monday, Tuesday, and Wednesday of each week.\u00a0\u00a0To ensure freshness and timely delivery be sure to place your order the week prior to your event.</p><p>PLEASE NOTE: Cake Decorating/Writing on Cakes is not available at this time.</p>",
+        "button_link": "",
+        "button_label": ""
+      }
+    },
+    "main": {
+      "type": "template--collection",
+      "blocks": {
+        "product_title": {
+          "type": "product-card-title",
+          "settings": {}
+        },
+        "product_price": {
+          "type": "product-card-price",
+          "settings": {}
+        }
+      },
+      "block_order": [
+        "product_title",
+        "product_price"
+      ],
+      "settings": {
+        "grid": 3,
+        "grid_mobile": "per_row_two",
+        "rows": 6,
+        "pagination_type": "load_more"
+      }
+    },
+    "text-adverts": {
+      "type": "text--text-adverts",
+      "blocks": {
+        "text-adverts-0": {
+          "type": "text",
+          "settings": {
+            "icon": "takeaway",
+            "heading": "Free shipping",
+            "subheading": "Shout about your unique selling points",
+            "buttonLabel": "",
+            "link": ""
+          }
+        },
+        "text-adverts-1": {
+          "type": "text",
+          "settings": {
+            "icon": "exchange",
+            "heading": "Hassle free returns",
+            "subheading": "Shout about your unique selling points",
+            "buttonLabel": "",
+            "link": ""
+          }
+        },
+        "text-adverts-2": {
+          "type": "text",
+          "settings": {
+            "icon": "recycle",
+            "heading": "Eco friendly packaging",
+            "subheading": "Shout about your unique selling points",
+            "buttonLabel": "",
+            "link": ""
+          }
+        }
+      },
+      "block_order": [
+        "text-adverts-0",
+        "text-adverts-1",
+        "text-adverts-2"
+      ],
+      "disabled": true,
+      "settings": {
+        "icon-color": "#333333",
+        "text-color": "#000000",
+        "background-color": "#ffffff"
+      }
+    },
+    "image-1": {
+      "type": "image--image",
+      "disabled": true,
+      "settings": {
+        "parallax": true,
+        "hero_size": "small",
+        "text-over-image-width": "full-width"
+      }
+    },
+    "image_image_with_text_block_bB6dDb": {
+      "type": "image--image-with-text-block",
+      "custom_css": [
+        ".btn {display: inline-flex; align-items: center; gap: 10px; padding: 16px 32px; background: #ff8c00; color: #ffffff; text-decoration: none; border-radius: 8px; font-size: 18px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; transition: all 0.3s ease; border: 3px solid #ffffff; box-shadow: 0 4px 12px rgba(255, 140, 0, 0.6); position: relative; overflow: hidden; font-family: inherit;}",
+        ".btn:hover {background: #ffffff; color: #ff8c00; border-color: #ff8c00;}"
+      ],
+      "name": "Image with text block",
+      "settings": {
+        "background_image": "shopify://shop_images/candles-on-an-illuminated-chocolate-cake.jpg",
+        "text-color": "#5b2512",
+        "background-color": "#e98d3d",
+        "horizontal-alignment": "center",
+        "subheading": "",
+        "title": "Every One has a Birthday!",
+        "text": "<p>Let Us Help You Celebrate Yours!</p>",
+        "button_link": "shopify://collections/birthday",
+        "button_label": "Order for Pickup or Local Delivery"
+      }
+    },
+    "image_gallery_3tHPq4": {
+      "type": "image--gallery",
+      "blocks": {},
+      "block_order": [],
+      "custom_css": [],
+      "name": "Gallery",
+      "settings": {}
+    }
+  },
+  "order": [
+    "collection_header",
+    "product_filtering",
+    "text_rich_text_PiKpCw",
+    "text-adverts",
+    "image-1",
+    "image_image_with_text_block_bB6dDb",
+    "image_gallery_3tHPq4",
+    "main"
+  ]
+}

@@ -1,0 +1,169 @@
+{% comment %}
+  templates/page.order-form.liquid
+{% endcomment %}
+
+{% schema %}
+{
+  "name": "Order Form",
+  "settings": [
+    {
+      "type": "color_scheme",
+      "id": "header_color_scheme",
+      "label": "Header Color Scheme",
+      "default": "scheme-1"
+    }
+  ]
+}
+{% endschema %}
+
+<div class="order-form">
+  
+  <table class="order-grid">
+    <thead>
+      <tr class="color-{{ section.settings.header_color_scheme }}">
+        <th>Product</th>
+        <th>Variant</th>
+        <th>Price</th>
+        <th>Quantity</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for product in collections['all'].products limit: 50 %}
+        <tr class="product-row" data-product-id="{{ product.id }}">
+          <td>
+            <a href="{{ product.url }}">{{ product.title }}</a>
+          </td>
+          <td>
+            <select class="variant-select" onchange="updatePrice(this)">
+              {% for variant in product.variants %}
+                <option 
+                  value="{{ variant.id }}" 
+                  data-price="{{ variant.price | money }}"
+                  data-price-raw="{{ variant.price }}"
+                >
+                  {{ variant.title }}
+                </option>
+              {% endfor %}
+            </select>
+          </td>
+          <td class="variant-price">
+            {{ product.variants.first.price | money }}
+          </td>
+          <td>
+            <input 
+              type="number" 
+              class="quantity-input"
+              value="1" 
+              min="1"
+            >
+          </td>
+          <td>
+            <button type="button" class="btn add-to-cart-btn" onclick="addToCart(this)">
+              Add to Cart
+            </button>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<style>
+  .order-grid {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .order-grid th, .order-grid td {
+    padding: 12px;
+    border-bottom: 1px solid #ddd;
+    text-align: left;
+  }
+  .order-grid thead tr {
+    background: rgba(var(--color-background), 1);
+    color: rgba(var(--color-foreground), 1);
+  }
+  .order-grid thead tr th {
+    background: inherit;
+    color: inherit;
+  }
+  .variant-select {
+    padding: 8px;
+    min-width: 120px;
+  }
+  .quantity-input {
+    width: 70px;
+    padding: 8px;
+    text-align: center;
+  }
+  .add-to-cart-btn {
+    padding: 10px 16px;
+    background: #000;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+  }
+  .add-to-cart-btn:hover {
+    background: #333;
+  }
+  .add-to-cart-btn.added {
+    background: #28a745;
+  }
+</style>
+
+<script>
+  function updatePrice(selectElement) {
+    const row = selectElement.closest('tr');
+    const selectedOption = selectElement.options[selectElement.selectedIndex];
+    const priceCell = row.querySelector('.variant-price');
+    priceCell.textContent = selectedOption.dataset.price;
+  }
+
+  function addToCart(button) {
+    const row = button.closest('tr');
+    const variantId = row.querySelector('.variant-select').value;
+    const quantity = row.querySelector('.quantity-input').value;
+
+    button.disabled = true;
+    button.textContent = 'Adding...';
+
+    fetch('/cart/add.js', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        id: variantId,
+        quantity: parseInt(quantity)
+      })
+    })
+    .then(response => response.json())
+    .then(data => {
+      button.textContent = 'Added!';
+      button.classList.add('added');
+      updateCartCount();
+      
+      setTimeout(() => {
+        button.textContent = 'Add to Cart';
+        button.classList.remove('added');
+        button.disabled = false;
+      }, 2000);
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      button.textContent = 'Error';
+      button.disabled = false;
+    });
+  }
+
+  function updateCartCount() {
+    fetch('/cart.js')
+      .then(response => response.json())
+      .then(cart => {
+        const cartCountElements = document.querySelectorAll('.cart-count, .cart-item-count, [data-cart-count]');
+        cartCountElements.forEach(el => {
+          el.textContent = cart.item_count;
+        });
+      });
+  }
+</script>

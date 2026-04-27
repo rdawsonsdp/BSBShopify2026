@@ -1,0 +1,180 @@
+{% comment %}
+  Store location with embedded Google Map.
+  Used in footer to give shoppers a quick visual of where the bakery is.
+{% endcomment %}
+
+<style>
+  .store-location-section--{{ section.id }} {
+    background-color: {{ section.settings.background_color }};
+    color: {{ section.settings.text_color }};
+    padding: 32px 16px;
+  }
+  .store-location-section--{{ section.id }} .store-location__inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  .store-location-section--{{ section.id }} .store-location__heading {
+    font-size: 22px;
+    margin: 0 0 8px;
+    color: {{ section.settings.text_color }};
+  }
+  .store-location-section--{{ section.id }} .store-location__line {
+    margin: 4px 0;
+    line-height: 1.45;
+    font-size: 15px;
+  }
+  .store-location-section--{{ section.id }} .store-location__line a {
+    color: {{ section.settings.text_color }};
+    text-decoration: underline;
+  }
+  .store-location-section--{{ section.id }} .store-location__hours {
+    margin-top: 12px;
+  }
+  .store-location-section--{{ section.id }} .store-location__hours-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 3px 0;
+    font-size: 14px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  .store-location-section--{{ section.id }} .store-location__hours-row:last-child {
+    border-bottom: none;
+  }
+  .store-location-section--{{ section.id }} .store-location__map {
+    width: 100%;
+    aspect-ratio: 16 / 11;
+    border: 0;
+    border-radius: 8px;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.05);
+  }
+  @media screen and (min-width: 768px) {
+    .store-location-section--{{ section.id }} {
+      padding: 48px 24px;
+    }
+    .store-location-section--{{ section.id }} .store-location__inner {
+      grid-template-columns: 1fr 1.2fr;
+      gap: 40px;
+      align-items: center;
+    }
+    .store-location-section--{{ section.id }} .store-location__heading {
+      font-size: 28px;
+    }
+  }
+</style>
+
+<section class="store-location-section--{{ section.id }}">
+  <div class="store-location__inner">
+    <div class="store-location__details">
+      {% if section.settings.heading != blank %}
+        <h2 class="store-location__heading">{{ section.settings.heading }}</h2>
+      {% endif %}
+
+      {% if section.settings.address != blank %}
+        <p class="store-location__line">
+          {% if section.settings.maps_link != blank %}
+            <a href="{{ section.settings.maps_link }}" target="_blank" rel="noopener">
+              {{ section.settings.address | newline_to_br }}
+            </a>
+          {% else %}
+            {{ section.settings.address | newline_to_br }}
+          {% endif %}
+        </p>
+      {% endif %}
+
+      {% if section.settings.phone != blank %}
+        <p class="store-location__line">
+          <a href="tel:{{ section.settings.phone | replace: '-', '' | replace: ' ', '' | replace: '(', '' | replace: ')', '' }}">
+            {{ section.settings.phone }}
+          </a>
+        </p>
+      {% endif %}
+
+      <div class="store-location__hours">
+        {% for block in section.blocks %}
+          <div class="store-location__hours-row" {{ block.shopify_attributes }}>
+            <span>{{ block.settings.day }}</span>
+            <span>{{ block.settings.hours }}</span>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="store-location__map-wrapper">
+      <iframe
+        class="store-location__map"
+        src="https://maps.google.com/maps?q={{ section.settings.address | url_encode }}&output=embed"
+        loading="lazy"
+        referrerpolicy="no-referrer-when-downgrade"
+        allowfullscreen
+        title="Map to {{ section.settings.heading | default: 'our store' }}"
+      ></iframe>
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Store location + map",
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Visit us"
+    },
+    {
+      "type": "textarea",
+      "id": "address",
+      "label": "Address",
+      "default": "328 E 75th Street\nChicago, IL 60619"
+    },
+    {
+      "type": "url",
+      "id": "maps_link",
+      "label": "Google Maps link"
+    },
+    {
+      "type": "text",
+      "id": "phone",
+      "label": "Phone",
+      "default": "773-570-7676"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background color",
+      "default": "#5b2512"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text color",
+      "default": "#ffffff"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "hours",
+      "name": "Hours row",
+      "settings": [
+        { "type": "text", "id": "day", "label": "Day", "default": "Monday" },
+        { "type": "text", "id": "hours", "label": "Hours", "default": "Closed" }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Store location + map",
+      "blocks": [
+        { "type": "hours", "settings": { "day": "Monday", "hours": "Closed" } },
+        { "type": "hours", "settings": { "day": "Tue – Sat", "hours": "10:00 am – 6:00 pm" } },
+        { "type": "hours", "settings": { "day": "Sunday", "hours": "12:00 pm – 5:00 pm" } }
+      ]
+    }
+  ]
+}
+{% endschema %}

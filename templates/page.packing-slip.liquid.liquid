@@ -1,0 +1,280 @@
+{% comment %}
+  Custom Bakery Packing Slip Template
+  
+  This template creates a bakery order slip with pickup date and time information
+{% endcomment %}
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>{{ shop.name }} - Order {{ order.name }}</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      font-size: 14px;
+    }
+    
+    .order-slip {
+      max-width: 800px;
+      margin: 0 auto 30px;
+      page-break-after: always;
+    }
+    
+    .customer-name {
+      font-size: 24px;
+      font-weight: bold;
+      color: #0047AB; /* Blue color for customer name */
+      margin-bottom: 5px;
+    }
+    
+    .order-number {
+      display: inline-block;
+      font-size: 24px;
+      font-weight: bold;
+      margin-left: 20px;
+    }
+    
+    .pickup-header {
+      font-size: 20px;
+      font-weight: bold;
+      margin: 10px 0 5px 0;
+      color: #333;
+    }
+    
+    .order-details {
+      margin-bottom: 5px;
+    }
+    
+    .order-details strong {
+      font-weight: bold;
+    }
+    
+    .pickup-info {
+      background-color: #f0f8ff;
+      border: 2px solid #0047AB;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 5px;
+    }
+    
+    .pickup-info strong {
+      color: #0047AB;
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 15px 0;
+    }
+    
+    table, th, td {
+      border: 1px solid #000;
+    }
+    
+    th, td {
+      padding: 8px;
+      text-align: left;
+    }
+    
+    th {
+      font-weight: bold;
+    }
+    
+    .qty-column {
+      width: 80px;
+      text-align: center;
+    }
+    
+    .divider {
+      border-top: 1px solid #ccc;
+      margin: 30px 0;
+    }
+    
+    .sheet-title {
+      text-align: right;
+      font-size: 24px;
+      font-weight: bold;
+      font-style: italic;
+      margin-bottom: 10px;
+    }
+    
+    .special-pickup {
+      background-color: #fff3cd;
+      border: 1px solid #ffeaa7;
+      padding: 5px;
+      margin: 5px 0;
+      border-radius: 3px;
+      font-style: italic;
+    }
+    
+    @media print {
+      .no-print {
+        display: none;
+      }
+      
+      body {
+        padding: 0;
+        margin: 0;
+      }
+      
+      .order-slip {
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  {% comment %} Extract pickup information from note_attributes {% endcomment %}
+  {% assign pickup_date = '' %}
+  {% assign pickup_time = '' %}
+  {% assign checkout_method = '' %}
+  
+  {% for attribute in order.note_attributes %}
+    {% if attribute.name == 'Pickup-Date' %}
+      {% assign pickup_date = attribute.value %}
+    {% elsif attribute.name == 'Pickup-Time' %}
+      {% assign pickup_time = attribute.value %}
+    {% elsif attribute.name == 'Checkout-Method' %}
+      {% assign checkout_method = attribute.value %}
+    {% endif %}
+  {% endfor %}
+
+  {% assign duplicate_slips = 2 %}
+  {% for i in (1..duplicate_slips) %}
+    <div class="order-slip">
+      <div>
+        <span class="customer-name">{{ order.customer.first_name }} {{ order.customer.last_name }}</span>
+        <span class="order-number">{{ forloop.index }}</span>
+      </div>
+      
+      {% comment %} Pickup Date and Time as main headers {% endcomment %}
+      {% if pickup_date != blank %}
+        <h1 class="pickup-header">Pickup Date: {{ pickup_date }}</h1>
+      {% endif %}
+      
+      {% if pickup_time != blank %}
+        <h1 class="pickup-header">Pickup Time: {{ pickup_time }}</h1>
+      {% endif %}
+      
+      <div class="order-details">
+        <strong>Order Date:</strong> {{ order.created_at | date: "%m/%d/%Y" }}
+      </div>
+      
+      <div class="order-details">
+        <strong>Order Time:</strong> {{ order.created_at | date: "%I:%M:%S %p" }}
+      </div>
+      
+      <div class="order-details">
+        <strong>Number:</strong> 
+        <a href="https://{{ shop.domain }}/admin/orders/{{ order.id }}">{{ order.name }}</a>
+      </div>
+      
+      {% comment %} Checkout Method (if different pickup information is needed) {% endcomment %}
+      {% if checkout_method != blank %}
+        <div class="pickup-info">
+          <div><strong>📦 Method:</strong> {{ checkout_method }}</div>
+        </div>
+      {% endif %}
+      
+      <table>
+        <tr>
+          <th width="80%">Order Details</th>
+          <th class="qty-column">Qty</th>
+        </tr>
+        
+        {% for line_item in order.line_items %}
+        <tr>
+          <td>
+            {{ line_item.title }}
+            {% if line_item.variant_title != 'Default Title' and line_item.variant_title != blank %}
+              - {{ line_item.variant_title }}
+            {% endif %}
+            
+            {% comment %} Check for special pickup date/time in line item properties {% endcomment %}
+            {% assign special_pickup_date = '' %}
+            {% assign special_pickup_time = '' %}
+            {% assign cake_writing = '' %}
+            {% assign writing_color = '' %}
+            
+            {% if line_item.properties != blank %}
+              <br>
+              {% for p in line_item.properties %}
+                {% unless p.last == blank or p.first contains '_' %}
+                  {% if p.first == 'Special-Pickup-Date' %}
+                    {% assign special_pickup_date = p.last %}
+                  {% elsif p.first == 'Special-Pickup-Time' %}
+                    {% assign special_pickup_time = p.last %}
+                  {% elsif p.first == 'Cake Writing' %}
+                    {% assign cake_writing = p.last %}
+                  {% elsif p.first == 'Writing-Color' %}
+                    {% assign writing_color = p.last %}
+                  {% else %}
+                    {{ p.first }}: {{ p.last }}<br>
+                  {% endif %}
+                {% endunless %}
+              {% endfor %}
+              
+              {% comment %} Display cake writing and color {% endcomment %}
+              {% if cake_writing != blank %}
+                <strong>Writing:</strong> {{ cake_writing }}
+                {% if writing_color != blank %} ({{ writing_color }}){% endif %}<br>
+              {% endif %}
+              
+              {% comment %} Display special pickup info if different from main pickup {% endcomment %}
+              {% if special_pickup_date != blank or special_pickup_time != blank %}
+                <div class="special-pickup">
+                  <strong>⚠️ Special Pickup:</strong>
+                  {% if special_pickup_date != blank %}Date: {{ special_pickup_date }}{% endif %}
+                  {% if special_pickup_time != blank %}Time: {{ special_pickup_time }}{% endif %}
+                </div>
+              {% endif %}
+            {% endif %}
+          </td>
+          <td class="qty-column">{{ line_item.quantity }}</td>
+        </tr>
+        {% endfor %}
+      </table>
+      
+      {% comment %} Customer Contact Information {% endcomment %}
+      {% if order.email != blank or order.phone != blank %}
+        <div class="order-details">
+          {% if order.email != blank %}
+            <strong>📧 Email:</strong> {{ order.email }}<br>
+          {% endif %}
+          {% if order.phone != blank %}
+            <strong>📞 Phone:</strong> {{ order.phone }}
+          {% endif %}
+        </div>
+      {% endif %}
+      
+      {% if forloop.index == 1 %}
+        <div class="divider"></div>
+      {% else %}
+        <div class="sheet-title">Bakery Sheet</div>
+      {% endif %}
+    </div>
+  {% endfor %}
+  
+  <div class="no-print">
+    <p><strong>Note:</strong> This template creates two copies of the packing slip: one standard copy and one labeled "Bakery Sheet".</p>
+    <p>The template now includes:</p>
+    <ul>
+      <li>📅 Pickup Date and 🕐 Pickup Time from order note attributes</li>
+      <li>⚠️ Special pickup dates/times for individual items</li>
+      <li>Cake writing instructions and colors</li>
+      <li>📧 Customer email and 📞 phone contact info</li>
+    </ul>
+    <p>You can adjust the number of copies by changing the "duplicate_slips" variable at the top of the template.</p>
+  </div>
+  
+  <script>
+    // Auto-print when page loads (uncomment if you want this functionality)
+    // window.onload = function() {
+    //   window.print();
+    // }
+  </script>
+</body>
+</html>

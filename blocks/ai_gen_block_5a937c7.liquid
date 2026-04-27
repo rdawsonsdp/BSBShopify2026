@@ -1,0 +1,799 @@
+{% doc %}
+  @prompt
+    Prompt for Shopify AI:
+    Create a product page for "Caramel Cake" using a split-screen layout inspired by the attached template. The page has two main zones:
+    LEFT SIDE (60% width): A large, full-height hero lifestyle image of the Caramel Cake — edge-to-edge, no padding, visually dominant.
+    RIGHT SIDE (40% width): The product details panel, stacked vertically:
+    
+    Product Title — Large, bold heading: "Caramel Cake"
+    Product Description — One-line subtitle beneath the title (e.g., "Our signature caramel cake, handmade with real caramel and layered buttercream.")
+    Fulfillment Selector — A segmented control or pill toggle with three options:
+    
+    🏪 Store Pickup
+    🚗 Delivery
+    📦 Shipping
+    
+    
+    Product Card — Below the selector, display a smaller product image (like the beanie card in the template) with:
+    
+    Product name
+    Price
+    Star rating / reviews (if applicable)
+    
+    
+    
+    Critical Product Logic:
+    
+    Store Pickup and Delivery are the SAME product (Product ID: [INSERT_LOCAL_PRODUCT_ID]). When either is selected, load this product's details, images, variants, and pricing. The only difference is the fulfillment tag applied at checkout.
+    Shipping is a DIFFERENT product entirely (Product ID: [INSERT_SHIPPING_PRODUCT_ID]). When Shipping is selected, swap the product card to show the shipping product's image, price, description, and variants. This product may have different packaging, pricing, or size options.
+    
+    Behavior on Toggle:
+    
+    When switching between Store Pickup and Delivery: Keep the same product loaded. Only change the fulfillment label and any delivery-specific fields (e.g., show a delivery address/zip input for Delivery, show store address + pickup time for Pickup).
+    When switching to Shipping: Swap to the shipping product entirely — update the product image in the card, price, description, and the Add to Cart variant ID. Show estimated shipping time and shipping cost.
+    
+    Add to Cart: One Add to Cart button at the bottom of the right panel. It adds the correct product variant based on the active fulfillment selection.
+    Responsive: On mobile, stack the hero image on top and the product panel below. The fulfillment toggle should be full-width and easy to tap.
+{% enddoc %}
+{% assign ai_gen_id = block.id | replace: '_', '' | downcase %}
+
+{% style %}
+  .ai-split-product-{{ ai_gen_id }} {
+    display: block;
+    width: 100%;
+  }
+
+  .ai-split-product-container-{{ ai_gen_id }} {
+    display: flex;
+    min-height: 100vh;
+    width: 100%;
+  }
+
+  .ai-split-product-hero-{{ ai_gen_id }} {
+    width: 60%;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .ai-split-product-hero-{{ ai_gen_id }} img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .ai-split-product-hero-placeholder-{{ ai_gen_id }} {
+    width: 100%;
+    height: 100%;
+    background-color: #f4f4f4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .ai-split-product-hero-placeholder-{{ ai_gen_id }} svg {
+    width: 100%;
+    height: 100%;
+    max-width: 600px;
+    max-height: 600px;
+  }
+
+  .ai-split-product-panel-{{ ai_gen_id }} {
+    width: 40%;
+    padding: 60px 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    background-color: {{ block.settings.panel_bg_color }};
+    overflow-y: auto;
+  }
+
+  .ai-split-product-title-{{ ai_gen_id }} {
+    font-size: {{ block.settings.title_size }}px;
+    font-weight: 700;
+    color: {{ block.settings.text_color }};
+    margin: 0;
+    line-height: 1.2;
+  }
+
+  .ai-split-product-description-{{ ai_gen_id }} {
+    font-size: {{ block.settings.description_size }}px;
+    color: {{ block.settings.text_color }};
+    margin: 0;
+    line-height: 1.5;
+  }
+
+  .ai-split-product-fulfillment-{{ ai_gen_id }} {
+    display: flex;
+    gap: 8px;
+    background-color: {{ block.settings.toggle_bg_color }};
+    padding: 4px;
+    border-radius: {{ block.settings.toggle_border_radius }}px;
+  }
+
+  .ai-split-product-fulfillment-option-{{ ai_gen_id }} {
+    flex: 1;
+    padding: 12px 16px;
+    border: none;
+    background: transparent;
+    color: {{ block.settings.toggle_text_color }};
+    font-size: {{ block.settings.toggle_text_size }}px;
+    cursor: pointer;
+    border-radius: {{ block.settings.toggle_border_radius }}px;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .ai-split-product-fulfillment-option-{{ ai_gen_id }}.active {
+    background-color: {{ block.settings.toggle_active_bg }};
+    color: {{ block.settings.toggle_active_text }};
+  }
+
+  .ai-split-product-card-{{ ai_gen_id }} {
+    border: 1px solid {{ block.settings.card_border_color }};
+    border-radius: {{ block.settings.card_border_radius }}px;
+    padding: 20px;
+    display: flex;
+    gap: 16px;
+    background-color: {{ block.settings.card_bg_color }};
+  }
+
+  .ai-split-product-card-image-{{ ai_gen_id }} {
+    width: 120px;
+    height: 120px;
+    flex-shrink: 0;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .ai-split-product-card-image-{{ ai_gen_id }} img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .ai-split-product-card-placeholder-{{ ai_gen_id }} {
+    width: 100%;
+    height: 100%;
+    background-color: #f4f4f4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .ai-split-product-card-placeholder-{{ ai_gen_id }} svg {
+    width: 60px;
+    height: 60px;
+  }
+
+  .ai-split-product-card-info-{{ ai_gen_id }} {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .ai-split-product-card-name-{{ ai_gen_id }} {
+    font-size: 18px;
+    font-weight: 600;
+    color: {{ block.settings.text_color }};
+    margin: 0;
+  }
+
+  .ai-split-product-card-price-{{ ai_gen_id }} {
+    font-size: 20px;
+    font-weight: 700;
+    color: {{ block.settings.text_color }};
+    margin: 0;
+  }
+
+  .ai-split-product-card-rating-{{ ai_gen_id }} {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 14px;
+    color: {{ block.settings.text_color }};
+  }
+
+  .ai-split-product-fulfillment-details-{{ ai_gen_id }} {
+    display: none;
+    padding: 16px;
+    background-color: {{ block.settings.details_bg_color }};
+    border-radius: 8px;
+  }
+
+  .ai-split-product-fulfillment-details-{{ ai_gen_id }}.active {
+    display: block;
+  }
+
+  .ai-split-product-details-title-{{ ai_gen_id }} {
+    font-size: 16px;
+    font-weight: 600;
+    color: {{ block.settings.text_color }};
+    margin: 0 0 12px 0;
+  }
+
+  .ai-split-product-input-{{ ai_gen_id }} {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid {{ block.settings.card_border_color }};
+    border-radius: 6px;
+    font-size: 14px;
+    margin-bottom: 8px;
+  }
+
+  .ai-split-product-details-text-{{ ai_gen_id }} {
+    font-size: 14px;
+    color: {{ block.settings.text_color }};
+    margin: 0;
+    line-height: 1.5;
+  }
+
+  .ai-split-product-add-to-cart-{{ ai_gen_id }} {
+    width: 100%;
+    padding: 16px 24px;
+    background-color: {{ block.settings.button_bg_color }};
+    color: {{ block.settings.button_text_color }};
+    border: none;
+    border-radius: {{ block.settings.button_border_radius }}px;
+    font-size: {{ block.settings.button_text_size }}px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+
+  .ai-split-product-add-to-cart-{{ ai_gen_id }}:hover {
+    background-color: {{ block.settings.button_hover_bg }};
+  }
+
+  @media screen and (max-width: 768px) {
+    .ai-split-product-container-{{ ai_gen_id }} {
+      flex-direction: column;
+      min-height: auto;
+    }
+
+    .ai-split-product-hero-{{ ai_gen_id }} {
+      width: 100%;
+      min-height: 50vh;
+    }
+
+    .ai-split-product-panel-{{ ai_gen_id }} {
+      width: 100%;
+      padding: 40px 20px;
+    }
+
+    .ai-split-product-fulfillment-option-{{ ai_gen_id }} {
+      font-size: 14px;
+      padding: 10px 12px;
+    }
+  }
+{% endstyle %}
+
+<split-product-{{ ai_gen_id }}
+  class="ai-split-product-{{ ai_gen_id }}"
+  data-pickup-product-id="{{ block.settings.pickup_product.id }}"
+  data-shipping-product-id="{{ block.settings.shipping_product.id }}"
+  {{ block.shopify_attributes }}
+>
+  <div class="ai-split-product-container-{{ ai_gen_id }}">
+    <div class="ai-split-product-hero-{{ ai_gen_id }}">
+      {% if block.settings.hero_image %}
+        <img
+          src="{{ block.settings.hero_image | image_url: width: 2000 }}"
+          alt="{{ block.settings.hero_image.alt | escape }}"
+          loading="lazy"
+          width="{{ block.settings.hero_image.width }}"
+          height="{{ block.settings.hero_image.height }}"
+        >
+      {% else %}
+        <div class="ai-split-product-hero-placeholder-{{ ai_gen_id }}">
+          {{ 'lifestyle-1' | placeholder_svg_tag }}
+        </div>
+      {% endif %}
+    </div>
+
+    <div class="ai-split-product-panel-{{ ai_gen_id }}">
+      <div>
+        <h1 class="ai-split-product-title-{{ ai_gen_id }}">{{ block.settings.product_title }}</h1>
+        {% if block.settings.product_subtitle != blank %}
+          <p class="ai-split-product-description-{{ ai_gen_id }}">{{ block.settings.product_subtitle }}</p>
+        {% endif %}
+      </div>
+
+      <div class="ai-split-product-fulfillment-{{ ai_gen_id }}">
+        <button
+          class="ai-split-product-fulfillment-option-{{ ai_gen_id }} active"
+          data-fulfillment="pickup"
+        >
+          <span>🏪</span>
+          <span>Store Pickup</span>
+        </button>
+        <button
+          class="ai-split-product-fulfillment-option-{{ ai_gen_id }}"
+          data-fulfillment="delivery"
+        >
+          <span>🚗</span>
+          <span>Delivery</span>
+        </button>
+        <button
+          class="ai-split-product-fulfillment-option-{{ ai_gen_id }}"
+          data-fulfillment="shipping"
+        >
+          <span>📦</span>
+          <span>Shipping</span>
+        </button>
+      </div>
+
+      <div class="ai-split-product-card-{{ ai_gen_id }}">
+        <div class="ai-split-product-card-image-{{ ai_gen_id }}">
+          {% if block.settings.pickup_product %}
+            <img
+              src="{{ block.settings.pickup_product.featured_image | image_url: width: 240 }}"
+              alt="{{ block.settings.pickup_product.featured_image.alt | escape }}"
+              width="240"
+              height="240"
+              loading="lazy"
+              class="ai-split-product-card-img-{{ ai_gen_id }}"
+            >
+          {% else %}
+            <div class="ai-split-product-card-placeholder-{{ ai_gen_id }}">
+              {{ 'product-1' | placeholder_svg_tag }}
+            </div>
+          {% endif %}
+        </div>
+        <div class="ai-split-product-card-info-{{ ai_gen_id }}">
+          <h3 class="ai-split-product-card-name-{{ ai_gen_id }}">
+            {% if block.settings.pickup_product %}
+              {{ block.settings.pickup_product.title }}
+            {% else %}
+              Product Name
+            {% endif %}
+          </h3>
+          <p class="ai-split-product-card-price-{{ ai_gen_id }}">
+            {% if block.settings.pickup_product %}
+              {{ block.settings.pickup_product.price | money }}
+            {% else %}
+              $0.00
+            {% endif %}
+          </p>
+          {% if block.settings.show_rating %}
+            <div class="ai-split-product-card-rating-{{ ai_gen_id }}">
+              <span>⭐⭐⭐⭐⭐</span>
+              <span>({{ block.settings.review_count }})</span>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <div
+        class="ai-split-product-fulfillment-details-{{ ai_gen_id }} active"
+        data-details="pickup"
+      >
+        <h4 class="ai-split-product-details-title-{{ ai_gen_id }}">Store Pickup Details</h4>
+        <p class="ai-split-product-details-text-{{ ai_gen_id }}">{{ block.settings.pickup_address }}</p>
+        {% if block.settings.pickup_hours != blank %}
+          <p class="ai-split-product-details-text-{{ ai_gen_id }}">{{ block.settings.pickup_hours }}</p>
+        {% endif %}
+      </div>
+
+      <div
+        class="ai-split-product-fulfillment-details-{{ ai_gen_id }}"
+        data-details="delivery"
+      >
+        <h4 class="ai-split-product-details-title-{{ ai_gen_id }}">Delivery Details</h4>
+        <input
+          type="text"
+          class="ai-split-product-input-{{ ai_gen_id }}"
+          placeholder="Enter delivery address"
+        >
+        <input
+          type="text"
+          class="ai-split-product-input-{{ ai_gen_id }}"
+          placeholder="Enter ZIP code"
+        >
+        {% if block.settings.delivery_info != blank %}
+          <p class="ai-split-product-details-text-{{ ai_gen_id }}">{{ block.settings.delivery_info }}</p>
+        {% endif %}
+      </div>
+
+      <div
+        class="ai-split-product-fulfillment-details-{{ ai_gen_id }}"
+        data-details="shipping"
+      >
+        <h4 class="ai-split-product-details-title-{{ ai_gen_id }}">Shipping Details</h4>
+        {% if block.settings.shipping_info != blank %}
+          <p class="ai-split-product-details-text-{{ ai_gen_id }}">{{ block.settings.shipping_info }}</p>
+        {% endif %}
+      </div>
+
+      <button
+        class="ai-split-product-add-to-cart-{{ ai_gen_id }}"
+        data-product-id="{{ block.settings.pickup_product.id }}"
+        data-variant-id="{{ block.settings.pickup_product.selected_or_first_available_variant.id }}"
+      >
+        Add to Cart
+      </button>
+    </div>
+  </div>
+</split-product-{{ ai_gen_id }}>
+
+<script>
+  (function() {
+    class SplitProduct{{ ai_gen_id }} extends HTMLElement {
+      constructor() {
+        super();
+        this.pickupProductId = this.dataset.pickupProductId;
+        this.shippingProductId = this.dataset.shippingProductId;
+        this.currentFulfillment = 'pickup';
+      }
+
+      connectedCallback() {
+        this.fulfillmentButtons = this.querySelectorAll('.ai-split-product-fulfillment-option-{{ ai_gen_id }}');
+        this.detailsSections = this.querySelectorAll('.ai-split-product-fulfillment-details-{{ ai_gen_id }}');
+        this.addToCartButton = this.querySelector('.ai-split-product-add-to-cart-{{ ai_gen_id }}');
+        this.cardImage = this.querySelector('.ai-split-product-card-img-{{ ai_gen_id }}');
+        this.cardName = this.querySelector('.ai-split-product-card-name-{{ ai_gen_id }}');
+        this.cardPrice = this.querySelector('.ai-split-product-card-price-{{ ai_gen_id }}');
+
+        this.setupEventListeners();
+      }
+
+      setupEventListeners() {
+        this.fulfillmentButtons.forEach(button => {
+          button.addEventListener('click', () => {
+            const fulfillmentType = button.dataset.fulfillment;
+            this.switchFulfillment(fulfillmentType);
+          });
+        });
+
+        this.addToCartButton.addEventListener('click', () => {
+          this.addToCart();
+        });
+      }
+
+      switchFulfillment(type) {
+        this.currentFulfillment = type;
+
+        this.fulfillmentButtons.forEach(btn => {
+          btn.classList.remove('active');
+          if (btn.dataset.fulfillment === type) {
+            btn.classList.add('active');
+          }
+        });
+
+        this.detailsSections.forEach(section => {
+          section.classList.remove('active');
+          if (section.dataset.details === type) {
+            section.classList.add('active');
+          }
+        });
+
+        if (type === 'shipping') {
+          this.loadShippingProduct();
+        } else {
+          this.loadPickupProduct();
+        }
+      }
+
+      loadPickupProduct() {
+        if (!this.pickupProductId) return;
+
+        fetch(`/products/${this.pickupProductId}.js`)
+          .then(response => response.json())
+          .then(product => {
+            this.updateProductCard(product);
+            this.addToCartButton.dataset.productId = product.id;
+            this.addToCartButton.dataset.variantId = product.variants[0].id;
+          });
+      }
+
+      loadShippingProduct() {
+        if (!this.shippingProductId) return;
+
+        fetch(`/products/${this.shippingProductId}.js`)
+          .then(response => response.json())
+          .then(product => {
+            this.updateProductCard(product);
+            this.addToCartButton.dataset.productId = product.id;
+            this.addToCartButton.dataset.variantId = product.variants[0].id;
+          });
+      }
+
+      updateProductCard(product) {
+        if (this.cardImage && product.featured_image) {
+          this.cardImage.src = product.featured_image;
+          this.cardImage.alt = product.title;
+        }
+
+        if (this.cardName) {
+          this.cardName.textContent = product.title;
+        }
+
+        if (this.cardPrice) {
+          const price = (product.price / 100).toFixed(2);
+          this.cardPrice.textContent = `$${price}`;
+        }
+      }
+
+      addToCart() {
+        const variantId = this.addToCartButton.dataset.variantId;
+        const fulfillmentTag = this.currentFulfillment;
+
+        const formData = {
+          items: [{
+            id: variantId,
+            quantity: 1,
+            properties: {
+              'Fulfillment': fulfillmentTag
+            }
+          }]
+        };
+
+        fetch('/cart/add.js', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(formData)
+        })
+        .then(response => response.json())
+        .then(data => {
+          window.location.href = '/cart';
+        })
+        .catch(error => {
+          console.error('Error:', error);
+        });
+      }
+    }
+
+    customElements.define('split-product-{{ ai_gen_id }}', SplitProduct{{ ai_gen_id }});
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "Split product page",
+  "tag": null,
+  "settings": [
+    {
+      "type": "header",
+      "content": "Hero image"
+    },
+    {
+      "type": "image_picker",
+      "id": "hero_image",
+      "label": "Lifestyle image"
+    },
+    {
+      "type": "header",
+      "content": "Product information"
+    },
+    {
+      "type": "text",
+      "id": "product_title",
+      "label": "Product title",
+      "default": "Caramel Cake"
+    },
+    {
+      "type": "textarea",
+      "id": "product_subtitle",
+      "label": "Product description",
+      "default": "Our signature caramel cake, handmade with real caramel and layered buttercream."
+    },
+    {
+      "type": "range",
+      "id": "title_size",
+      "label": "Title size",
+      "min": 24,
+      "max": 60,
+      "step": 2,
+      "unit": "px",
+      "default": 42
+    },
+    {
+      "type": "range",
+      "id": "description_size",
+      "label": "Description size",
+      "min": 14,
+      "max": 24,
+      "step": 1,
+      "unit": "px",
+      "default": 16
+    },
+    {
+      "type": "header",
+      "content": "Products"
+    },
+    {
+      "type": "product",
+      "id": "pickup_product",
+      "label": "Pickup and delivery product"
+    },
+    {
+      "type": "product",
+      "id": "shipping_product",
+      "label": "Shipping product"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_rating",
+      "label": "Show star rating",
+      "default": true
+    },
+    {
+      "type": "range",
+      "id": "review_count",
+      "label": "Review count",
+      "min": 0,
+      "max": 500,
+      "step": 5,
+      "default": 50
+    },
+    {
+      "type": "header",
+      "content": "Fulfillment details"
+    },
+    {
+      "type": "textarea",
+      "id": "pickup_address",
+      "label": "Store pickup address",
+      "default": "123 Main Street, Chicago, IL 60601"
+    },
+    {
+      "type": "textarea",
+      "id": "pickup_hours",
+      "label": "Pickup hours"
+    },
+    {
+      "type": "textarea",
+      "id": "delivery_info",
+      "label": "Delivery information",
+      "default": "Same-day delivery available within 10 miles. Delivery fee applies."
+    },
+    {
+      "type": "textarea",
+      "id": "shipping_info",
+      "label": "Shipping information",
+      "default": "Ships nationwide in 3-5 business days. Special packaging ensures freshness."
+    },
+    {
+      "type": "header",
+      "content": "Colors"
+    },
+    {
+      "type": "color",
+      "id": "panel_bg_color",
+      "label": "Panel background",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text",
+      "default": "#333333"
+    },
+    {
+      "type": "color",
+      "id": "toggle_bg_color",
+      "label": "Toggle background",
+      "default": "#f4f4f4"
+    },
+    {
+      "type": "color",
+      "id": "toggle_text_color",
+      "label": "Toggle text",
+      "default": "#666666"
+    },
+    {
+      "type": "color",
+      "id": "toggle_active_bg",
+      "label": "Toggle active background",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "toggle_active_text",
+      "label": "Toggle active text",
+      "default": "#333333"
+    },
+    {
+      "type": "color",
+      "id": "card_bg_color",
+      "label": "Card background",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "card_border_color",
+      "label": "Card border",
+      "default": "#e0e0e0"
+    },
+    {
+      "type": "color",
+      "id": "details_bg_color",
+      "label": "Details background",
+      "default": "#f9f9f9"
+    },
+    {
+      "type": "color",
+      "id": "button_bg_color",
+      "label": "Button background",
+      "default": "#e68b3c"
+    },
+    {
+      "type": "color",
+      "id": "button_hover_bg",
+      "label": "Button hover background",
+      "default": "#d47a2b"
+    },
+    {
+      "type": "color",
+      "id": "button_text_color",
+      "label": "Button text",
+      "default": "#ffffff"
+    },
+    {
+      "type": "header",
+      "content": "Style"
+    },
+    {
+      "type": "range",
+      "id": "toggle_border_radius",
+      "label": "Toggle border radius",
+      "min": 0,
+      "max": 30,
+      "step": 2,
+      "unit": "px",
+      "default": 8
+    },
+    {
+      "type": "range",
+      "id": "card_border_radius",
+      "label": "Card border radius",
+      "min": 0,
+      "max": 30,
+      "step": 2,
+      "unit": "px",
+      "default": 12
+    },
+    {
+      "type": "range",
+      "id": "button_border_radius",
+      "label": "Button border radius",
+      "min": 0,
+      "max": 30,
+      "step": 2,
+      "unit": "px",
+      "default": 8
+    },
+    {
+      "type": "range",
+      "id": "toggle_text_size",
+      "label": "Toggle text size",
+      "min": 12,
+      "max": 20,
+      "step": 1,
+      "unit": "px",
+      "default": 14
+    },
+    {
+      "type": "range",
+      "id": "button_text_size",
+      "label": "Button text size",
+      "min": 14,
+      "max": 22,
+      "step": 1,
+      "unit": "px",
+      "default": 16
+    }
+  ],
+  "presets": [
+    {
+      "name": "Split product page"
+    }
+  ]
+}
+{% endschema %}

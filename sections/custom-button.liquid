@@ -1,0 +1,130 @@
+{% comment %}
+  Custom Responsive Buttons Section
+  Creates three responsive buttons with theme styling for different ordering options
+{% endcomment %}
+
+{% assign btn_class = 'btn' %}
+{% if settings.button_style %}
+  {% assign btn_class = btn_class | append: ' btn--' | append: settings.button_style %}
+{% endif %}
+
+<style>
+  .custom-buttons-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 15px;
+    margin: 30px auto;
+    max-width: 1200px;
+    padding: 0 20px;
+  }
+  
+  .custom-button-wrapper {
+    flex: 1 1 200px; /* Allows buttons to grow but ensures minimum width */
+    display: flex;
+  }
+  
+  .custom-button {
+    width: 100%;
+    text-align: center;
+    padding: 14px 25px;
+    font-weight: 700;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .custom-button svg {
+    margin-right: 8px;
+  }
+  
+  /* Responsive adjustments */
+  @media screen and (max-width: 767px) {
+    .custom-buttons-container {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    
+    .custom-button-wrapper {
+      flex: 1 1 auto;
+    }
+    
+    .custom-button {
+      padding: 16px 20px;
+      font-size: 15px;
+    }
+  }
+</style>
+
+<div class="custom-buttons-container">
+  <div class="custom-button-wrapper">
+    <a href="{{ section.settings.pickup_url }}" class="custom-button {{ btn_class }}">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"></circle>
+        <polyline points="12 6 12 12 16 14"></polyline>
+      </svg>
+      Same-Day Pick Up
+    </a>
+  </div>
+  
+  <div class="custom-button-wrapper">
+    <a href="{{ section.settings.preorder_url }}" class="custom-button {{ btn_class }}">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+        <line x1="16" y1="2" x2="16" y2="6"></line>
+        <line x1="8" y1="2" x2="8" y2="6"></line>
+        <line x1="3" y1="10" x2="21" y2="10"></line>
+      </svg>
+      Pre-Order
+    </a>
+  </div>
+  
+  <div class="custom-button-wrapper">
+    <a href="{{ section.settings.shipping_url }}" class="custom-button {{ btn_class }}">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="1" y="3" width="15" height="13"></rect>
+        <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
+        <circle cx="5.5" cy="18.5" r="2.5"></circle>
+        <circle cx="18.5" cy="18.5" r="2.5"></circle>
+      </svg>
+      Nationwide Shipping
+    </a>
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Custom Buttons",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Button Links"
+    },
+    {
+      "type": "url",
+      "id": "pickup_url",
+      "label": "Same-Day Pick Up Link",
+      "default": "/"
+    },
+    {
+      "type": "url",
+      "id": "preorder_url",
+      "label": "Pre-Order Link",
+      "default": "/"
+    },
+    {
+      "type": "url",
+      "id": "shipping_url",
+      "label": "Nationwide Shipping Link",
+      "default": "/"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Custom Buttons",
+      "category": "Custom Content"
+    }
+  ]
+}
+{% endschema %}

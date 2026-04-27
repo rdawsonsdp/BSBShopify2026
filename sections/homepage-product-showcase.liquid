@@ -1,0 +1,373 @@
+{% comment %}
+  Homepage Product Showcase
+  Levain-style hero product cards: large imagery on cream background, scroll-engaging on mobile.
+  Per-product callout via product tag prefix `badge:` (e.g., tag "badge:The Original" → shows "The Original" badge).
+{% endcomment %}
+
+{% assign coll = collections[section.settings.collection] %}
+
+<section
+  class="hero-product-showcase"
+  style="background-color: {{ section.settings.section_bg }}; color: {{ section.settings.text_color }};"
+  data-section-id="{{ section.id }}"
+>
+  <div class="hero-product-showcase__inner">
+    {% if section.settings.heading != blank %}
+      <h2 class="hero-product-showcase__heading">{{ section.settings.heading | escape }}</h2>
+    {% endif %}
+
+    {% if section.settings.subheading != blank %}
+      <div class="hero-product-showcase__subheading">{{ section.settings.subheading }}</div>
+    {% endif %}
+
+    <div class="hero-product-showcase__grid hero-product-showcase__grid--cols-{{ section.settings.desktop_columns }}">
+      {% for product in coll.products limit: section.settings.products_to_show %}
+        {%- assign badge_text = blank -%}
+        {%- for tag in product.tags -%}
+          {%- if tag contains 'badge:' -%}
+            {%- assign badge_text = tag | remove: 'badge:' | strip -%}
+          {%- endif -%}
+        {%- endfor -%}
+
+        <a
+          href="{{ product.url }}"
+          class="hero-product-showcase__card"
+          style="background-color: {{ section.settings.card_bg }}; color: {{ section.settings.card_text }};"
+        >
+          <div class="hero-product-showcase__image-wrap">
+            {% if badge_text != blank %}
+              <span
+                class="hero-product-showcase__badge"
+                style="background-color: {{ section.settings.badge_bg }}; color: {{ section.settings.badge_text }};"
+              >
+                {{ badge_text }}
+              </span>
+            {% endif %}
+
+            {% if product.featured_media %}
+              <img
+                src="{{ product.featured_media | image_url: width: 800 }}"
+                srcset="
+                  {{ product.featured_media | image_url: width: 400 }} 400w,
+                  {{ product.featured_media | image_url: width: 600 }} 600w,
+                  {{ product.featured_media | image_url: width: 800 }} 800w,
+                  {{ product.featured_media | image_url: width: 1000 }} 1000w
+                "
+                sizes="(max-width: 575px) 92vw, (max-width: 767px) 80vw, 33vw"
+                alt="{{ product.featured_media.alt | default: product.title | escape }}"
+                loading="lazy"
+                width="800"
+                height="800"
+                class="hero-product-showcase__image"
+              >
+            {% else %}
+              {{ 'product-1' | placeholder_svg_tag: 'placeholder-svg' }}
+            {% endif %}
+          </div>
+
+          <div class="hero-product-showcase__caption">
+            <h3 class="hero-product-showcase__product-title">{{ product.title }}</h3>
+            {% if section.settings.show_price %}
+              <p class="hero-product-showcase__price">
+                {% if product.price_varies %}
+                  <span class="hero-product-showcase__from">From</span>
+                  {{ product.price_min | money }}
+                {% else %}
+                  {{ product.price | money }}
+                {% endif %}
+              </p>
+            {% endif %}
+          </div>
+        </a>
+      {% else %}
+        <p class="hero-product-showcase__empty">Choose a collection in the section settings.</p>
+      {% endfor %}
+    </div>
+
+    {% if section.settings.cta_label != blank and section.settings.cta_link != blank %}
+      <div class="hero-product-showcase__cta-wrap">
+        <a
+          href="{{ section.settings.cta_link }}"
+          class="hero-product-showcase__cta"
+          style="background-color: {{ section.settings.badge_bg }}; color: {{ section.settings.badge_text }};"
+        >
+          {{ section.settings.cta_label | escape }}
+        </a>
+      </div>
+    {% endif %}
+  </div>
+</section>
+
+<style>
+  .hero-product-showcase {
+    padding: 32px 0 24px;
+  }
+  .hero-product-showcase__inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 16px;
+  }
+  .hero-product-showcase__heading {
+    font-size: clamp(28px, 6vw, 44px);
+    line-height: 1.1;
+    font-weight: 800;
+    margin: 0 0 6px;
+    text-align: left;
+    color: inherit;
+  }
+  .hero-product-showcase__subheading {
+    font-size: clamp(14px, 2.4vw, 16px);
+    line-height: 1.5;
+    margin: 0 0 18px;
+    opacity: 0.8;
+  }
+  .hero-product-showcase__grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+  .hero-product-showcase__card {
+    display: block;
+    border-radius: 14px;
+    overflow: hidden;
+    text-decoration: none;
+    color: inherit;
+    box-shadow: 0 4px 14px rgba(91, 37, 18, 0.08);
+    transition: transform 240ms cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 240ms ease;
+  }
+  .hero-product-showcase__card:hover,
+  .hero-product-showcase__card:focus-visible {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 28px rgba(91, 37, 18, 0.16);
+    outline: none;
+  }
+  .hero-product-showcase__image-wrap {
+    position: relative;
+    aspect-ratio: 1 / 1;
+    width: 100%;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .hero-product-showcase__image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 400ms ease;
+  }
+  .hero-product-showcase__card:hover .hero-product-showcase__image,
+  .hero-product-showcase__card:focus-visible .hero-product-showcase__image {
+    transform: scale(1.04);
+  }
+  .hero-product-showcase__badge {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 78px;
+    height: 78px;
+    border-radius: 50%;
+    font-weight: 800;
+    font-size: 13px;
+    line-height: 1.1;
+    text-align: center;
+    padding: 8px;
+    transform: rotate(-8deg);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    border: 1.5px dashed rgba(255, 255, 255, 0.5);
+  }
+  .hero-product-showcase__caption {
+    padding: 16px 16px 18px;
+  }
+  .hero-product-showcase__product-title {
+    font-size: clamp(18px, 4vw, 22px);
+    font-weight: 700;
+    margin: 0 0 4px;
+    line-height: 1.25;
+    color: inherit;
+  }
+  .hero-product-showcase__price {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0;
+    opacity: 0.85;
+  }
+  .hero-product-showcase__from {
+    font-size: 13px;
+    font-weight: 500;
+    opacity: 0.7;
+    margin-right: 2px;
+  }
+  .hero-product-showcase__cta-wrap {
+    margin-top: 22px;
+    text-align: center;
+  }
+  .hero-product-showcase__cta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 48px;
+    padding: 12px 28px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 15px;
+    text-decoration: none;
+    box-shadow: 0 4px 12px rgba(91, 37, 18, 0.2);
+    transition: transform 200ms ease, filter 200ms ease;
+  }
+  .hero-product-showcase__cta:hover,
+  .hero-product-showcase__cta:focus-visible {
+    transform: translateY(-2px);
+    filter: brightness(1.06);
+    outline: none;
+  }
+  .hero-product-showcase__empty {
+    text-align: center;
+    padding: 24px;
+    opacity: 0.6;
+  }
+
+  @media screen and (min-width: 768px) {
+    .hero-product-showcase {
+      padding: 56px 0 40px;
+    }
+    .hero-product-showcase__heading {
+      text-align: center;
+    }
+    .hero-product-showcase__subheading {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    .hero-product-showcase__grid {
+      gap: 24px;
+    }
+    .hero-product-showcase__grid--cols-3 {
+      grid-template-columns: repeat(3, 1fr);
+    }
+    .hero-product-showcase__grid--cols-4 {
+      grid-template-columns: repeat(4, 1fr);
+    }
+    .hero-product-showcase__badge {
+      width: 90px;
+      height: 90px;
+      font-size: 14px;
+    }
+  }
+</style>
+
+{% schema %}
+{
+  "name": "Homepage Product Showcase",
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Our Cakes"
+    },
+    {
+      "type": "richtext",
+      "id": "subheading",
+      "label": "Subheading"
+    },
+    {
+      "type": "collection",
+      "id": "collection",
+      "label": "Collection",
+      "info": "Pull cakes (or any collection) — products display in collection order. Use product tag like `badge:The Original` to show a circular callout on a specific item."
+    },
+    {
+      "type": "range",
+      "id": "products_to_show",
+      "label": "Products to show",
+      "min": 2,
+      "max": 12,
+      "step": 1,
+      "default": 6
+    },
+    {
+      "type": "select",
+      "id": "desktop_columns",
+      "label": "Desktop columns",
+      "options": [
+        { "value": "3", "label": "3 columns" },
+        { "value": "4", "label": "4 columns" }
+      ],
+      "default": "3"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_price",
+      "label": "Show price",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "Optional CTA"
+    },
+    {
+      "type": "text",
+      "id": "cta_label",
+      "label": "CTA Button Label",
+      "default": "View All Cakes"
+    },
+    {
+      "type": "url",
+      "id": "cta_link",
+      "label": "CTA Button Link"
+    },
+    {
+      "type": "header",
+      "content": "Colors"
+    },
+    {
+      "type": "color",
+      "id": "section_bg",
+      "label": "Section background (backdrop)",
+      "default": "#570522",
+      "info": "Brand primary (wine #570522, caramel #ba5b28, orange #e68c3b). Avoid white."
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Section heading + subheading text",
+      "default": "#FFF8F0"
+    },
+    {
+      "type": "color",
+      "id": "card_bg",
+      "label": "Card / image background",
+      "default": "#FFF8F0"
+    },
+    {
+      "type": "color",
+      "id": "card_text",
+      "label": "Card text (product title + price)",
+      "default": "#570522"
+    },
+    {
+      "type": "color",
+      "id": "badge_bg",
+      "label": "Badge / CTA color",
+      "default": "#e68c3b"
+    },
+    {
+      "type": "color",
+      "id": "badge_text",
+      "label": "Badge / CTA text color",
+      "default": "#570522"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Homepage Product Showcase",
+      "category": "Promotional"
+    }
+  ]
+}
+{% endschema %}

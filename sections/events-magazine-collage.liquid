@@ -1,0 +1,321 @@
+{% comment %}
+  LIFT: Relevance — anchors expectations with editorial-style imagery.
+  Magazine pinwheel layout (feature + portrait + portrait + feature) reads as
+  curated lookbook, not Shopify catalog. Asymmetric grid + numbered captions
+  give the page a print-publication weight that matches BSB's "two decades of
+  celebrations" credibility frame.
+{% endcomment %}
+
+{%- liquid
+  assign image_blocks = section.blocks | where: 'type', 'image'
+  assign default_paths = 'events-collage-1-cake-cutting.jpg|events-collage-2-pink-tier.jpg|events-collage-3-anniversary.jpg|events-collage-4-roses.jpg' | split: '|'
+  assign default_kickers = 'WEDDING|BIRTHDAY|ANNIVERSARY|WEDDING' | split: '|'
+  assign default_captions = 'The cake-cutting moment, made yours|Bespoke for the birthday girl|Fifty years, one cake|Tiered, classic, made on 75th' | split: '|'
+-%}
+
+<section class="events-collage events-collage--{{ section.id }}" aria-label="{{ section.settings.heading | default: 'Inspiration' | escape }}">
+  <div class="events-collage__inner">
+    {% if section.settings.eyebrow != blank %}
+      <p class="events-collage__eyebrow">{{ section.settings.eyebrow | escape }}</p>
+    {% endif %}
+    {% if section.settings.heading != blank %}
+      <h2 class="events-collage__heading">{{ section.settings.heading | escape }}</h2>
+    {% endif %}
+    {% if section.settings.subheading != blank %}
+      <p class="events-collage__subheading">{{ section.settings.subheading | escape }}</p>
+    {% endif %}
+
+    <div class="events-collage__grid">
+      {%- if image_blocks.size > 0 -%}
+        {%- for block in image_blocks -%}
+          {%- assign idx = forloop.index0 -%}
+          {%- assign slot = forloop.index | modulo: 4 -%}
+          {%- if slot == 1 -%}{%- assign slot_class = 'events-collage__item--feature1' -%}
+          {%- elsif slot == 2 -%}{%- assign slot_class = 'events-collage__item--portrait1' -%}
+          {%- elsif slot == 3 -%}{%- assign slot_class = 'events-collage__item--portrait2' -%}
+          {%- else -%}{%- assign slot_class = 'events-collage__item--feature2' -%}
+          {%- endif -%}
+          {%- assign fallback_path = default_paths[idx] -%}
+          {%- assign fallback_kicker = default_kickers[idx] -%}
+          {%- assign fallback_caption = default_captions[idx] -%}
+          {%- assign tile_link = block.settings.link -%}
+
+          {% if tile_link != blank %}
+            <a class="events-collage__item {{ slot_class }}" href="{{ tile_link }}">
+          {% else %}
+            <figure class="events-collage__item {{ slot_class }}">
+          {% endif %}
+
+            <div class="events-collage__media">
+              {% if block.settings.image != blank %}
+                {{ block.settings.image | image_url: width: 1200 | image_tag:
+                  loading: 'lazy',
+                  class: 'events-collage__photo',
+                  alt: block.settings.caption | default: 'Brown Sugar Bakery event cake'
+                }}
+              {% elsif fallback_path != blank %}
+                <img class="events-collage__photo" src="{{ fallback_path | asset_url }}" alt="{{ fallback_caption | escape }}" loading="lazy">
+              {% endif %}
+            </div>
+
+            <figcaption class="events-collage__caption">
+              <span class="events-collage__num">{% if forloop.index < 10 %}0{% endif %}{{ forloop.index }}</span>
+              <span class="events-collage__kicker">{{ block.settings.kicker | default: fallback_kicker | escape }}</span>
+              <span class="events-collage__detail">{{ block.settings.caption | default: fallback_caption | escape }}</span>
+            </figcaption>
+
+          {% if tile_link != blank %}
+            </a>
+          {% else %}
+            </figure>
+          {% endif %}
+        {%- endfor -%}
+      {%- else -%}
+        {%- for path in default_paths -%}
+          {%- assign slot = forloop.index | modulo: 4 -%}
+          {%- if slot == 1 -%}{%- assign slot_class = 'events-collage__item--feature1' -%}
+          {%- elsif slot == 2 -%}{%- assign slot_class = 'events-collage__item--portrait1' -%}
+          {%- elsif slot == 3 -%}{%- assign slot_class = 'events-collage__item--portrait2' -%}
+          {%- else -%}{%- assign slot_class = 'events-collage__item--feature2' -%}
+          {%- endif -%}
+          <figure class="events-collage__item {{ slot_class }}">
+            <div class="events-collage__media">
+              <img class="events-collage__photo" src="{{ path | asset_url }}" alt="{{ default_captions[forloop.index0] | escape }}" loading="lazy">
+            </div>
+            <figcaption class="events-collage__caption">
+              <span class="events-collage__num">0{{ forloop.index }}</span>
+              <span class="events-collage__kicker">{{ default_kickers[forloop.index0] | escape }}</span>
+              <span class="events-collage__detail">{{ default_captions[forloop.index0] | escape }}</span>
+            </figcaption>
+          </figure>
+        {%- endfor -%}
+      {%- endif -%}
+    </div>
+  </div>
+</section>
+
+<style>
+  .events-collage--{{ section.id }} {
+    background: {{ section.settings.background_color }};
+    color: {{ section.settings.text_color }};
+    padding: 36px 16px;
+  }
+  .events-collage--{{ section.id }} .events-collage__inner {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  .events-collage--{{ section.id }} .events-collage__eyebrow {
+    font-size: 12px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    font-weight: 700;
+    margin: 0 0 8px;
+    opacity: 0.75;
+    text-align: center;
+  }
+  .events-collage--{{ section.id }} .events-collage__heading {
+    font-size: clamp(22px, 4vw, 32px);
+    font-weight: 800;
+    margin: 0 0 8px;
+    text-align: center;
+    color: inherit;
+  }
+  .events-collage--{{ section.id }} .events-collage__subheading {
+    margin: 0 auto 28px;
+    max-width: 600px;
+    text-align: center;
+    font-size: 15px;
+    line-height: 1.5;
+    opacity: 0.85;
+  }
+
+  /* Mobile: stack 1-up with editorial caption beneath each */
+  .events-collage--{{ section.id }} .events-collage__grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 22px;
+  }
+  .events-collage--{{ section.id }} .events-collage__item {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    margin: 0;
+    transition: transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .events-collage--{{ section.id }} .events-collage__item:hover {
+    transform: translateY(-2px);
+  }
+  .events-collage--{{ section.id }} .events-collage__media {
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    background: rgba(91, 37, 18, 0.06);
+    border-radius: 2px;
+    box-shadow: 0 1px 2px rgba(91, 37, 18, 0.08), 0 8px 22px rgba(91, 37, 18, 0.10);
+    transition: box-shadow 220ms ease;
+  }
+  .events-collage--{{ section.id }} .events-collage__item:hover .events-collage__media {
+    box-shadow: 0 2px 4px rgba(91, 37, 18, 0.12), 0 14px 30px rgba(91, 37, 18, 0.16);
+  }
+  .events-collage--{{ section.id }} .events-collage__photo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 600ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .events-collage--{{ section.id }} .events-collage__item:hover .events-collage__photo {
+    transform: scale(1.03);
+  }
+  .events-collage--{{ section.id }} .events-collage__caption {
+    display: block;
+    padding: 12px 4px 0;
+    line-height: 1.4;
+  }
+  .events-collage--{{ section.id }} .events-collage__num {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.18em;
+    color: #ba5b28;
+    margin-right: 8px;
+    vertical-align: middle;
+  }
+  .events-collage--{{ section.id }} .events-collage__kicker {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: #570522;
+    margin-right: 10px;
+    vertical-align: middle;
+  }
+  .events-collage--{{ section.id }} .events-collage__detail {
+    display: block;
+    margin-top: 4px;
+    font-size: 14px;
+    font-style: italic;
+    line-height: 1.45;
+    color: rgba(91, 37, 18, 0.82);
+  }
+
+  /* Tablet: 2 columns, captions stay below each image, asymmetric heights */
+  @media screen and (min-width: 576px) {
+    .events-collage--{{ section.id }} .events-collage__grid {
+      grid-template-columns: 1fr 1fr;
+      gap: 22px 18px;
+    }
+  }
+
+  /* Desktop: pinwheel — feature1 (cols 1-2 row 1) | portrait1 (col 3 row 1)
+                       portrait2 (col 1 row 2) | feature2 (cols 2-3 row 2) */
+  @media screen and (min-width: 900px) {
+    .events-collage--{{ section.id }} {
+      padding: 64px 24px;
+    }
+    .events-collage--{{ section.id }} .events-collage__grid {
+      grid-template-columns: 1fr 1fr 1fr;
+      grid-template-rows: auto auto;
+      grid-template-areas:
+        "feature1 feature1 portrait1"
+        "portrait2 feature2 feature2";
+      gap: 32px 22px;
+    }
+    .events-collage--{{ section.id }} .events-collage__item--feature1 {
+      grid-area: feature1;
+    }
+    .events-collage--{{ section.id }} .events-collage__item--portrait1 {
+      grid-area: portrait1;
+    }
+    .events-collage--{{ section.id }} .events-collage__item--portrait2 {
+      grid-area: portrait2;
+    }
+    .events-collage--{{ section.id }} .events-collage__item--feature2 {
+      grid-area: feature2;
+    }
+    /* Wider feature cells get landscape aspect, single-col cells stay portrait */
+    .events-collage--{{ section.id }} .events-collage__item--feature1 .events-collage__media,
+    .events-collage--{{ section.id }} .events-collage__item--feature2 .events-collage__media {
+      aspect-ratio: 16 / 10;
+    }
+    .events-collage--{{ section.id }} .events-collage__item--portrait1 .events-collage__media,
+    .events-collage--{{ section.id }} .events-collage__item--portrait2 .events-collage__media {
+      aspect-ratio: 4 / 5;
+    }
+  }
+</style>
+
+{% schema %}
+{
+  "name": "Events magazine collage",
+  "max_blocks": 4,
+  "settings": [
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow",
+      "default": "INSPIRATION"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Desserts for every kind of event"
+    },
+    {
+      "type": "textarea",
+      "id": "subheading",
+      "label": "Subheading",
+      "default": "Cakes, cupcakes, minis, candy spreads, dessert tables — your concept, your colors, your guest count."
+    },
+    {
+      "type": "header",
+      "content": "Colors"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background",
+      "default": "#fffaf2"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text",
+      "default": "#570522"
+    },
+    {
+      "type": "header",
+      "content": "Layout note"
+    },
+    {
+      "type": "paragraph",
+      "content": "Order of blocks determines the pinwheel layout: 1) large feature top-left, 2) portrait top-right, 3) portrait bottom-left, 4) large feature bottom-right. For best results use 4 image blocks total — landscape photos in slots 1 & 4, portrait photos in slots 2 & 3."
+    }
+  ],
+  "blocks": [
+    {
+      "type": "image",
+      "name": "Image",
+      "settings": [
+        { "type": "image_picker", "id": "image", "label": "Image" },
+        { "type": "text", "id": "kicker", "label": "Kicker (e.g. WEDDING, BIRTHDAY)" },
+        { "type": "text", "id": "caption", "label": "Caption (italic, below image)" },
+        { "type": "url", "id": "link", "label": "Link to (optional — makes the tile clickable)" }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Events magazine collage",
+      "category": "Storytelling",
+      "blocks": [
+        { "type": "image" },
+        { "type": "image" },
+        { "type": "image" },
+        { "type": "image" }
+      ]
+    }
+  ]
+}
+{% endschema %}

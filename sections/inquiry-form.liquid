@@ -1,0 +1,377 @@
+{%- comment -%}
+  Inquiry form — uses Shopify's built-in {% form 'contact' %}.
+  All fields named `contact[*]` get emailed to the store contact email.
+  Configurable: heading, subheading, which optional fields to show, success message.
+{%- endcomment -%}
+
+{%- liquid
+  assign form_id = 'inquiry-' | append: section.id
+-%}
+
+<section class="bsb-inquiry bsb-inquiry--{{ section.id }}" aria-label="{{ section.settings.heading | default: 'Inquiry form' | escape }}">
+  <div class="bsb-inquiry__inner">
+    {% if section.settings.eyebrow != blank %}
+      <p class="bsb-inquiry__eyebrow">{{ section.settings.eyebrow | escape }}</p>
+    {% endif %}
+    {% if section.settings.heading != blank %}
+      <h2 class="bsb-inquiry__heading">{{ section.settings.heading | escape }}</h2>
+    {% endif %}
+    {% if section.settings.subheading != blank %}
+      <p class="bsb-inquiry__subheading">{{ section.settings.subheading | escape }}</p>
+    {% endif %}
+
+    {% form 'contact', id: form_id, class: 'bsb-inquiry__form' %}
+      {% if form.posted_successfully? %}
+        <div class="bsb-inquiry__success" role="status">
+          <strong>Thanks — we got it.</strong>
+          <p>{{ section.settings.success_message | default: "We will respond within 48 hours." | escape }}</p>
+        </div>
+      {% endif %}
+
+      {% if form.errors %}
+        <div class="bsb-inquiry__errors" role="alert">
+          {{ form.errors | default_errors }}
+        </div>
+      {% endif %}
+
+      <div class="bsb-inquiry__row bsb-inquiry__row--2">
+        <label class="bsb-inquiry__field">
+          <span class="bsb-inquiry__label">Your name *</span>
+          <input
+            type="text"
+            name="contact[name]"
+            required
+            value="{% if form.name %}{{ form.name }}{% elsif customer %}{{ customer.name }}{% endif %}"
+          >
+        </label>
+
+        <label class="bsb-inquiry__field">
+          <span class="bsb-inquiry__label">Email *</span>
+          <input
+            type="email"
+            name="contact[email]"
+            required
+            value="{% if form.email %}{{ form.email }}{% elsif customer %}{{ customer.email }}{% endif %}"
+          >
+        </label>
+      </div>
+
+      <div class="bsb-inquiry__row bsb-inquiry__row--2">
+        {% if section.settings.show_phone %}
+          <label class="bsb-inquiry__field">
+            <span class="bsb-inquiry__label">Phone</span>
+            <input type="tel" name="contact[phone]" value="{{ form.phone }}">
+          </label>
+        {% endif %}
+
+        {% if section.settings.show_event_type %}
+          <label class="bsb-inquiry__field">
+            <span class="bsb-inquiry__label">Type of event *</span>
+            <select name="contact[Event type]" required>
+              <option value="">Select an event…</option>
+              <option value="Wedding">Wedding</option>
+              <option value="Corporate / company event">Corporate / company event</option>
+              <option value="Anniversary">Anniversary</option>
+              <option value="Birthday party">Birthday party</option>
+              <option value="Graduation">Graduation</option>
+              <option value="Other">Other</option>
+            </select>
+          </label>
+        {% endif %}
+      </div>
+
+      <div class="bsb-inquiry__row bsb-inquiry__row--2">
+        {% if section.settings.show_event_date %}
+          <label class="bsb-inquiry__field">
+            <span class="bsb-inquiry__label">Event date</span>
+            <input type="date" name="contact[Event date]">
+          </label>
+        {% endif %}
+
+        {% if section.settings.show_guest_count %}
+          <label class="bsb-inquiry__field">
+            <span class="bsb-inquiry__label">Approx. guest count</span>
+            <input type="number" name="contact[Guest count]" min="1" placeholder="e.g. 75">
+          </label>
+        {% endif %}
+      </div>
+
+      <label class="bsb-inquiry__field">
+        <span class="bsb-inquiry__label">Tell us about your event *</span>
+        <textarea
+          name="contact[body]"
+          required
+          rows="5"
+          placeholder="Theme, flavors you're considering, dietary needs, delivery vs. pickup, anything else we should know…"
+        >{{ form.body }}</textarea>
+      </label>
+
+      <div class="bsb-inquiry__submit-row">
+        <button type="submit" class="bsb-inquiry__submit">{{ section.settings.button_label | default: 'Send inquiry' | escape }}</button>
+        <p class="bsb-inquiry__fineprint">We will respond within 48 hours.</p>
+      </div>
+    {% endform %}
+  </div>
+</section>
+
+<style>
+  .bsb-inquiry--{{ section.id }} {
+    background: {{ section.settings.background_color }};
+    color: {{ section.settings.text_color }};
+    padding: 36px 16px;
+  }
+  .bsb-inquiry--{{ section.id }} .bsb-inquiry__inner {
+    max-width: 720px;
+    margin: 0 auto;
+  }
+  .bsb-inquiry--{{ section.id }} .bsb-inquiry__eyebrow {
+    font-size: 12px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    font-weight: 700;
+    margin: 0 0 8px;
+    opacity: 0.75;
+    text-align: center;
+  }
+  .bsb-inquiry--{{ section.id }} .bsb-inquiry__heading {
+    font-size: clamp(22px, 4vw, 32px);
+    font-weight: 800;
+    margin: 0 0 8px;
+    text-align: center;
+    color: inherit;
+  }
+  .bsb-inquiry--{{ section.id }} .bsb-inquiry__subheading {
+    margin: 0 auto 24px;
+    max-width: 560px;
+    text-align: center;
+    font-size: 15px;
+    line-height: 1.5;
+    opacity: 0.85;
+  }
+  .bsb-inquiry--{{ section.id }} .bsb-inquiry__success {
+    background: #f7ead6;
+    border: 1px solid rgba(91, 37, 18, 0.32);
+    border-radius: 4px;
+    padding: 16px 18px;
+    margin-bottom: 16px;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.55),
+      0 1px 2px rgba(91, 37, 18, 0.10);
+  }
+  .bsb-inquiry--{{ section.id }} .bsb-inquiry__success strong {
+    display: block;
+    font-size: 16px;
+    margin-bottom: 4px;
+  }
+  .bsb-inquiry--{{ section.id }} .bsb-inquiry__success p {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .bsb-inquiry--{{ section.id }} .bsb-inquiry__errors {
+    background: #fbeae5;
+    color: #9a2918;
+    border: 1px solid rgba(154, 41, 24, 0.3);
+    border-radius: 4px;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    font-size: 14px;
+  }
+  .bsb-inquiry--{{ section.id }} .bsb-inquiry__form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .bsb-inquiry--{{ section.id }} .bsb-inquiry__row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  .bsb-inquiry--{{ section.id }} .bsb-inquiry__field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .bsb-inquiry--{{ section.id }} .bsb-inquiry__label {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    opacity: 0.75;
+  }
+  .bsb-inquiry--{{ section.id }} .bsb-inquiry__field input,
+  .bsb-inquiry--{{ section.id }} .bsb-inquiry__field select,
+  .bsb-inquiry--{{ section.id }} .bsb-inquiry__field textarea {
+    width: 100%;
+    background: #fffaf2;
+    color: #5b2512;
+    border: 1px solid rgba(91, 37, 18, 0.32);
+    border-radius: 4px;
+    padding: 12px 14px;
+    font-size: 15px;
+    line-height: 1.4;
+    font-family: inherit;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.55),
+      inset 0 -1px 0 rgba(91, 37, 18, 0.06),
+      0 1px 1px rgba(91, 37, 18, 0.06);
+    transition: border-color 180ms ease, box-shadow 180ms ease;
+  }
+  .bsb-inquiry--{{ section.id }} .bsb-inquiry__field input:focus,
+  .bsb-inquiry--{{ section.id }} .bsb-inquiry__field select:focus,
+  .bsb-inquiry--{{ section.id }} .bsb-inquiry__field textarea:focus {
+    outline: none;
+    border-color: rgba(91, 37, 18, 0.6);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.6),
+      0 0 0 3px rgba(186, 91, 40, 0.18);
+  }
+  .bsb-inquiry--{{ section.id }} .bsb-inquiry__field textarea {
+    resize: vertical;
+    min-height: 120px;
+  }
+  .bsb-inquiry--{{ section.id }} .bsb-inquiry__submit-row {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    margin-top: 6px;
+  }
+  .bsb-inquiry--{{ section.id }} .bsb-inquiry__submit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    background: linear-gradient(180deg, #6c0a2e 0%, #570522 60%, #45041b 100%);
+    color: #ffffff;
+    border: 1px solid #2e0212;
+    border-radius: 5px;
+    padding: 14px 26px;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.22),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.28),
+      0 2px 0 rgba(46, 2, 18, 0.5),
+      0 3px 6px rgba(46, 2, 18, 0.22);
+    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.35);
+    transition: background 180ms ease, transform 80ms ease;
+  }
+  .bsb-inquiry--{{ section.id }} .bsb-inquiry__submit:hover {
+    background: linear-gradient(180deg, #d2682d 0%, #ba5b28 60%, #9a4a20 100%);
+    border-color: #6e3514;
+  }
+  .bsb-inquiry--{{ section.id }} .bsb-inquiry__submit:active {
+    transform: translateY(2px);
+  }
+  .bsb-inquiry--{{ section.id }} .bsb-inquiry__fineprint {
+    margin: 0;
+    font-size: 12px;
+    opacity: 0.65;
+  }
+
+  @media screen and (min-width: 640px) {
+    .bsb-inquiry--{{ section.id }} .bsb-inquiry__row--2 {
+      grid-template-columns: 1fr 1fr;
+    }
+    .bsb-inquiry--{{ section.id }} .bsb-inquiry__submit {
+      width: auto;
+      min-width: 220px;
+    }
+  }
+  @media screen and (min-width: 768px) {
+    .bsb-inquiry--{{ section.id }} {
+      padding: 56px 24px;
+    }
+  }
+</style>
+
+{% schema %}
+{
+  "name": "Inquiry form",
+  "settings": [
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Tell us about your event"
+    },
+    {
+      "type": "textarea",
+      "id": "subheading",
+      "label": "Subheading",
+      "default": "Share a few details and we'll send back ideas, sizing, and pricing."
+    },
+    {
+      "type": "text",
+      "id": "button_label",
+      "label": "Submit button label",
+      "default": "Send inquiry"
+    },
+    {
+      "type": "text",
+      "id": "success_message",
+      "label": "Success message",
+      "default": "We will respond within 48 hours."
+    },
+    {
+      "type": "header",
+      "content": "Optional fields"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_phone",
+      "label": "Show phone field",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_event_type",
+      "label": "Show event type dropdown",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_event_date",
+      "label": "Show event date field",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_guest_count",
+      "label": "Show guest count field",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "Colors"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background",
+      "default": "#fffaf2"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text",
+      "default": "#570522"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Inquiry form",
+      "category": "Forms"
+    }
+  ]
+}
+{% endschema %}

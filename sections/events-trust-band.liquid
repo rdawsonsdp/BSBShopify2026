@@ -1,0 +1,278 @@
+{% comment %}
+  LIFT: Anxiety reduction — third-party validation reduces "is this place legit
+  for big events" fear. Verifiable claims only — no invented testimonials.
+{% endcomment %}
+
+{%- liquid
+  assign stat_blocks = section.blocks | where: 'type', 'stat'
+  assign press_blocks = section.blocks | where: 'type', 'press_logo'
+-%}
+
+<section class="events-trust events-trust--{{ section.id }}" aria-label="{{ section.settings.heading | default: 'Two decades of celebrations' | escape }}">
+  <div class="events-trust__inner">
+    {% if section.settings.eyebrow != blank %}
+      <p class="events-trust__eyebrow">{{ section.settings.eyebrow | escape }}</p>
+    {% endif %}
+    {% if section.settings.heading != blank %}
+      <h2 class="events-trust__heading">{{ section.settings.heading | escape }}</h2>
+    {% endif %}
+
+    {%- if stat_blocks.size > 0 -%}
+      <div class="events-trust__stats">
+        {%- for block in stat_blocks -%}
+          <div class="events-trust__stat" {{ block.shopify_attributes }}>
+            {% if block.settings.number != blank %}
+              <span class="events-trust__number">{{ block.settings.number | escape }}</span>
+            {% endif %}
+            {% if block.settings.label != blank %}
+              <span class="events-trust__label">{{ block.settings.label | escape }}</span>
+            {% endif %}
+          </div>
+        {%- endfor -%}
+      </div>
+    {%- endif -%}
+
+    {%- if press_blocks.size > 0 -%}
+      <div class="events-trust__logos" role="list">
+        {%- for block in press_blocks -%}
+          {%- if block.settings.image != blank -%}
+            {%- assign logo_alt = block.settings.alt_text | default: 'Press logo' -%}
+            {%- if block.settings.link != blank -%}
+              <a class="events-trust__logo" href="{{ block.settings.link }}" role="listitem" {{ block.shopify_attributes }}>
+                {{ block.settings.image | image_url: width: 240 | image_tag:
+                  loading: 'lazy',
+                  alt: logo_alt,
+                  class: 'events-trust__logo-img'
+                }}
+              </a>
+            {%- else -%}
+              <span class="events-trust__logo" role="listitem" {{ block.shopify_attributes }}>
+                {{ block.settings.image | image_url: width: 240 | image_tag:
+                  loading: 'lazy',
+                  alt: logo_alt,
+                  class: 'events-trust__logo-img'
+                }}
+              </span>
+            {%- endif -%}
+          {%- endif -%}
+        {%- endfor -%}
+      </div>
+    {%- else -%}
+      {% comment %} TODO: confirm press list with Stephanie before publishing {% endcomment %}
+    {%- endif -%}
+  </div>
+</section>
+
+<style>
+  .events-trust--{{ section.id }} {
+    background: {{ section.settings.background_color }};
+    color: {{ section.settings.text_color }};
+    padding: 36px 16px;
+  }
+  .events-trust--{{ section.id }} .events-trust__inner {
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  .events-trust--{{ section.id }} .events-trust__eyebrow {
+    font-size: 12px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    font-weight: 700;
+    margin: 0 0 8px;
+    opacity: 0.75;
+    text-align: center;
+  }
+  .events-trust--{{ section.id }} .events-trust__heading {
+    font-size: clamp(22px, 4vw, 32px);
+    font-weight: 800;
+    margin: 0 0 24px;
+    text-align: center;
+    color: inherit;
+  }
+  .events-trust--{{ section.id }} .events-trust__stats {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 28px;
+    justify-items: center;
+    align-items: start;
+    margin: 0 auto;
+  }
+  .events-trust--{{ section.id }} .events-trust__stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 6px;
+    max-width: 260px;
+  }
+  .events-trust--{{ section.id }} .events-trust__number {
+    font-size: clamp(28px, 5vw, 42px);
+    font-weight: 800;
+    line-height: 1.05;
+    color: {{ section.settings.accent_color }};
+    letter-spacing: -0.01em;
+  }
+  .events-trust--{{ section.id }} .events-trust__label {
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.4;
+    color: #5b2512;
+    opacity: 0.85;
+    max-width: 240px;
+  }
+  .events-trust--{{ section.id }} .events-trust__logos {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 32px;
+    margin: 32px auto 0;
+  }
+  .events-trust--{{ section.id }} .events-trust__logo {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.65;
+    transition: opacity 200ms ease;
+    text-decoration: none;
+  }
+  .events-trust--{{ section.id }} .events-trust__logo:hover,
+  .events-trust--{{ section.id }} .events-trust__logo:focus-visible {
+    opacity: 1;
+  }
+  .events-trust--{{ section.id }} .events-trust__logo-img {
+    max-height: 32px;
+    width: auto;
+    height: auto;
+    display: block;
+  }
+
+  @media screen and (min-width: 768px) {
+    .events-trust--{{ section.id }} {
+      padding: 56px 24px;
+    }
+    .events-trust--{{ section.id }} .events-trust__heading {
+      margin-bottom: 32px;
+    }
+    .events-trust--{{ section.id }} .events-trust__stats {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 36px;
+    }
+    .events-trust--{{ section.id }} .events-trust__label {
+      font-size: 15px;
+    }
+    .events-trust--{{ section.id }} .events-trust__logo-img {
+      max-height: 40px;
+    }
+  }
+</style>
+
+{% schema %}
+{
+  "name": "Events trust band",
+  "max_blocks": 12,
+  "settings": [
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Two decades of celebrations"
+    },
+    {
+      "type": "header",
+      "content": "Colors"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background",
+      "default": "#fffaf2"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text",
+      "default": "#570522"
+    },
+    {
+      "type": "color",
+      "id": "accent_color",
+      "label": "Stat accent",
+      "default": "#ba5b28"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "stat",
+      "name": "Stat",
+      "settings": [
+        {
+          "type": "text",
+          "id": "number",
+          "label": "Number / headline (e.g. \"20+ years\" or \"James Beard\")"
+        },
+        {
+          "type": "text",
+          "id": "label",
+          "label": "Label"
+        }
+      ]
+    },
+    {
+      "type": "press_logo",
+      "name": "Press logo",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Logo"
+        },
+        {
+          "type": "text",
+          "id": "alt_text",
+          "label": "Alt text"
+        },
+        {
+          "type": "url",
+          "id": "link",
+          "label": "Link (optional)"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Events trust band",
+      "category": "Storytelling",
+      "blocks": [
+        {
+          "type": "stat",
+          "settings": {
+            "number": "20+ years",
+            "label": "On the South Side"
+          }
+        },
+        {
+          "type": "stat",
+          "settings": {
+            "number": "James Beard",
+            "label": "Nominated for Stephanie Hart"
+          }
+        },
+        {
+          "type": "stat",
+          "settings": {
+            "number": "Featured in",
+            "label": "Food Network · QVC · Rachael Ray · WGN-TV"
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

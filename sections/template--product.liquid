@@ -222,6 +222,8 @@
                     </div>
                   {%- endif -%}
 
+                  {% render 'writing-option-enhance' %}
+
                 {% when 'product-options' %}
 
                   {% if product.variants.size > 0 %}
@@ -357,6 +359,8 @@
 
                     <div class="product-description-wrapper" {{ block.shopify_attributes }}>
                       {{ product.description }}
+                      {% render 'product-info-boxes' %}
+                      {% render 'stephanie-audio' %}
                     </div>
 
                   {% when 'complementary-products' %}

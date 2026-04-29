@@ -1,0 +1,188 @@
+{
+  "sections": {
+    "main": {
+      "type": "template--page",
+      "disabled": true,
+      "settings": {}
+    },
+    "events_header": {
+      "type": "page-banner-strip",
+      "settings": {
+        "eyebrow": "EVENTS · WEDDINGS · CORPORATE · ANNIVERSARIES",
+        "heading": "Let us be a part of your special event.",
+        "heading_tag": "h1",
+        "subheading": "From intimate dinners to 300-guest galas — Brown Sugar Bakery has been the centerpiece of Chicago's celebrations for two decades. Tell us what you're planning and we'll bake it.",
+        "button_label": "",
+        "button_link": "",
+        "text_align": "center",
+        "background_color": "#f7ead6",
+        "text_color": "#570522",
+        "padding_y": 32,
+        "padding_y_desktop": 64
+      }
+    },
+    "events_inspiration": {
+      "type": "events-magazine-collage",
+      "blocks": {
+        "img_1": {
+          "type": "image",
+          "settings": {
+            "kicker": "WEDDING",
+            "caption": "The cake-cutting moment, made yours"
+          }
+        },
+        "img_2": {
+          "type": "image",
+          "settings": {
+            "kicker": "BIRTHDAY",
+            "caption": "Bespoke for the birthday girl"
+          }
+        },
+        "img_3": {
+          "type": "image",
+          "settings": {
+            "kicker": "ANNIVERSARY",
+            "caption": "Fifty years, one cake"
+          }
+        },
+        "img_4": {
+          "type": "image",
+          "settings": {
+            "kicker": "WEDDING",
+            "caption": "Tiered, classic, made on 75th"
+          }
+        }
+      },
+      "block_order": ["img_1", "img_2", "img_3", "img_4"],
+      "settings": {
+        "eyebrow": "INSPIRATION",
+        "heading": "Desserts for every kind of event",
+        "subheading": "Cakes, cupcakes, minis, candy spreads, dessert tables — your concept, your colors, your guest count.",
+        "background_color": "#fffaf2",
+        "text_color": "#570522"
+      }
+    },
+    "events_process": {
+      "type": "events-process",
+      "blocks": {
+        "step_1": {
+          "type": "step",
+          "settings": {
+            "icon": "📅",
+            "title": "Tell us about your date",
+            "body": "<p>Two minutes. Pick a date, tell us the occasion, give us a guest count.</p>"
+          }
+        },
+        "step_2": {
+          "type": "step",
+          "settings": {
+            "icon": "📞",
+            "title": "We'll reach out within 48 hours",
+            "body": "<p>A real person from our team — not a chatbot — will call or email to walk through your concept, pricing, and timeline.</p>"
+          }
+        },
+        "step_3": {
+          "type": "step",
+          "settings": {
+            "icon": "🎂",
+            "title": "We bake. You enjoy your event.",
+            "body": "<p>We confirm the design, deliver or arrange pickup, and you focus on your guests.</p>"
+          }
+        }
+      },
+      "block_order": ["step_1", "step_2", "step_3"],
+      "settings": {
+        "eyebrow": "HOW IT WORKS",
+        "heading": "Take the worry out of your event planning.",
+        "subheading": "Three steps. No surprises. We handle the rest.",
+        "background_color": "#f7ead6",
+        "text_color": "#570522"
+      }
+    },
+    "events_form": {
+      "type": "events-inquiry-form",
+      "settings": {
+        "eyebrow": "EVENT INQUIRY",
+        "heading": "Tell us about your event",
+        "subheading": "The more we know, the better we can plan. Takes about two minutes.",
+        "endpoint_url": "",
+        "supabase_anon_key": "",
+        "background_color": "#fffaf2",
+        "text_color": "#570522"
+      }
+    },
+    "events_featured_products": {
+      "type": "events-featured-products",
+      "settings": {
+        "eyebrow": "EVENT FAVORITES",
+        "heading": "Event Dessert Favorites",
+        "subheading": "Tested at hundreds of celebrations. Sized and styled for events of every kind.",
+        "collection": "event-favorites",
+        "products_to_show": 9,
+        "desktop_columns": "3",
+        "cta_label": "Browse all event favorites",
+        "cta_link": "/collections/event-favorites",
+        "background_color": "#f7ead6",
+        "text_color": "#570522"
+      }
+    },
+    "events_trust": {
+      "type": "events-trust-band",
+      "blocks": {
+        "stat_1": {
+          "type": "stat",
+          "settings": {
+            "number": "20+ years",
+            "label": "On the South Side"
+          }
+        },
+        "stat_2": {
+          "type": "stat",
+          "settings": {
+            "number": "James Beard",
+            "label": "Nominated for Stephanie Hart"
+          }
+        },
+        "stat_3": {
+          "type": "stat",
+          "settings": {
+            "number": "Featured in",
+            "label": "Food Network · QVC · Rachael Ray · WGN-TV"
+          }
+        }
+      },
+      "block_order": ["stat_1", "stat_2", "stat_3"],
+      "settings": {
+        "eyebrow": "TRUSTED",
+        "heading": "Two decades of celebrations",
+        "background_color": "#fffaf2",
+        "text_color": "#570522",
+        "accent_color": "#ba5b28"
+      }
+    },
+    "events_cta": {
+      "type": "events-closing-cta",
+      "settings": {
+        "heading": "Whatever you're planning, we can bake it.",
+        "subheading": "Tell us your date — we'll do the rest.",
+        "button_label": "Send my event details",
+        "button_link": "#event-inquiry",
+        "microcopy": "We will respond within 48 hours.",
+        "background_color": "#ba5b28",
+        "text_color": "#f7ead6",
+        "button_bg_color": "#570522",
+        "button_text_color": "#ffffff"
+      }
+    }
+  },
+  "order": [
+    "main",
+    "events_header",
+    "events_inspiration",
+    "events_process",
+    "events_form",
+    "events_featured_products",
+    "events_trust",
+    "events_cta"
+  ]
+}

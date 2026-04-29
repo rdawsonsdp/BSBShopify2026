@@ -1,0 +1,204 @@
+{%- liquid
+  assign image = section.settings.image
+  assign default_image_url = 'bsb-storefront-stephanie.jpg' | asset_url
+-%}
+
+<section class="bsb-heritage bsb-heritage--{{ section.id }}">
+  <div class="bsb-heritage__inner">
+    <div class="bsb-heritage__media">
+      {% if image != blank %}
+        {{ image | image_url: width: 1200 | image_tag:
+          loading: 'lazy',
+          class: 'bsb-heritage__photo',
+          alt: section.settings.image_alt | default: 'Stephanie Hart in front of Brown Sugar Bakery on 75th Street'
+        }}
+      {% else %}
+        <img
+          src="{{ default_image_url }}"
+          alt="{{ section.settings.image_alt | default: 'Stephanie Hart in front of Brown Sugar Bakery on 75th Street' | escape }}"
+          class="bsb-heritage__photo"
+          loading="lazy"
+        >
+      {% endif %}
+    </div>
+
+    <div class="bsb-heritage__copy">
+      {% if section.settings.eyebrow != blank %}
+        <p class="bsb-heritage__eyebrow">{{ section.settings.eyebrow | escape }}</p>
+      {% endif %}
+      {% if section.settings.heading != blank %}
+        <h2 class="bsb-heritage__heading">{{ section.settings.heading | escape }}</h2>
+      {% endif %}
+      {% if section.settings.body != blank %}
+        <div class="bsb-heritage__body rte">{{ section.settings.body }}</div>
+      {% endif %}
+      {% if section.settings.button_label != blank and section.settings.button_link != blank %}
+        <a href="{{ section.settings.button_link }}" class="bsb-heritage__cta">
+          {{ section.settings.button_label | escape }}
+          <span aria-hidden="true">→</span>
+        </a>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+<style>
+  .bsb-heritage--{{ section.id }} {
+    background: {{ section.settings.background_color }};
+    color: {{ section.settings.text_color }};
+    padding: 48px 20px;
+  }
+  .bsb-heritage--{{ section.id }} .bsb-heritage__inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 28px;
+    align-items: center;
+  }
+  .bsb-heritage--{{ section.id }} .bsb-heritage__media {
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid rgba(91, 37, 18, 0.32);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.4),
+      0 4px 14px rgba(91, 37, 18, 0.18);
+  }
+  .bsb-heritage--{{ section.id }} .bsb-heritage__photo {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+  .bsb-heritage--{{ section.id }} .bsb-heritage__eyebrow {
+    font-size: 12px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    font-weight: 700;
+    margin: 0 0 10px;
+    opacity: 0.75;
+  }
+  .bsb-heritage--{{ section.id }} .bsb-heritage__heading {
+    font-size: clamp(26px, 4.4vw, 38px);
+    line-height: 1.15;
+    font-weight: 800;
+    margin: 0 0 16px;
+    color: inherit;
+  }
+  .bsb-heritage--{{ section.id }} .bsb-heritage__body {
+    font-size: 16px;
+    line-height: 1.6;
+    margin: 0 0 18px;
+  }
+  .bsb-heritage--{{ section.id }} .bsb-heritage__body p {
+    margin: 0 0 12px;
+  }
+  .bsb-heritage--{{ section.id }} .bsb-heritage__body p:last-child { margin-bottom: 0; }
+  .bsb-heritage--{{ section.id }} .bsb-heritage__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 6px;
+    padding: 12px 22px;
+    border: 1px solid {{ section.settings.text_color }};
+    border-radius: 5px;
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: {{ section.settings.text_color }};
+    background: transparent;
+    transition: background 180ms ease, color 180ms ease, transform 80ms ease;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.35),
+      0 1px 2px rgba(91, 37, 18, 0.14);
+  }
+  .bsb-heritage--{{ section.id }} .bsb-heritage__cta:hover {
+    background: {{ section.settings.text_color }};
+    color: {{ section.settings.background_color }};
+  }
+  .bsb-heritage--{{ section.id }} .bsb-heritage__cta:active {
+    transform: translateY(1px);
+  }
+
+  @media screen and (min-width: 768px) {
+    .bsb-heritage--{{ section.id }} {
+      padding: 72px 32px;
+    }
+    .bsb-heritage--{{ section.id }} .bsb-heritage__inner {
+      grid-template-columns: 5fr 6fr;
+      gap: 48px;
+    }
+  }
+</style>
+
+{% schema %}
+{
+  "name": "Heritage story",
+  "settings": [
+    {
+      "type": "image_picker",
+      "id": "image",
+      "label": "Photo",
+      "info": "Defaults to bundled team photo if empty"
+    },
+    {
+      "type": "text",
+      "id": "image_alt",
+      "label": "Photo alt text",
+      "default": "Stephanie Hart in front of Brown Sugar Bakery on 75th Street"
+    },
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow",
+      "default": "SINCE 2004 — 75TH STREET, CHICAGO"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "A South Side staple"
+    },
+    {
+      "type": "richtext",
+      "id": "body",
+      "label": "Body",
+      "default": "<p>Stephanie Hart opened Brown Sugar Bakery on 75th Street with her mother's recipes and one promise: every cake should taste like it came out of grandma's oven.</p><p>Two decades later, BSB is woven into Chicago's South Side — at every birthday, graduation, and Sunday dinner. We're proud to be the bakery this neighborhood calls its own.</p>"
+    },
+    {
+      "type": "text",
+      "id": "button_label",
+      "label": "Button label",
+      "default": "Read Stephanie's story"
+    },
+    {
+      "type": "url",
+      "id": "button_link",
+      "label": "Button link"
+    },
+    {
+      "type": "header",
+      "content": "Colors"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background",
+      "default": "#f7ead6"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text",
+      "default": "#570522"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Heritage story",
+      "category": "Storytelling"
+    }
+  ]
+}
+{% endschema %}

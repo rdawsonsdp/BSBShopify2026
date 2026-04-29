@@ -1,0 +1,261 @@
+{%- comment -%}
+  Wraps the "Writing" variant option dropdown in a collapsible
+  "Add writing to any cake" section with a script icon.
+  Progressive enhancement: works only if the product has a "Writing" option;
+  no-op otherwise. Pure DOM manipulation — doesn't change form submission.
+{%- endcomment -%}
+
+<style>
+  /* Beveled enamelware look — subtle square corners, inset highlight, soft drop shadow. */
+  .bsb-writing-option {
+    margin: 18px 0 18px;
+    background: #f7ead6;
+    color: #5b2512;
+    border: 1px solid rgba(91, 37, 18, 0.32);
+    border-radius: 4px;
+    overflow: hidden;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.55),
+      inset 0 -1px 0 rgba(91, 37, 18, 0.10),
+      0 1px 2px rgba(91, 37, 18, 0.10);
+    transition: background 180ms ease, border-color 180ms ease, box-shadow 180ms ease, transform 80ms ease;
+  }
+  .bsb-writing-option:hover {
+    background: #f0dec0;
+    border-color: rgba(91, 37, 18, 0.45);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.6),
+      inset 0 -1px 0 rgba(91, 37, 18, 0.14),
+      0 2px 5px rgba(91, 37, 18, 0.16);
+  }
+  .bsb-writing-option:active {
+    transform: translateY(1px);
+    box-shadow:
+      inset 0 1px 2px rgba(91, 37, 18, 0.18),
+      0 1px 2px rgba(91, 37, 18, 0.10);
+  }
+  .bsb-writing-option[open] {
+    background: #f0dec0;
+    border-color: rgba(91, 37, 18, 0.4);
+  }
+  .bsb-writing-option__summary {
+    list-style: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    font-weight: 500;
+    font-size: 13px;
+    letter-spacing: 0.01em;
+    user-select: none;
+  }
+  .bsb-writing-option__summary::-webkit-details-marker { display: none; }
+  .bsb-writing-option__summary:focus-visible {
+    outline: 2px solid rgba(186, 91, 40, 0.5);
+    outline-offset: -2px;
+  }
+  .bsb-writing-option__icon {
+    font-size: 13px;
+    flex-shrink: 0;
+    opacity: 0.7;
+  }
+  .bsb-writing-option__title { flex: 1; }
+  .bsb-writing-option__hint {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    opacity: 0.55;
+  }
+  .bsb-writing-option__chevron {
+    transition: transform 200ms ease;
+    font-size: 11px;
+    opacity: 0.55;
+  }
+  .bsb-writing-option[open] .bsb-writing-option__chevron {
+    transform: rotate(180deg);
+  }
+  .bsb-writing-option__body {
+    padding: 2px 14px 12px;
+    font-size: 13px;
+    line-height: 1.5;
+    color: rgba(91, 37, 18, 0.72);
+    animation: bsb-writing-fade 200ms ease;
+  }
+  /* Tighten the dropdown's existing label inside the collapsible */
+  .bsb-writing-option__body .product-form-option > label,
+  .bsb-writing-option__body .input-field > label,
+  .bsb-writing-option__body wetheme-dropdown label {
+    display: none;
+  }
+  @keyframes bsb-writing-fade {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>
+
+<script>
+  (function () {
+    var DEBUG = false;
+    function log() { if (DEBUG && window.console) console.log.apply(console, ['[writing-pillbox]'].concat([].slice.call(arguments))); }
+
+    function findOptionByLabel(name) {
+      // 1. Standard dropdown label inside a .product-form-option / .input-field
+      var labels = document.querySelectorAll('.product-form-option label, .input-field label, label');
+      for (var i = 0; i < labels.length; i++) {
+        var t = (labels[i].textContent || '').trim().toLowerCase();
+        if (t === name) {
+          var c = labels[i].closest('.product-form-option') || labels[i].closest('.input-field') || labels[i].parentElement;
+          if (c) return c;
+        }
+      }
+      // 2. Fallback: walk any element whose direct text matches the label name (catches custom variant-button apps)
+      var all = document.querySelectorAll('legend, span, div, p');
+      for (var j = 0; j < all.length; j++) {
+        var el = all[j];
+        if (el.children.length === 0) {
+          var txt = (el.textContent || '').trim().toLowerCase();
+          if (txt === name) {
+            var container = el.closest('.product-form-option') || el.closest('fieldset') || el.parentElement;
+            if (container) return container;
+          }
+        }
+      }
+      return null;
+    }
+
+    function hideDuplicateWriting() {
+      // Hide any element whose direct text is "Writing" outside the pillbox —
+      // catches variant-button apps that render their own UI alongside the dropdown.
+      var candidates = document.querySelectorAll('.product-form-option label, .input-field label, label, legend, span, div, p');
+      for (var k = 0; k < candidates.length; k++) {
+        var el = candidates[k];
+        if (el.children.length !== 0) continue;
+        var t = (el.textContent || '').trim().toLowerCase();
+        if (t !== 'writing') continue;
+        if (el.closest('.bsb-writing-option')) continue;
+        var c = el.closest('.product-form-option')
+             || el.closest('.input-field')
+             || el.closest('fieldset')
+             || el.closest('.variant-input-wrap, .variant-wrapper, .swatch, .product-form__input')
+             || el.parentElement;
+        if (c && !c.closest('.bsb-writing-option')) {
+          c.style.display = 'none';
+        }
+      }
+    }
+
+    function findCakeWritingProperty() {
+      // Line item property input/textarea whose name or label mentions "writing"
+      var fields = document.querySelectorAll('input[name*="properties"], textarea[name*="properties"]');
+      for (var i = 0; i < fields.length; i++) {
+        var f = fields[i];
+        if (f.closest('.bsb-writing-option')) continue;
+        var nm = (f.name || '').toLowerCase();
+        var matches = nm.indexOf('writing') !== -1;
+        if (!matches && f.id) {
+          var lbl = document.querySelector('label[for="' + f.id + '"]');
+          if (lbl && (lbl.textContent || '').toLowerCase().indexOf('writing') !== -1) matches = true;
+        }
+        if (!matches) {
+          var parentLbl = f.closest('label');
+          if (parentLbl && (parentLbl.textContent || '').toLowerCase().indexOf('writing') !== -1) matches = true;
+        }
+        if (matches) {
+          return f.closest('.line-item-property, .product-form__input, .input-field, fieldset, .form-group, .product-customizer-field') || f.parentElement;
+        }
+      }
+      return null;
+    }
+
+    function relocateCakeWriting(body) {
+      var prop = findCakeWritingProperty();
+      if (!prop || prop.dataset.bsbCakeWritingWrapped === '1') return false;
+      body.appendChild(prop);
+      prop.dataset.bsbCakeWritingWrapped = '1';
+      return true;
+    }
+
+    function enhance() {
+      // If a pillbox already exists, keep cake-writing relocation in sync.
+      var existing = document.querySelector('.bsb-writing-option');
+      if (existing) {
+        var existingBody = existing.querySelector('.bsb-writing-option__body');
+        if (existingBody) relocateCakeWriting(existingBody);
+        hideDuplicateWriting();
+        return true;
+      }
+
+      var writing = findOptionByLabel('writing');
+      if (!writing) { log('writing option not found yet'); return false; }
+      if (writing.dataset.bsbWritingWrapped === '1') return true;
+
+      var details = document.createElement('details');
+      details.className = 'bsb-writing-option';
+      details.innerHTML =
+        '<summary class="bsb-writing-option__summary">' +
+        '<span class="bsb-writing-option__icon" aria-hidden="true">✍️</span>' +
+        '<span class="bsb-writing-option__title">Add writing to any cake</span>' +
+        '<span class="bsb-writing-option__hint">Optional</span>' +
+        '<span class="bsb-writing-option__chevron" aria-hidden="true">▾</span>' +
+        '</summary>';
+
+      var body = document.createElement('div');
+      body.className = 'bsb-writing-option__body';
+      details.appendChild(body);
+
+      // Default insertion point: where Writing currently lives
+      writing.parentNode.insertBefore(details, writing);
+      body.appendChild(writing);
+      writing.dataset.bsbWritingWrapped = '1';
+
+      // Pull the Cake Writing line item property into the pillbox too.
+      relocateCakeWriting(body);
+
+      // Relocate to sit just BEFORE the Add to Cart button so the buying order is
+      // …options → quantity → price → [Writing pillbox] → Add to cart.
+      var addBtn = document.querySelector(
+        'form[action*="/cart/add"] [name="add"], form[action*="/cart/add"] button[type="submit"], .product-form__cart-submit, .btn--add-to-cart'
+      );
+      if (addBtn) {
+        var anchor = addBtn.closest('.product-form__buttons, .product-form__cart, .payment-buttons, .product-page__add-to-cart') || addBtn;
+        anchor.parentNode.insertBefore(details, anchor);
+      } else {
+        // Fallback: after Size option if no add-to-cart found
+        var size = findOptionByLabel('size');
+        if (size && size.parentNode) {
+          size.parentNode.insertBefore(details, size.nextSibling);
+        }
+      }
+      hideDuplicateWriting();
+      log('wrapped writing pillbox');
+      return true;
+    }
+
+    function init() {
+      if (enhance()) return;
+      // Retry once apps inject markup. Stops after 5s or first success.
+      var tries = 0;
+      var iv = setInterval(function () {
+        tries++;
+        if (enhance() || tries > 25) clearInterval(iv);
+      }, 200);
+
+      // Also observe DOM mutations as a belt-and-braces guard. Keep watching
+      // longer so a Cake Writing input that renders only after "Yes" is selected
+      // still gets pulled into the pillbox.
+      if (window.MutationObserver) {
+        var mo = new MutationObserver(function () { enhance(); });
+        mo.observe(document.body, { childList: true, subtree: true });
+        setTimeout(function () { mo.disconnect(); }, 30000);
+      }
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
+  })();
+</script>

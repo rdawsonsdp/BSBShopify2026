@@ -1,18 +1,6 @@
 {
   "wrapper": "div.index-sections",
   "sections": {
-    "image_image_9Gn4Bi": {
-      "type": "image--image",
-      "disabled": true,
-      "custom_css": [],
-      "name": "Image",
-      "settings": {
-        "image": "shopify://shop_images/IMG_6598.png",
-        "parallax": false,
-        "hero_size": "x-large",
-        "text-over-image-width": "full-width"
-      }
-    },
     "video_video_tgXxRD": {
       "type": "video--video",
       "disabled": true,
@@ -24,6 +12,23 @@
         "loop": false,
         "mute": false,
         "width_classes": "video-width--75"
+      }
+    },
+    "stephanie_hero_main": {
+      "type": "image-hero",
+      "settings": {
+        "image_alt": "Stephanie Hart, founder of Brown Sugar Bakery",
+        "image_position": "center center",
+        "eyebrow": "",
+        "heading": "",
+        "subheading": "Hand-crafted on 75th Street, shipped fresh nationwide.",
+        "button_label": "",
+        "button_link": "",
+        "text_align": "center",
+        "vertical_align": "flex-end",
+        "text_color": "#ffffff",
+        "overlay_opacity": 25,
+        "mobile_only": true
       }
     },
     "video_video_with_text_overlay_XLJRPp": {
@@ -52,7 +57,7 @@
           "type": "ai_gen_block_8168b69",
           "disabled": true,
           "settings": {
-            "banner_text": "Chicagoland Delivery Available \u2014 Order Now",
+            "banner_text": "Chicagoland Delivery Available — Order Now",
             "text_alignment": "center",
             "max_width": 1200,
             "padding_vertical": 15,
@@ -94,16 +99,16 @@
       "type": "custom-buttons",
       "settings": {
         "birthday_label": "Birthdays",
-        "birthday_url": "shopify://collections/birthday-collection",
+        "birthday_url": "/pages/birthdays?view=birthdays",
         "birthday_sub": "Order 3 days ahead for pickup",
         "events_label": "Events",
-        "events_url": "/pages/events",
+        "events_url": "/pages/events?view=events",
         "events_sub": "Weddings, corporate, custom orders",
         "shipping_label": "Shipping",
         "shipping_url": "shopify://collections/nationwide-shipping",
         "shipping_sub": "Arrives fresh in 2-3 days",
         "candy_label": "Shop Candy",
-        "candy_url": "shopify://collections/candy-collection",
+        "candy_url": "/pages/candy?view=candy",
         "candy_sub": "Hand-poured & boxed daily",
         "pickup_label": "Pre Order",
         "pickup_url": "shopify://collections/available-for-pickup",
@@ -120,11 +125,11 @@
         "eyebrow": "FREE TO JOIN",
         "heading": "Join the Birthday Club",
         "subheading": "<p>We celebrate everyone who walks through our door — and that includes you. Tell us when your birthday is and we'll make it sweeter.</p>",
-        "perk_1_icon": "\ud83c\udf81",
+        "perk_1_icon": "🎁",
         "perk_1": "30% off on your birthday",
-        "perk_2_icon": "\ud83d\udc9d",
+        "perk_2_icon": "💝",
         "perk_2": "20% off for family birthdays",
-        "perk_3_icon": "\ud83e\uddc1",
+        "perk_3_icon": "🧁",
         "perk_3": "Free birthday cupcake in store",
         "cta_label": "Get My Birthday Perks",
         "cta_link": "/pages/birthdayclub",
@@ -147,9 +152,9 @@
         "show_price": false,
         "cta_label": "View All Cakes",
         "cta_link": "shopify://collections/available-for-pickup",
-        "section_bg": "#570522",
-        "text_color": "#FFF8F0",
-        "card_bg": "#FFF8F0",
+        "section_bg": "#fffaf2",
+        "text_color": "#570522",
+        "card_bg": "transparent",
         "card_text": "#570522",
         "badge_bg": "#e68c3b",
         "badge_text": "#570522"
@@ -162,7 +167,7 @@
         "ai_gen_block_765157a_tCmRPh": {
           "type": "ai_gen_block_765157a",
           "settings": {
-            "heading": "Hand-crafted in Small Batches\u00a0",
+            "heading": "Hand-crafted in Small Batches ",
             "featured_product": "mini-cup-cakes",
             "show_vendor": false,
             "button_text": "Order Today for Pickup",
@@ -315,7 +320,7 @@
       "settings": {
         "show_header": true,
         "title": "Chicago Postcard Collection",
-        "subtitle": "\"Chicago is more than a city\u2014it's a feeling\"",
+        "subtitle": "\"Chicago is more than a city—it's a feeling\"",
         "title_size": 42,
         "grid_gap": 0,
         "max_width": 1600,
@@ -530,72 +535,17 @@
         "overlay": false
       }
     },
-    "image_logo_list_4VbbKB": {
-      "type": "image--logo-list",
-      "blocks": {
-        "logo_image_DM4aAf": {
-          "type": "logo_image",
-          "settings": {
-            "image": "shopify://shop_images/Food.png",
-            "link": "https://citizennewspapergroup.com/news/2014/nov/12/brown-sugar-bakery-owner-competes-food-network-hol/"
-          }
-        },
-        "logo_image_GrWzni": {
-          "type": "logo_image",
-          "settings": {
-            "image": "shopify://shop_images/Pauls.png",
-            "link": "shopify://collections"
-          }
-        },
-        "logo_image_feQbzM": {
-          "type": "logo_image",
-          "settings": {
-            "image": "shopify://shop_images/chicagosbest.png",
-            "link": "https://www.youtube.com/watch?v=pr-VFNe7ZcA"
-          }
-        },
-        "logo_image_ejMkdn": {
-          "type": "logo_image",
-          "settings": {
-            "image": "shopify://shop_images/QVC.png",
-            "link": "shopify://collections"
-          }
-        },
-        "logo_image_JAFy33": {
-          "type": "logo_image",
-          "settings": {
-            "image": "shopify://shop_images/RR.png",
-            "link": "shopify://collections"
-          }
-        },
-        "logo_image_NiYCBA": {
-          "type": "logo_image",
-          "settings": {
-            "image": "shopify://shop_images/HOME.png",
-            "link": "shopify://collections"
-          }
-        },
-        "logo_image_TrQNE7": {
-          "type": "logo_image",
-          "settings": {
-            "image": "shopify://shop_images/WGN_NEWS_NOW.webp",
-            "link": "https://vimeo.com/984585382"
-          }
-        }
-      },
-      "block_order": [
-        "logo_image_DM4aAf",
-        "logo_image_GrWzni",
-        "logo_image_feQbzM",
-        "logo_image_ejMkdn",
-        "logo_image_JAFy33",
-        "logo_image_NiYCBA",
-        "logo_image_TrQNE7"
-      ],
+    "heritage_story_main": {
+      "type": "heritage-story",
       "settings": {
-        "width": 150,
-        "subheading": "",
-        "title": "As seen in"
+        "image_alt": "Stephanie Hart in front of Brown Sugar Bakery on 75th Street",
+        "eyebrow": "SINCE 2004 — 75TH STREET, CHICAGO",
+        "heading": "A South Side staple",
+        "body": "<p>Stephanie Hart opened Brown Sugar Bakery on 75th Street with her mother's recipes and one promise: every cake should taste like it came out of grandma's oven.</p><p>Two decades later, BSB is woven into Chicago's South Side — at every birthday, graduation, and Sunday dinner. We're proud to be the bakery this neighborhood calls its own.</p>",
+        "button_label": "Read Stephanie's story",
+        "button_link": "/pages/our-story",
+        "background_color": "#f7ead6",
+        "text_color": "#570522"
       }
     },
     "text_testimonials_LQf8An": {
@@ -605,7 +555,7 @@
           "type": "textarea",
           "settings": {
             "stars": "0",
-            "testimonial": "<p><strong>Store Location</strong></p><p>328 E\u00a075th\u00a0Street<br/>Chicago, IL 60619<br/></p><p>773-570-7676</p>",
+            "testimonial": "<p><strong>Store Location</strong></p><p>328 E 75th Street<br/>Chicago, IL 60619<br/></p><p>773-570-7676</p>",
             "author": "",
             "link": "https://maps.app.goo.gl/YQq2u5v4H5NH6EG6A"
           }
@@ -614,7 +564,7 @@
           "type": "textarea",
           "settings": {
             "stars": "0",
-            "testimonial": "<p><strong>Store Hours</strong></p><p><strong>Monday: </strong>Closed<br/><strong>Tuesday - Saturday:<br/></strong>10:00 am -6:00\u00a0pm<br/><strong>Sunday: </strong>12 pm -5:00\u00a0pm</p>",
+            "testimonial": "<p><strong>Store Hours</strong></p><p><strong>Monday: </strong>Closed<br/><strong>Tuesday - Saturday:<br/></strong>10:00 am -6:00 pm<br/><strong>Sunday: </strong>12 pm -5:00 pm</p>",
             "author": "",
             "link": ""
           }
@@ -701,7 +651,7 @@
     }
   },
   "order": [
-    "image_image_9Gn4Bi",
+    "stephanie_hero_main",
     "video_video_tgXxRD",
     "video_video_with_text_overlay_XLJRPp",
     "1771622856dda3f084",
@@ -721,7 +671,7 @@
     "text_text_adverts_YDxxff",
     "text_rich_text_7Dn3RD",
     "image_slideshow_EKEBJx",
-    "image_logo_list_4VbbKB",
+    "heritage_story_main",
     "text_testimonials_LQf8An",
     "social_media_social_media_icons_Abg4xw",
     "video_video_zYjFxn",

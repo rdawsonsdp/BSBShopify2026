@@ -63,20 +63,20 @@
             {% else %}
               {{ 'product-1' | placeholder_svg_tag: 'placeholder-svg' }}
             {% endif %}
-          </div>
 
-          <div class="hero-product-showcase__caption">
-            <h3 class="hero-product-showcase__product-title">{{ product.title }}</h3>
-            {% if section.settings.show_price %}
-              <p class="hero-product-showcase__price">
-                {% if product.price_varies %}
-                  <span class="hero-product-showcase__from">From</span>
-                  {{ product.price_min | money }}
-                {% else %}
-                  {{ product.price | money }}
-                {% endif %}
-              </p>
-            {% endif %}
+            <div class="hero-product-showcase__caption">
+              <h3 class="hero-product-showcase__product-title">{{ product.title }}</h3>
+              {% if section.settings.show_price %}
+                <p class="hero-product-showcase__price">
+                  {% if product.price_varies %}
+                    <span class="hero-product-showcase__from">From</span>
+                    {{ product.price_min | money }}
+                  {% else %}
+                    {{ product.price | money }}
+                  {% endif %}
+                </p>
+              {% endif %}
+            </div>
           </div>
         </a>
       {% else %}
@@ -105,7 +105,7 @@
   .hero-product-showcase__inner {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 0 16px;
+    padding: 0 24px;
   }
   .hero-product-showcase__heading {
     font-size: clamp(28px, 6vw, 44px);
@@ -124,22 +124,39 @@
   .hero-product-showcase__grid {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 18px;
+    gap: 28px;
   }
   .hero-product-showcase__card {
     display: block;
-    border-radius: 14px;
+    border-radius: 4px;
     overflow: hidden;
     text-decoration: none;
     color: inherit;
-    box-shadow: 0 4px 14px rgba(91, 37, 18, 0.08);
-    transition: transform 240ms cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 240ms ease;
+    background: transparent !important;
+    transition: transform 240ms cubic-bezier(0.2, 0.8, 0.2, 1);
   }
   .hero-product-showcase__card:hover,
   .hero-product-showcase__card:focus-visible {
-    transform: translateY(-3px);
-    box-shadow: 0 12px 28px rgba(91, 37, 18, 0.16);
+    transform: translateY(-2px);
     outline: none;
+  }
+  .hero-product-showcase__card .hero-product-showcase__image-wrap {
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 1px 2px rgba(91, 37, 18, 0.06), 0 8px 24px rgba(91, 37, 18, 0.08);
+    transition: box-shadow 240ms ease;
+  }
+  .hero-product-showcase__card:hover .hero-product-showcase__image-wrap,
+  .hero-product-showcase__card:focus-visible .hero-product-showcase__image-wrap {
+    box-shadow: 0 2px 4px rgba(91, 37, 18, 0.10), 0 14px 32px rgba(91, 37, 18, 0.14);
+  }
+  .hero-product-showcase__card .hero-product-showcase__image-wrap::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.55) 0%, rgba(0, 0, 0, 0.15) 28%, rgba(0, 0, 0, 0) 55%);
   }
   .hero-product-showcase__image-wrap {
     position: relative;
@@ -182,14 +199,34 @@
     border: 1.5px dashed rgba(255, 255, 255, 0.5);
   }
   .hero-product-showcase__caption {
-    padding: 16px 16px 18px;
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 14px 16px 16px;
+    z-index: 2;
+    text-align: left;
+    background: transparent !important;
+    color: #ffffff !important;
+    pointer-events: none;
   }
   .hero-product-showcase__product-title {
-    font-size: clamp(18px, 4vw, 22px);
+    font-size: clamp(15px, 2.6vw, 19px);
     font-weight: 700;
-    margin: 0 0 4px;
-    line-height: 1.25;
-    color: inherit;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin: 0;
+    line-height: 1.15;
+    color: #ffffff !important;
+    text-decoration: none !important;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
+  }
+  .hero-product-showcase__card:hover .hero-product-showcase__product-title {
+    text-decoration: none !important;
+  }
+  .hero-product-showcase__price {
+    color: #ffffff !important;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
   }
   .hero-product-showcase__price {
     font-size: 16px;
@@ -211,20 +248,33 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-height: 48px;
-    padding: 12px 28px;
-    border-radius: 8px;
+    min-height: 44px;
+    padding: 12px 26px;
+    background: linear-gradient(180deg, #6c0a2e 0%, #570522 60%, #45041b 100%) !important;
+    color: #ffffff !important;
+    border: 1px solid #2e0212;
+    border-radius: 5px;
     font-weight: 700;
-    font-size: 15px;
+    font-size: 14px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
     text-decoration: none;
-    box-shadow: 0 4px 12px rgba(91, 37, 18, 0.2);
-    transition: transform 200ms ease, filter 200ms ease;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.22),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.28),
+      0 2px 0 rgba(46, 2, 18, 0.5),
+      0 3px 6px rgba(46, 2, 18, 0.22);
+    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.35);
+    transition: background 180ms ease, transform 80ms ease;
   }
   .hero-product-showcase__cta:hover,
   .hero-product-showcase__cta:focus-visible {
-    transform: translateY(-2px);
-    filter: brightness(1.06);
+    background: linear-gradient(180deg, #d2682d 0%, #ba5b28 60%, #9a4a20 100%) !important;
+    border-color: #6e3514;
     outline: none;
+  }
+  .hero-product-showcase__cta:active {
+    transform: translateY(2px);
   }
   .hero-product-showcase__empty {
     text-align: center;
@@ -234,7 +284,10 @@
 
   @media screen and (min-width: 768px) {
     .hero-product-showcase {
-      padding: 56px 0 40px;
+      padding: 72px 0 56px;
+    }
+    .hero-product-showcase__inner {
+      padding: 0 40px;
     }
     .hero-product-showcase__heading {
       text-align: center;
@@ -244,7 +297,7 @@
       margin-bottom: 32px;
     }
     .hero-product-showcase__grid {
-      gap: 24px;
+      gap: 36px;
     }
     .hero-product-showcase__grid--cols-3 {
       grid-template-columns: repeat(3, 1fr);

@@ -18,7 +18,7 @@
       ],
       "disabled": false,
       "settings": {
-        "show_back_to_top": true,
+        "show_back_to_top": false,
         "back_to_top_text": "Back to top",
         "show_borders": true
       }
@@ -31,7 +31,7 @@
         "show_currency_selector": true,
         "show_locale_selector": true,
         "show_ebt": true,
-        "ebt_text": "We proudly accept EBT / SNAP in our store"
+        "ebt_text": ""
       }
     },
     "store_location_map_main": {
@@ -69,8 +69,8 @@
         "address": "328 E 75th Street\nChicago, IL 60619",
         "maps_link": "https://maps.app.goo.gl/YQq2u5v4H5NH6EG6A",
         "phone": "773-570-7676",
-        "background_color": "#5b2512",
-        "text_color": "#ffffff"
+        "background_color": "#e68c3b",
+        "text_color": "#570522"
       }
     }
   },

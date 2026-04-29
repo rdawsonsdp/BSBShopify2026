@@ -1,0 +1,181 @@
+{
+  "sections": {
+    "main": {
+      "type": "template--page",
+      "disabled": true,
+      "settings": {}
+    },
+    "birthday_header": {
+      "type": "page-banner-strip",
+      "settings": {
+        "eyebrow": "BIRTHDAYS AT BROWN SUGAR BAKERY",
+        "heading": "Everyone has a birthday.",
+        "heading_tag": "h1",
+        "subheading": "From a single layer to a five-tier showstopper. Hand-crafted on 75th Street in Chicago — and shipped fresh nationwide.",
+        "button_label": "",
+        "button_link": "",
+        "text_align": "center",
+        "background_color": "#f7ead6",
+        "text_color": "#570522",
+        "padding_y": 32,
+        "padding_y_desktop": 64
+      }
+    },
+    "birthday_inspiration": {
+      "type": "inspiration-grid",
+      "blocks": {
+        "img_1": {
+          "type": "image",
+          "settings": {
+            "caption": "Caramel — Happy Birthday Dad",
+            "link": "/products/carmel"
+          }
+        },
+        "img_2": {
+          "type": "image",
+          "settings": {
+            "caption": "Caramel with sugar flowers",
+            "link": "/products/carmel"
+          }
+        },
+        "img_3": {
+          "type": "image",
+          "settings": {
+            "caption": "The famous caramel drip",
+            "link": "/products/carmel"
+          }
+        },
+        "img_4": {
+          "type": "image",
+          "settings": {
+            "caption": "Loaded caramel — popcorn & wafers",
+            "link": "/products/carmel"
+          }
+        }
+      },
+      "block_order": ["img_1", "img_2", "img_3", "img_4"],
+      "settings": {
+        "eyebrow": "INSPIRATION",
+        "heading": "Cakes that say \"Happy Birthday\"",
+        "subheading": "We'll write any message you'd like — in any color.",
+        "background_color": "#fffaf2",
+        "text_color": "#570522"
+      }
+    },
+    "birthday_cta": {
+      "type": "page-banner-strip",
+      "settings": {
+        "eyebrow": "GOOD TO KNOW",
+        "heading": "Order ANY cake as a birthday cake.",
+        "heading_tag": "h2",
+        "subheading": "Add a personal message to any cake at checkout — no extra charge. Caramel, German chocolate, pineapple, lemon, strawberry, you name it.",
+        "button_label": "Shop all cakes",
+        "button_link": "/collections/all",
+        "text_align": "center",
+        "background_color": "#570522",
+        "text_color": "#f7ead6",
+        "padding_y": 36,
+        "padding_y_desktop": 64
+      }
+    },
+    "birthday_featured": {
+      "type": "collection--featured-collection",
+      "blocks": {
+        "product_card_title": { "type": "product-card-title", "settings": {} },
+        "product_card_price": { "type": "product-card-price", "settings": {} }
+      },
+      "block_order": ["product_card_title", "product_card_price"],
+      "settings": {
+        "collection": "birthday-collection",
+        "title": "Birthday favorites",
+        "subheading": "Most-ordered for birthdays this year",
+        "show-view-all": true,
+        "products-per-row": 4,
+        "products-per-row-mobile": 2,
+        "max-products": 8
+      }
+    },
+    "birthday_faq": {
+      "type": "faq-accordion",
+      "blocks": {
+        "q1": {
+          "type": "qa",
+          "settings": {
+            "question": "How far in advance should I order a birthday cake?",
+            "answer": "<p>For local pickup at 75th Street, please order at least 48 hours in advance. For nationwide shipping, allow 4–5 business days from order to delivery so the cake arrives fresh. Custom designs may need a little more lead time — give us a call at 773-570-7676 if you're not sure.</p>"
+          }
+        },
+        "q2": {
+          "type": "qa",
+          "settings": {
+            "question": "Can you write a custom message on the cake?",
+            "answer": "<p>Yes — and it's free. Every cake on the site has an \"Add cake writing to your order\" option. Tell us the name and we'll pipe it on. Multiple lines, special characters, even simple icons are usually fine — just leave a note at checkout if you want something specific.</p>"
+          }
+        },
+        "q3": {
+          "type": "qa",
+          "settings": {
+            "question": "Do you ship cakes for delivery on a specific day?",
+            "answer": "<p>Yes. Choose your preferred arrival date at checkout. We bake fresh and ship via overnight courier in insulated packaging so cakes arrive ready to enjoy. We recommend the cake arrive at least one day before the party — there's no risk of weather delays, and the cake travels best with a brief settle in the fridge.</p>"
+          }
+        },
+        "q4": {
+          "type": "qa",
+          "settings": {
+            "question": "What sizes do you offer?",
+            "answer": "<p>Our standard birthday cakes serve 8–10 (single layer), 12–16 (two layer), and 20–25 (three layer). Need something bigger — or smaller? Reach out and we'll quote a custom size for your party.</p>"
+          }
+        },
+        "q5": {
+          "type": "qa",
+          "settings": {
+            "question": "Can you do candles or special decorations?",
+            "answer": "<p>For pickup orders, just ask — we're happy to add a candle or a few simple flourishes. For shipped cakes, we don't include candles in the box (they don't travel well), but the cake will arrive ready for you to add your own.</p>"
+          }
+        },
+        "q6": {
+          "type": "qa",
+          "settings": {
+            "question": "What flavors are most popular for birthdays?",
+            "answer": "<p>Stephanie's caramel cake is the original Brown Sugar Bakery signature — it's what our regulars order year after year. German chocolate, pineapple, and strawberry are right behind it. If you can't choose, our half-and-half cakes let you have two flavors in one.</p>"
+          }
+        }
+      },
+      "block_order": ["q1", "q2", "q3", "q4", "q5", "q6"],
+      "settings": {
+        "eyebrow": "QUESTIONS",
+        "heading": "Birthday cake FAQ",
+        "subheading": "",
+        "background_color": "#fffaf2",
+        "text_color": "#570522"
+      }
+    },
+    "birthday_club_promo": {
+      "type": "birthday-club-teaser",
+      "settings": {
+        "enable": true,
+        "eyebrow": "FREE TO JOIN",
+        "heading": "Make your own birthday sweeter.",
+        "subheading": "<p>Tell us when your birthday is and we'll send a special discount before the big day. Free to join — perks for you and up to four family members.</p>",
+        "perk_1_icon": "🎁",
+        "perk_1": "30% off on your birthday",
+        "perk_2_icon": "💝",
+        "perk_2": "20% off for family birthdays",
+        "perk_3_icon": "🧁",
+        "perk_3": "Free birthday cupcake in store",
+        "cta_label": "Join the Birthday Club",
+        "cta_link": "/pages/birthdayclub",
+        "fine_print": "Free to join. Unsubscribe anytime."
+      }
+    }
+  },
+  "order": [
+    "main",
+    "birthday_header",
+    "birthday_inspiration",
+    "birthday_cta",
+    "birthday_featured",
+    "birthday_faq",
+    "birthday_club_promo"
+  ]
+}

@@ -1,0 +1,275 @@
+{%- comment -%}
+  Stephanie audio story — sticky pill + slide-up drawer.
+  Renders only when product.metafields.bsb.story_audio is set.
+  Optional: product.metafields.bsb.story_transcript (rich text or multi-line text)
+{%- endcomment -%}
+
+{%- liquid
+  assign audio_file = product.metafields.bsb.story_audio.value
+  assign transcript = product.metafields.bsb.story_transcript
+  assign subject = product.metafields.bsb.story_subject | default: product.title
+  assign subject = subject | split: ' -' | first | split: ',' | first | strip
+
+  # TEMP TEST MODE: flip to true to force-render with a sample audio URL.
+  # Set back to false (or delete this block) once the metafield is wired up.
+  assign test_mode = true
+-%}
+
+{%- if audio_file != blank or test_mode -%}
+  {%- if audio_file != blank -%}
+    {%- assign audio_url = audio_file.url | default: audio_file -%}
+  {%- else -%}
+    {%- assign audio_url = 'https://download.samplelib.com/mp3/sample-3s.mp3' -%}
+  {%- endif -%}
+
+  {%- comment -%} Sample transcript in test mode so the drawer UX is reviewable. {%- endcomment -%}
+  {%- if test_mode and transcript == blank -%}
+    {%- capture transcript -%}
+      My grandmother used to make this lemon cake every Sunday after church. She'd cream the butter by hand — said the mixer made it lazy. The trick is fresh-zested lemons, not bottled juice. When you bite into it, you should taste sunshine. That's what she always told me. We've been baking it the same way at the shop since 2003. Every single one is for somebody's somebody. That's why it matters.
+    {%- endcapture -%}
+  {%- endif -%}
+
+  <div class="bsb-stephanie-cta">
+    <button
+      type="button"
+      class="bsb-stephanie-pill"
+      aria-haspopup="dialog"
+      aria-controls="bsb-stephanie-drawer"
+      aria-expanded="false"
+    >
+      <span class="bsb-stephanie-pill__icon" aria-hidden="true">🎙</span>
+      <span class="bsb-stephanie-pill__label">
+        Listen to Stephanie's story about the {{ subject | escape }}
+      </span>
+    </button>
+  </div>
+
+  <div
+    id="bsb-stephanie-drawer"
+    class="bsb-stephanie-drawer"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="bsb-stephanie-drawer-title"
+    hidden
+  >
+    <div class="bsb-stephanie-drawer__backdrop" data-bsb-close></div>
+    <div class="bsb-stephanie-drawer__panel" role="document">
+      <button
+        type="button"
+        class="bsb-stephanie-drawer__close"
+        aria-label="Close Stephanie's story"
+        data-bsb-close
+      >
+        &times;
+      </button>
+
+      <h2 id="bsb-stephanie-drawer-title" class="bsb-stephanie-drawer__title">
+        Stephanie tells the story behind her {{ subject | escape }}
+      </h2>
+
+      <audio
+        class="bsb-stephanie-drawer__audio"
+        controls
+        preload="metadata"
+        src="{{ audio_url }}"
+      >
+        Your browser does not support audio playback.
+      </audio>
+
+      {%- if transcript != blank -%}
+        <details class="bsb-stephanie-drawer__transcript">
+          <summary>Read transcript</summary>
+          <div class="bsb-stephanie-drawer__transcript-body">
+            {%- if transcript.type == 'rich_text_field' -%}
+              {{ transcript | metafield_tag }}
+            {%- else -%}
+              {{ transcript | newline_to_br }}
+            {%- endif -%}
+          </div>
+        </details>
+      {%- endif -%}
+    </div>
+  </div>
+
+  <style>
+    .bsb-stephanie-cta {
+      display: flex;
+      justify-content: center;
+      margin: 18px 0 22px;
+    }
+    .bsb-stephanie-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 22px;
+      min-height: 48px;
+      max-width: 100%;
+      border: 0;
+      border-radius: 999px;
+      background: #5b2512;
+      color: #fff;
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      text-align: left;
+      cursor: pointer;
+      box-shadow: 0 6px 18px rgba(91, 37, 18, 0.28);
+      transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease;
+    }
+    .bsb-stephanie-pill:hover,
+    .bsb-stephanie-pill:focus-visible {
+      background: #6e2e16;
+      transform: translateY(-1px);
+      box-shadow: 0 10px 22px rgba(91, 37, 18, 0.36);
+      outline: none;
+    }
+    .bsb-stephanie-pill__icon {
+      font-size: 18px;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+    .bsb-stephanie-pill__label {
+      line-height: 1.25;
+    }
+    @media (max-width: 575px) {
+      .bsb-stephanie-cta {
+        margin: 14px 0 18px;
+      }
+      .bsb-stephanie-pill {
+        width: 100%;
+        justify-content: center;
+        padding: 14px 18px;
+        font-size: 14px;
+      }
+    }
+
+    .bsb-stephanie-drawer[hidden] { display: none; }
+    .bsb-stephanie-drawer {
+      position: fixed;
+      inset: 0;
+      z-index: 70;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    .bsb-stephanie-drawer__backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(20, 8, 4, 0.5);
+      animation: bsb-fade-in 200ms ease;
+    }
+    .bsb-stephanie-drawer__panel {
+      position: relative;
+      width: 100%;
+      max-width: 520px;
+      background: #fff8f0;
+      color: #2a1006;
+      border-radius: 16px 16px 0 0;
+      padding: 22px 22px 28px;
+      box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.18);
+      animation: bsb-slide-up 240ms cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+    @media (min-width: 769px) {
+      .bsb-stephanie-drawer { align-items: center; }
+      .bsb-stephanie-drawer__panel { border-radius: 16px; }
+    }
+    .bsb-stephanie-drawer__close {
+      position: absolute;
+      top: 8px;
+      right: 10px;
+      background: transparent;
+      border: 0;
+      font-size: 28px;
+      line-height: 1;
+      color: #5b2512;
+      cursor: pointer;
+      padding: 6px 10px;
+    }
+    .bsb-stephanie-drawer__eyebrow {
+      margin: 0 0 4px;
+      font-size: 12px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      font-weight: 700;
+      color: #ba5b28;
+    }
+    .bsb-stephanie-drawer__title {
+      margin: 0 0 14px;
+      font-size: 22px;
+      line-height: 1.2;
+      font-weight: 700;
+    }
+    .bsb-stephanie-drawer__audio {
+      width: 100%;
+      margin-bottom: 12px;
+    }
+    .bsb-stephanie-drawer__transcript {
+      border-top: 1px solid rgba(91, 37, 18, 0.15);
+      padding-top: 12px;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    .bsb-stephanie-drawer__transcript summary {
+      cursor: pointer;
+      font-weight: 600;
+      color: #5b2512;
+    }
+    .bsb-stephanie-drawer__transcript-body {
+      margin-top: 8px;
+      color: #3b1a0c;
+    }
+
+    @keyframes bsb-fade-in {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes bsb-slide-up {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+  </style>
+
+  <script>
+    (function () {
+      var pill = document.querySelector('.bsb-stephanie-pill');
+      var drawer = document.getElementById('bsb-stephanie-drawer');
+      if (!pill || !drawer) return;
+      var audio = drawer.querySelector('.bsb-stephanie-drawer__audio');
+      var lastFocused = null;
+
+      function open() {
+        lastFocused = document.activeElement;
+        drawer.hidden = false;
+        pill.setAttribute('aria-expanded', 'true');
+        document.body.style.overflow = 'hidden';
+        var closeBtn = drawer.querySelector('.bsb-stephanie-drawer__close');
+        if (closeBtn) closeBtn.focus();
+      }
+      function close() {
+        if (audio && !audio.paused) audio.pause();
+        drawer.hidden = true;
+        pill.setAttribute('aria-expanded', 'false');
+        document.body.style.overflow = '';
+        if (lastFocused && typeof lastFocused.focus === 'function') lastFocused.focus();
+      }
+
+      pill.addEventListener('click', open);
+      drawer.querySelectorAll('[data-bsb-close]').forEach(function (el) {
+        el.addEventListener('click', close);
+      });
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && !drawer.hidden) close();
+      });
+
+      // Pause when user clicks Add to Cart (any product form submit / known cart buttons)
+      var cartTriggers = document.querySelectorAll(
+        '[name="add"], button[type="submit"][form*="product-form"], .product-form__submit, .add-to-cart-button'
+      );
+      cartTriggers.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          if (audio && !audio.paused) audio.pause();
+        });
+      });
+    })();
+  </script>
+{%- endif -%}

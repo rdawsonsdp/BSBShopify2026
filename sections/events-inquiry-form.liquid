@@ -1,0 +1,612 @@
+{% comment %}
+  LIFT: Anxiety + Clarity — native form keeps the user on-page (no third-party redirect).
+  The "Not sure yet" budget option is non-negotiable — forcing a budget commitment kills inquiries.
+  Microcopy under the submit sets response expectations ("within one business day, no hard sells").
+  Friendly error copy never strands the user — falls back to phone + email if the API errors.
+
+  Backend status: PHASE A — placeholder. The form posts to `endpoint_url` (defaults to a stub).
+  In Phase B this gets pointed at the Supabase Edge Function `submit-event-inquiry` which writes
+  to the `event_inquiries` table and triggers notification + confirmation emails. While the URL is
+  empty or contains "placeholder", the JS short-circuits to a simulated success so the UI is fully
+  reviewable without a live backend.
+{% endcomment %}
+
+{%- liquid
+  assign form_id = 'event-inquiry-form-' | append: section.id
+-%}
+
+<section id="event-inquiry" class="events-form events-form--{{ section.id }}" aria-label="{{ section.settings.heading | default: 'Tell us about your event' | escape }}">
+  <div class="events-form__inner">
+    {% if section.settings.eyebrow != blank %}
+      <p class="events-form__eyebrow">{{ section.settings.eyebrow | escape }}</p>
+    {% endif %}
+    {% if section.settings.heading != blank %}
+      <h2 class="events-form__heading">{{ section.settings.heading | escape }}</h2>
+    {% endif %}
+    {% if section.settings.subheading != blank %}
+      <p class="events-form__subheading">{{ section.settings.subheading | escape }}</p>
+    {% endif %}
+
+    <noscript>
+      <div class="events-form__noscript">
+        <p>Your browser has JavaScript disabled. Please email us directly at <a href="mailto:events@brownsugarbakery.com">events@brownsugarbakery.com</a> or call <a href="tel:7735707676">(773) 570-7676</a>.</p>
+      </div>
+    </noscript>
+
+    <form id="{{ form_id }}" class="events-form__form" novalidate
+          data-endpoint="{{ section.settings.endpoint_url }}"
+          data-anon-key="{{ section.settings.supabase_anon_key }}">
+
+      {%- comment -%} Honeypot — visually hidden, accessibility-hidden, tabindex out of order. Bots fill it; humans don't. {%- endcomment -%}
+      <div class="events-form__honeypot" aria-hidden="true">
+        <label>Website
+          <input type="text" name="website" tabindex="-1" autocomplete="off">
+        </label>
+      </div>
+
+      <fieldset class="events-form__group">
+        <legend class="events-form__legend">Who are you?</legend>
+        <div class="events-form__row events-form__row--2">
+          <label class="events-form__field" for="first_name-{{ section.id }}">
+            <span class="events-form__label">First name <span class="events-form__req" aria-hidden="true">*</span></span>
+            <input type="text" id="first_name-{{ section.id }}" name="first_name" required aria-required="true" autocomplete="given-name" aria-describedby="first_name-err-{{ section.id }}">
+            <span class="events-form__err" id="first_name-err-{{ section.id }}" role="alert"></span>
+          </label>
+          <label class="events-form__field" for="last_name-{{ section.id }}">
+            <span class="events-form__label">Last name <span class="events-form__req" aria-hidden="true">*</span></span>
+            <input type="text" id="last_name-{{ section.id }}" name="last_name" required aria-required="true" autocomplete="family-name" aria-describedby="last_name-err-{{ section.id }}">
+            <span class="events-form__err" id="last_name-err-{{ section.id }}" role="alert"></span>
+          </label>
+        </div>
+        <div class="events-form__row events-form__row--2">
+          <label class="events-form__field" for="email-{{ section.id }}">
+            <span class="events-form__label">Email <span class="events-form__req" aria-hidden="true">*</span></span>
+            <input type="email" id="email-{{ section.id }}" name="email" required aria-required="true" autocomplete="email" aria-describedby="email-err-{{ section.id }}">
+            <span class="events-form__err" id="email-err-{{ section.id }}" role="alert"></span>
+          </label>
+          <label class="events-form__field" for="phone-{{ section.id }}">
+            <span class="events-form__label">Phone <span class="events-form__req" aria-hidden="true">*</span></span>
+            <input type="tel" id="phone-{{ section.id }}" name="phone" required aria-required="true" autocomplete="tel" aria-describedby="phone-err-{{ section.id }}">
+            <span class="events-form__err" id="phone-err-{{ section.id }}" role="alert"></span>
+          </label>
+        </div>
+      </fieldset>
+
+      <fieldset class="events-form__group">
+        <legend class="events-form__legend">Tell us about your event</legend>
+        <div class="events-form__row events-form__row--2">
+          <label class="events-form__field" for="event_date-{{ section.id }}">
+            <span class="events-form__label">Event date <span class="events-form__req" aria-hidden="true">*</span></span>
+            <input type="date" id="event_date-{{ section.id }}" name="event_date" required aria-required="true" aria-describedby="event_date-err-{{ section.id }}">
+            <span class="events-form__err" id="event_date-err-{{ section.id }}" role="alert"></span>
+          </label>
+          <label class="events-form__field" for="event_type-{{ section.id }}">
+            <span class="events-form__label">Event type <span class="events-form__req" aria-hidden="true">*</span></span>
+            <select id="event_type-{{ section.id }}" name="event_type" required aria-required="true" aria-describedby="event_type-err-{{ section.id }}">
+              <option value="">Choose one…</option>
+              <option value="wedding">Wedding</option>
+              <option value="corporate">Corporate</option>
+              <option value="birthday">Birthday</option>
+              <option value="anniversary">Anniversary</option>
+              <option value="other">Other</option>
+            </select>
+            <span class="events-form__err" id="event_type-err-{{ section.id }}" role="alert"></span>
+          </label>
+        </div>
+        <div class="events-form__row events-form__row--2">
+          <label class="events-form__field" for="guest_count-{{ section.id }}">
+            <span class="events-form__label">Approximate guest count <span class="events-form__req" aria-hidden="true">*</span></span>
+            <input type="number" id="guest_count-{{ section.id }}" name="guest_count" min="1" required aria-required="true" placeholder="e.g. 75" aria-describedby="guest_count-err-{{ section.id }}">
+            <span class="events-form__err" id="guest_count-err-{{ section.id }}" role="alert"></span>
+          </label>
+          <label class="events-form__field" for="budget_range-{{ section.id }}">
+            <span class="events-form__label">Budget range <span class="events-form__req" aria-hidden="true">*</span></span>
+            <select id="budget_range-{{ section.id }}" name="budget_range" required aria-required="true" aria-describedby="budget_range-err-{{ section.id }}">
+              <option value="">Choose one…</option>
+              <option value="under_500">Under $500</option>
+              <option value="500_1500">$500–$1,500</option>
+              <option value="1500_5000">$1,500–$5,000</option>
+              <option value="5000_plus">$5,000+</option>
+              <option value="not_sure">Not sure yet</option>
+            </select>
+            <span class="events-form__err" id="budget_range-err-{{ section.id }}" role="alert"></span>
+          </label>
+        </div>
+        <label class="events-form__field" for="vision-{{ section.id }}">
+          <span class="events-form__label">Tell us about your vision</span>
+          <textarea id="vision-{{ section.id }}" name="vision" rows="4" placeholder="Colors, theme, dietary needs, anything you're picturing…"></textarea>
+        </label>
+      </fieldset>
+
+      <div class="events-form__submit-row">
+        <button type="submit" class="events-form__submit">Send my event details</button>
+        <p class="events-form__microcopy"><em>We will respond within 48 hours.</em></p>
+      </div>
+
+      <div class="events-form__status" id="{{ form_id }}-status" role="status" aria-live="polite"></div>
+    </form>
+  </div>
+</section>
+
+<style>
+  .events-form--{{ section.id }} {
+    background: {{ section.settings.background_color }};
+    color: {{ section.settings.text_color }};
+    padding: 36px 16px;
+    scroll-margin-top: 80px;
+  }
+  .events-form--{{ section.id }} .events-form__inner {
+    max-width: 720px;
+    margin: 0 auto;
+  }
+  .events-form--{{ section.id }} .events-form__eyebrow {
+    font-size: 12px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    font-weight: 700;
+    margin: 0 0 8px;
+    opacity: 0.75;
+    text-align: center;
+  }
+  .events-form--{{ section.id }} .events-form__heading {
+    font-size: clamp(22px, 4vw, 32px);
+    font-weight: 800;
+    margin: 0 0 8px;
+    text-align: center;
+    color: inherit;
+  }
+  .events-form--{{ section.id }} .events-form__subheading {
+    margin: 0 auto 28px;
+    max-width: 560px;
+    text-align: center;
+    font-size: 15px;
+    line-height: 1.5;
+    opacity: 0.85;
+  }
+  .events-form--{{ section.id }} .events-form__noscript {
+    background: #fbeae5;
+    color: #9a2918;
+    border: 1px solid rgba(154, 41, 24, 0.3);
+    border-radius: 4px;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .events-form--{{ section.id }} .events-form__noscript p { margin: 0; }
+  .events-form--{{ section.id }} .events-form__noscript a { color: inherit; font-weight: 700; }
+
+  .events-form--{{ section.id }} .events-form__honeypot {
+    position: absolute !important;
+    left: -9999px !important;
+    width: 1px !important;
+    height: 1px !important;
+    overflow: hidden !important;
+  }
+
+  .events-form--{{ section.id }} .events-form__form {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .events-form--{{ section.id }} .events-form__group {
+    border: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .events-form--{{ section.id }} .events-form__legend {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    opacity: 0.65;
+    margin: 0 0 6px;
+    padding: 0;
+  }
+  .events-form--{{ section.id }} .events-form__row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  .events-form--{{ section.id }} .events-form__field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .events-form--{{ section.id }} .events-form__label {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    opacity: 0.75;
+  }
+  .events-form--{{ section.id }} .events-form__req { color: #ba5b28; margin-left: 2px; }
+  .events-form--{{ section.id }} .events-form__field input,
+  .events-form--{{ section.id }} .events-form__field select,
+  .events-form--{{ section.id }} .events-form__field textarea {
+    width: 100%;
+    background: #fffaf2;
+    color: #5b2512;
+    border: 1px solid rgba(91, 37, 18, 0.32);
+    border-radius: 4px;
+    padding: 12px 14px;
+    font-size: 15px;
+    line-height: 1.4;
+    font-family: inherit;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.55),
+      inset 0 -1px 0 rgba(91, 37, 18, 0.06),
+      0 1px 1px rgba(91, 37, 18, 0.06);
+    transition: border-color 180ms ease, box-shadow 180ms ease;
+  }
+  .events-form--{{ section.id }} .events-form__field input:focus,
+  .events-form--{{ section.id }} .events-form__field select:focus,
+  .events-form--{{ section.id }} .events-form__field textarea:focus {
+    outline: none;
+    border-color: rgba(91, 37, 18, 0.6);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.6),
+      0 0 0 3px rgba(186, 91, 40, 0.18);
+  }
+  .events-form--{{ section.id }} .events-form__field textarea {
+    resize: vertical;
+    min-height: 120px;
+  }
+  .events-form--{{ section.id }} .events-form__field [aria-invalid="true"] {
+    border-color: #9a2918;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.5),
+      0 0 0 3px rgba(154, 41, 24, 0.15);
+  }
+  .events-form--{{ section.id }} .events-form__err {
+    display: none;
+    font-size: 12px;
+    color: #9a2918;
+    line-height: 1.4;
+  }
+  .events-form--{{ section.id }} .events-form__err.is-shown {
+    display: block;
+  }
+
+  .events-form--{{ section.id }} .events-form__submit-row {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    margin-top: 8px;
+  }
+  .events-form--{{ section.id }} .events-form__submit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    background: linear-gradient(180deg, #6c0a2e 0%, #570522 60%, #45041b 100%);
+    color: #ffffff;
+    border: 1px solid #2e0212;
+    border-radius: 5px;
+    padding: 14px 26px;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.22),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.28),
+      0 2px 0 rgba(46, 2, 18, 0.5),
+      0 3px 6px rgba(46, 2, 18, 0.22);
+    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.35);
+    transition: background 180ms ease, transform 80ms ease, opacity 180ms ease;
+  }
+  .events-form--{{ section.id }} .events-form__submit:hover:not([disabled]) {
+    background: linear-gradient(180deg, #d2682d 0%, #ba5b28 60%, #9a4a20 100%);
+    border-color: #6e3514;
+  }
+  .events-form--{{ section.id }} .events-form__submit:active:not([disabled]) {
+    transform: translateY(2px);
+  }
+  .events-form--{{ section.id }} .events-form__submit[disabled] {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+  .events-form--{{ section.id }} .events-form__microcopy {
+    margin: 0;
+    font-size: 12px;
+    opacity: 0.7;
+    text-align: center;
+  }
+
+  .events-form--{{ section.id }} .events-form__status {
+    margin-top: 16px;
+  }
+  .events-form--{{ section.id }} .events-form__status .events-form__success {
+    background: #f7ead6;
+    border: 1px solid rgba(91, 37, 18, 0.32);
+    border-radius: 4px;
+    padding: 18px 20px;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.55),
+      0 1px 2px rgba(91, 37, 18, 0.10);
+  }
+  .events-form--{{ section.id }} .events-form__status .events-form__success strong {
+    display: block;
+    font-size: 17px;
+    margin-bottom: 6px;
+    color: #570522;
+  }
+  .events-form--{{ section.id }} .events-form__status .events-form__success p {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.55;
+    color: rgba(91, 37, 18, 0.82);
+  }
+  .events-form--{{ section.id }} .events-form__status .events-form__error {
+    background: #fbeae5;
+    color: #9a2918;
+    border: 1px solid rgba(154, 41, 24, 0.3);
+    border-radius: 4px;
+    padding: 14px 16px;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  @media screen and (min-width: 640px) {
+    .events-form--{{ section.id }} .events-form__row--2 {
+      grid-template-columns: 1fr 1fr;
+    }
+    .events-form--{{ section.id }} .events-form__submit {
+      width: auto;
+      min-width: 260px;
+    }
+  }
+  @media screen and (min-width: 768px) {
+    .events-form--{{ section.id }} {
+      padding: 56px 24px;
+    }
+  }
+</style>
+
+<script>
+(function () {
+  var form = document.getElementById('{{ form_id }}');
+  if (!form) return;
+
+  var statusEl = document.getElementById('{{ form_id }}-status');
+  var submitBtn = form.querySelector('.events-form__submit');
+  var sectionId = '{{ section.id }}';
+
+  function getField(name) { return form.querySelector('[name="' + name + '"]'); }
+  function getErr(name) { return document.getElementById(name + '-err-' + sectionId); }
+
+  function clearErrors() {
+    form.querySelectorAll('.events-form__err').forEach(function (el) {
+      el.textContent = '';
+      el.classList.remove('is-shown');
+    });
+    form.querySelectorAll('[aria-invalid="true"]').forEach(function (el) {
+      el.removeAttribute('aria-invalid');
+    });
+  }
+
+  function showFieldError(name, message) {
+    var input = getField(name);
+    var err = getErr(name);
+    if (input) input.setAttribute('aria-invalid', 'true');
+    if (err) {
+      err.textContent = message;
+      err.classList.add('is-shown');
+    }
+  }
+
+  function validate() {
+    clearErrors();
+    var errors = {};
+
+    var requiredText = ['first_name', 'last_name', 'email', 'phone', 'event_date', 'event_type', 'guest_count', 'budget_range'];
+    requiredText.forEach(function (n) {
+      var f = getField(n);
+      if (!f) return;
+      if (!f.value || !String(f.value).trim()) {
+        errors[n] = 'Required.';
+      }
+    });
+
+    var email = getField('email');
+    if (email && email.value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value)) {
+      errors.email = 'Please enter a valid email.';
+    }
+
+    var date = getField('event_date');
+    if (date && date.value) {
+      var today = new Date(); today.setHours(0,0,0,0);
+      var d = new Date(date.value + 'T00:00:00');
+      if (d < today) {
+        errors.event_date = 'Pick a date in the future.';
+      }
+    }
+
+    var guests = getField('guest_count');
+    if (guests && guests.value && parseInt(guests.value, 10) < 1) {
+      errors.guest_count = 'At least one guest.';
+    }
+
+    Object.keys(errors).forEach(function (n) { showFieldError(n, errors[n]); });
+
+    if (Object.keys(errors).length > 0) {
+      var firstName = Object.keys(errors)[0];
+      var firstField = getField(firstName);
+      if (firstField) {
+        firstField.focus();
+        firstField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      return false;
+    }
+    return true;
+  }
+
+  function buildPayload() {
+    var data = {};
+    var fields = ['first_name', 'last_name', 'email', 'phone', 'event_date', 'event_type', 'guest_count', 'budget_range', 'vision', 'website'];
+    fields.forEach(function (n) {
+      var f = getField(n);
+      if (f) data[n] = f.value;
+    });
+    if (data.guest_count) data.guest_count = parseInt(data.guest_count, 10) || null;
+
+    var utm = {};
+    var qs = new URLSearchParams(window.location.search);
+    ['utm_source','utm_medium','utm_campaign','utm_term','utm_content'].forEach(function (k) {
+      if (qs.get(k)) utm[k] = qs.get(k);
+    });
+    data.utm = utm;
+    data.source_page = window.location.href;
+    return data;
+  }
+
+  function showSuccess() {
+    statusEl.innerHTML =
+      '<div class="events-form__success">' +
+      '<strong>Thank you. We\'ve got your details.</strong>' +
+      '<p>We will respond within 48 hours. — Stephanie &amp; the BSB team</p>' +
+      '</div>';
+    form.querySelectorAll('fieldset, .events-form__submit-row').forEach(function (el) { el.style.display = 'none'; });
+    statusEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  function showError(message) {
+    statusEl.innerHTML = '<div class="events-form__error">' + message + '</div>';
+    statusEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+
+    // Honeypot — silently succeed without posting
+    var honey = getField('website');
+    if (honey && honey.value) { showSuccess(); return; }
+
+    if (!validate()) return;
+
+    submitBtn.disabled = true;
+    var originalLabel = submitBtn.textContent;
+    submitBtn.textContent = 'Sending…';
+
+    var endpoint = (form.dataset.endpoint || '').trim();
+    var anonKey = (form.dataset.anonKey || '').trim();
+
+    // PHASE A — placeholder backend. If the endpoint is empty or contains "placeholder",
+    // simulate a successful submission so the UI is fully reviewable.
+    var isStub = !endpoint || endpoint.indexOf('placeholder') >= 0 || endpoint.indexOf('example.com') >= 0;
+    if (isStub) {
+      setTimeout(function () { showSuccess(); }, 700);
+      return;
+    }
+
+    var headers = { 'Content-Type': 'application/json' };
+    if (anonKey) headers['apikey'] = anonKey;
+
+    fetch(endpoint, {
+      method: 'POST',
+      headers: headers,
+      body: JSON.stringify(buildPayload())
+    }).then(function (res) {
+      if (res.ok) {
+        showSuccess();
+        return;
+      }
+      if (res.status === 400) {
+        return res.json().then(function (body) {
+          if (body && body.errors) {
+            Object.keys(body.errors).forEach(function (k) { showFieldError(k, body.errors[k]); });
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalLabel;
+          } else {
+            showError('Please double-check your inputs and try again.');
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalLabel;
+          }
+        });
+      }
+      if (res.status === 429) {
+        showError('Looks like you\'ve already sent us a few — give us a chance to read them. We\'ll be in touch soon.');
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalLabel;
+        return;
+      }
+      throw new Error('HTTP ' + res.status);
+    }).catch(function () {
+      showError('Something went wrong on our end. Please call us at <a href="tel:7735707676">(773) 570-7676</a> or email <a href="mailto:events@brownsugarbakery.com">events@brownsugarbakery.com</a> — we\'d love to hear about your event.');
+      submitBtn.disabled = false;
+      submitBtn.textContent = originalLabel;
+    });
+  });
+})();
+</script>
+
+{% schema %}
+{
+  "name": "Events inquiry form",
+  "settings": [
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow",
+      "default": "EVENT INQUIRY"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Tell us about your event"
+    },
+    {
+      "type": "textarea",
+      "id": "subheading",
+      "label": "Subheading",
+      "default": "The more we know, the better we can plan. Takes about two minutes."
+    },
+    {
+      "type": "header",
+      "content": "Backend",
+      "info": "Phase A: leave endpoint blank or use a placeholder URL — the form simulates a successful submit. Phase B: point at the Supabase Edge Function (e.g. https://avsrrrgliekawvcvdcye.supabase.co/functions/v1/submit-event-inquiry)."
+    },
+    {
+      "type": "url",
+      "id": "endpoint_url",
+      "label": "Submit endpoint URL",
+      "info": "Empty or contains the word 'placeholder' = stub mode (simulated success)."
+    },
+    {
+      "type": "text",
+      "id": "supabase_anon_key",
+      "label": "Supabase anon key (sent as apikey header)",
+      "info": "Required only when posting to a Supabase Edge Function."
+    },
+    {
+      "type": "header",
+      "content": "Colors"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background",
+      "default": "#f7ead6"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text",
+      "default": "#570522"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Events inquiry form",
+      "category": "Forms"
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,335 @@
+{% comment %}
+  LIFT: Relevance — real product evidence anchored in the same magazine pinwheel
+  layout as the inspiration collage. Clicks go to PDP. The form (not the cart)
+  is the conversion target.
+{% endcomment %}
+
+{%- liquid
+  assign coll_handle = section.settings.collection | default: 'all'
+  assign coll = collections[coll_handle]
+  assign limit = 4
+-%}
+
+<section class="events-products events-products--{{ section.id }}" aria-label="{{ section.settings.heading | default: 'Featured event cakes' | escape }}">
+  <div class="events-products__inner">
+    {% if section.settings.eyebrow != blank %}
+      <p class="events-products__eyebrow">{{ section.settings.eyebrow | escape }}</p>
+    {% endif %}
+    {% if section.settings.heading != blank %}
+      <h2 class="events-products__heading">{{ section.settings.heading | escape }}</h2>
+    {% endif %}
+    {% if section.settings.subheading != blank %}
+      <p class="events-products__subheading">{{ section.settings.subheading | escape }}</p>
+    {% endif %}
+
+    <div class="events-products__grid">
+      {% for product in coll.products limit: limit %}
+        {%- assign slot = forloop.index | modulo: 4 -%}
+        {%- if slot == 1 -%}{%- assign slot_class = 'events-products__item--feature1' -%}
+        {%- elsif slot == 2 -%}{%- assign slot_class = 'events-products__item--portrait1' -%}
+        {%- elsif slot == 3 -%}{%- assign slot_class = 'events-products__item--portrait2' -%}
+        {%- else -%}{%- assign slot_class = 'events-products__item--feature2' -%}
+        {%- endif -%}
+
+        <a class="events-products__item {{ slot_class }}" href="{{ product.url }}" aria-label="{{ product.title | escape }}">
+          <div class="events-products__media">
+            {% if product.featured_media %}
+              {{ product.featured_media | image_url: width: 1200 | image_tag:
+                loading: 'lazy',
+                alt: product.featured_media.alt | default: product.title,
+                class: 'events-products__photo'
+              }}
+            {% else %}
+              {{ 'product-1' | placeholder_svg_tag: 'events-products__photo' }}
+            {% endif %}
+            {% unless product.available %}
+              <span class="events-products__badge">Sold out</span>
+            {% endunless %}
+          </div>
+          <div class="events-products__caption">
+            <span class="events-products__num">0{{ forloop.index }}</span>
+            <span class="events-products__kicker">{{ product.title | escape }}</span>
+            {% if product.type != blank %}
+              <span class="events-products__detail">{{ product.type | escape }}</span>
+            {% elsif product.tags contains 'featured-event' %}
+              <span class="events-products__detail">A favorite for events</span>
+            {% endif %}
+          </div>
+        </a>
+      {% else %}
+        <p class="events-products__empty">Choose a collection in the section settings.</p>
+      {% endfor %}
+    </div>
+
+    {% if section.settings.cta_label != blank and section.settings.cta_link != blank %}
+      <div class="events-products__cta-wrap">
+        <a class="events-products__cta" href="{{ section.settings.cta_link }}">
+          {{ section.settings.cta_label | escape }}
+          <span aria-hidden="true">→</span>
+        </a>
+      </div>
+    {% endif %}
+  </div>
+</section>
+
+<style>
+  .events-products--{{ section.id }} {
+    background: {{ section.settings.background_color }};
+    color: {{ section.settings.text_color }};
+    padding: 36px 16px;
+  }
+  .events-products--{{ section.id }} .events-products__inner {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  .events-products--{{ section.id }} .events-products__eyebrow {
+    font-size: 12px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    font-weight: 700;
+    margin: 0 0 8px;
+    opacity: 0.75;
+    text-align: center;
+  }
+  .events-products--{{ section.id }} .events-products__heading {
+    font-size: clamp(22px, 4vw, 32px);
+    font-weight: 800;
+    margin: 0 0 8px;
+    text-align: center;
+    color: inherit;
+  }
+  .events-products--{{ section.id }} .events-products__subheading {
+    margin: 0 auto 28px;
+    max-width: 600px;
+    text-align: center;
+    font-size: 15px;
+    line-height: 1.5;
+    opacity: 0.85;
+  }
+
+  /* Mobile: stack 1-up with editorial caption beneath each */
+  .events-products--{{ section.id }} .events-products__grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 22px;
+  }
+  .events-products--{{ section.id }} .events-products__item {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    transition: transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .events-products--{{ section.id }} .events-products__item:hover {
+    transform: translateY(-2px);
+  }
+  .events-products--{{ section.id }} .events-products__media {
+    position: relative;
+    aspect-ratio: 5 / 4;
+    overflow: hidden;
+    background: rgba(91, 37, 18, 0.06);
+    border-radius: 2px;
+    box-shadow: 0 1px 2px rgba(91, 37, 18, 0.08), 0 6px 16px rgba(91, 37, 18, 0.08);
+    transition: box-shadow 220ms ease;
+    padding: 12px;
+    box-sizing: border-box;
+  }
+  .events-products--{{ section.id }} .events-products__item:hover .events-products__media {
+    box-shadow: 0 2px 4px rgba(91, 37, 18, 0.12), 0 14px 30px rgba(91, 37, 18, 0.16);
+  }
+  .events-products--{{ section.id }} .events-products__photo {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+    transition: transform 600ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .events-products--{{ section.id }} .events-products__item:hover .events-products__photo {
+    transform: scale(1.03);
+  }
+  .events-products--{{ section.id }} .events-products__badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: #ffffff;
+    color: #5b2512;
+    border: 1px solid rgba(91, 37, 18, 0.18);
+    border-radius: 3px;
+    padding: 4px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    line-height: 1;
+    box-shadow: 0 1px 2px rgba(91, 37, 18, 0.10);
+  }
+  .events-products--{{ section.id }} .events-products__caption {
+    display: block;
+    padding: 12px 4px 0;
+    line-height: 1.4;
+  }
+  .events-products--{{ section.id }} .events-products__num {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.18em;
+    color: #ba5b28;
+    margin-right: 8px;
+    vertical-align: middle;
+  }
+  .events-products--{{ section.id }} .events-products__kicker {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #570522;
+    vertical-align: middle;
+  }
+  .events-products--{{ section.id }} .events-products__detail {
+    display: block;
+    margin-top: 4px;
+    font-size: 14px;
+    font-style: italic;
+    line-height: 1.45;
+    color: rgba(91, 37, 18, 0.82);
+  }
+  .events-products--{{ section.id }} .events-products__empty {
+    text-align: center;
+    padding: 24px;
+    opacity: 0.6;
+  }
+
+  .events-products--{{ section.id }} .events-products__cta-wrap {
+    margin-top: 28px;
+    text-align: center;
+  }
+  .events-products--{{ section.id }} .events-products__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    border: 1px solid {{ section.settings.text_color }};
+    border-radius: 5px;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: {{ section.settings.text_color }};
+    background: transparent;
+    transition: background 180ms ease, color 180ms ease, transform 80ms ease;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.35),
+      0 1px 2px rgba(91, 37, 18, 0.10);
+  }
+  .events-products--{{ section.id }} .events-products__cta:hover {
+    background: {{ section.settings.text_color }};
+    color: {{ section.settings.background_color }};
+  }
+  .events-products--{{ section.id }} .events-products__cta:active {
+    transform: translateY(1px);
+  }
+
+  /* Tablet: 2 columns, stacked captions */
+  @media screen and (min-width: 576px) {
+    .events-products--{{ section.id }} .events-products__grid {
+      grid-template-columns: 1fr 1fr;
+      gap: 22px 18px;
+    }
+  }
+
+  /* Desktop: pinwheel — feature1 (cols 1-2 row 1) | portrait1 (col 3 row 1)
+                       portrait2 (col 1 row 2) | feature2 (cols 2-3 row 2) */
+  @media screen and (min-width: 900px) {
+    .events-products--{{ section.id }} {
+      padding: 64px 24px;
+    }
+    .events-products--{{ section.id }} .events-products__grid {
+      grid-template-columns: 1fr 1fr 1fr;
+      grid-template-rows: auto auto;
+      grid-template-areas:
+        "feature1 feature1 portrait1"
+        "portrait2 feature2 feature2";
+      gap: 32px 22px;
+    }
+    .events-products--{{ section.id }} .events-products__item--feature1 { grid-area: feature1; }
+    .events-products--{{ section.id }} .events-products__item--portrait1 { grid-area: portrait1; }
+    .events-products--{{ section.id }} .events-products__item--portrait2 { grid-area: portrait2; }
+    .events-products--{{ section.id }} .events-products__item--feature2 { grid-area: feature2; }
+    .events-products--{{ section.id }} .events-products__item--feature1 .events-products__media,
+    .events-products--{{ section.id }} .events-products__item--feature2 .events-products__media {
+      aspect-ratio: 16 / 10;
+    }
+    .events-products--{{ section.id }} .events-products__item--portrait1 .events-products__media,
+    .events-products--{{ section.id }} .events-products__item--portrait2 .events-products__media {
+      aspect-ratio: 4 / 5;
+    }
+  }
+</style>
+
+{% schema %}
+{
+  "name": "Events featured products",
+  "settings": [
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Event Dessert Favorites"
+    },
+    {
+      "type": "textarea",
+      "id": "subheading",
+      "label": "Subheading",
+      "default": "Tested at hundreds of celebrations. Sized and styled for events of every kind."
+    },
+    {
+      "type": "collection",
+      "id": "collection",
+      "label": "Collection (e.g. Event Favorites)",
+      "info": "Pulls the first 4 products from the chosen collection. Order matters: 1) large feature top-left, 2) portrait top-right, 3) portrait bottom-left, 4) large feature bottom-right."
+    },
+    {
+      "type": "header",
+      "content": "Browse-all CTA"
+    },
+    {
+      "type": "text",
+      "id": "cta_label",
+      "label": "CTA label",
+      "default": "Browse all event favorites"
+    },
+    {
+      "type": "url",
+      "id": "cta_link",
+      "label": "CTA link"
+    },
+    {
+      "type": "header",
+      "content": "Colors"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background",
+      "default": "#fffaf2"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text",
+      "default": "#570522"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Events featured products",
+      "category": "Storytelling"
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,295 @@
+{%- liquid
+  assign image = section.settings.image
+  assign default_image_url = 'bsb-stephanie-hero.jpg' | asset_url
+  assign overlay_alpha = section.settings.overlay_opacity | divided_by: 100.0
+-%}
+
+<section
+  class="bsb-image-hero bsb-image-hero--{{ section.id }}"
+  {% if section.settings.text_align == 'center' %}data-align="center"{% endif %}
+  aria-label="{{ section.settings.heading | default: 'Brown Sugar Bakery' | escape }}"
+>
+  <div class="bsb-image-hero__media">
+    {% if image != blank %}
+      {{ image | image_url: width: 1800 | image_tag:
+        loading: 'eager',
+        fetchpriority: 'high',
+        class: 'bsb-image-hero__photo',
+        alt: section.settings.image_alt | default: 'Brown Sugar Bakery'
+      }}
+    {% else %}
+      <img
+        src="{{ default_image_url }}"
+        alt="{{ section.settings.image_alt | default: 'Stephanie Hart, founder of Brown Sugar Bakery' | escape }}"
+        class="bsb-image-hero__photo"
+        loading="eager"
+        fetchpriority="high"
+      >
+    {% endif %}
+  </div>
+
+  {% if section.settings.heading != blank or section.settings.subheading != blank or section.settings.button_label != blank %}
+    <div class="bsb-image-hero__overlay">
+      <div class="bsb-image-hero__copy">
+        {% if section.settings.eyebrow != blank %}
+          <p class="bsb-image-hero__eyebrow">{{ section.settings.eyebrow | escape }}</p>
+        {% endif %}
+        {% if section.settings.heading != blank %}
+          <h1 class="bsb-image-hero__heading">{{ section.settings.heading | escape }}</h1>
+        {% endif %}
+        {% if section.settings.subheading != blank %}
+          <p class="bsb-image-hero__subheading">{{ section.settings.subheading | escape }}</p>
+        {% endif %}
+        {% if section.settings.button_label != blank and section.settings.button_link != blank %}
+          <a href="{{ section.settings.button_link }}" class="bsb-image-hero__cta">
+            {{ section.settings.button_label | escape }}
+          </a>
+        {% endif %}
+      </div>
+    </div>
+  {% endif %}
+</section>
+
+<style>
+  .bsb-image-hero--{{ section.id }} {
+    position: relative;
+    overflow: hidden;
+    background: #1d0a04;
+  }
+  {% if section.settings.mobile_only %}
+  @media screen and (min-width: 768px) {
+    .bsb-image-hero--{{ section.id }},
+    #shopify-section-{{ section.id }} {
+      display: none !important;
+    }
+  }
+  {% endif %}
+  .bsb-image-hero--{{ section.id }} .bsb-image-hero__media {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    max-height: 70vh;
+    overflow: hidden;
+  }
+  .bsb-image-hero--{{ section.id }} .bsb-image-hero__photo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: {{ section.settings.image_position }};
+    display: block;
+  }
+  .bsb-image-hero--{{ section.id }} .bsb-image-hero__overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: {{ section.settings.vertical_align | default: 'center' }};
+    justify-content: {% if section.settings.text_align == 'center' %}center{% elsif section.settings.text_align == 'right' %}flex-end{% else %}flex-start{% endif %};
+    padding: 32px 24px;
+    background: linear-gradient(
+      {% if section.settings.vertical_align == 'flex-end' %}to top{% elsif section.settings.vertical_align == 'flex-start' %}to bottom{% elsif section.settings.text_align == 'right' %}to left{% else %}to right{% endif %},
+      rgba(0, 0, 0, {{ overlay_alpha }}) 0%,
+      rgba(0, 0, 0, 0) 70%
+    );
+    pointer-events: none;
+  }
+  .bsb-image-hero--{{ section.id }} .bsb-image-hero__copy {
+    max-width: 540px;
+    color: {{ section.settings.text_color }};
+    text-align: {{ section.settings.text_align }};
+    pointer-events: auto;
+  }
+  .bsb-image-hero--{{ section.id }} .bsb-image-hero__eyebrow {
+    font-size: 12px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    font-weight: 700;
+    margin: 0 0 12px;
+    opacity: 0.95;
+  }
+  .bsb-image-hero--{{ section.id }} .bsb-image-hero__heading {
+    font-size: clamp(28px, 6vw, 56px);
+    line-height: 1.05;
+    font-weight: 800;
+    margin: 0 0 14px;
+    color: inherit;
+    text-shadow: 0 2px 12px rgba(0, 0, 0, 0.45);
+  }
+  .bsb-image-hero--{{ section.id }} .bsb-image-hero__subheading {
+    font-size: clamp(13px, 1.8vw, 16px);
+    line-height: 1.45;
+    margin: 0;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.55), 0 0 16px rgba(0, 0, 0, 0.4);
+  }
+  .bsb-image-hero--{{ section.id }} .bsb-image-hero__cta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 14px 28px;
+    background: linear-gradient(180deg, #6c0a2e 0%, #570522 60%, #45041b 100%);
+    color: #ffffff;
+    border: 1px solid #2e0212;
+    border-radius: 5px;
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    text-decoration: none;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.22),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.28),
+      0 2px 0 rgba(46, 2, 18, 0.5),
+      0 3px 6px rgba(46, 2, 18, 0.22);
+    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.35);
+    transition: background 180ms ease, transform 80ms ease;
+  }
+  .bsb-image-hero--{{ section.id }} .bsb-image-hero__cta:hover {
+    background: linear-gradient(180deg, #d2682d 0%, #ba5b28 60%, #9a4a20 100%);
+    border-color: #6e3514;
+  }
+  .bsb-image-hero--{{ section.id }} .bsb-image-hero__cta:active {
+    transform: translateY(2px);
+  }
+
+  @media screen and (max-width: 767px) {
+    .bsb-image-hero--{{ section.id }} .bsb-image-hero__media {
+      aspect-ratio: 4 / 3;
+      max-height: 60vh;
+    }
+    .bsb-image-hero--{{ section.id }} .bsb-image-hero__overlay {
+      padding: 20px 18px;
+      background: linear-gradient(to top, rgba(0, 0, 0, {{ overlay_alpha }}) 0%, rgba(0, 0, 0, 0) 60%);
+      align-items: flex-end;
+      justify-content: flex-start;
+    }
+    .bsb-image-hero--{{ section.id }} .bsb-image-hero__copy {
+      text-align: left;
+      max-width: 100%;
+    }
+  }
+</style>
+
+{% schema %}
+{
+  "name": "Image hero",
+  "settings": [
+    {
+      "type": "image_picker",
+      "id": "image",
+      "label": "Image",
+      "info": "Defaults to bundled Stephanie hero image if empty"
+    },
+    {
+      "type": "text",
+      "id": "image_alt",
+      "label": "Image alt text",
+      "default": "Stephanie Hart, founder of Brown Sugar Bakery"
+    },
+    {
+      "type": "select",
+      "id": "image_position",
+      "label": "Image focus",
+      "options": [
+        { "value": "center center", "label": "Center" },
+        { "value": "center top", "label": "Top" },
+        { "value": "center bottom", "label": "Bottom" },
+        { "value": "left center", "label": "Left" },
+        { "value": "right center", "label": "Right" }
+      ],
+      "default": "center center"
+    },
+    {
+      "type": "header",
+      "content": "Copy"
+    },
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow",
+      "default": "MADE IN CHICAGO · SINCE 2004"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Cake the way Mama made it."
+    },
+    {
+      "type": "text",
+      "id": "subheading",
+      "label": "Subheading",
+      "default": "Hand-crafted on 75th Street, shipped fresh nationwide."
+    },
+    {
+      "type": "text",
+      "id": "button_label",
+      "label": "Button label",
+      "default": "Shop our cakes"
+    },
+    {
+      "type": "url",
+      "id": "button_link",
+      "label": "Button link"
+    },
+    {
+      "type": "header",
+      "content": "Layout"
+    },
+    {
+      "type": "select",
+      "id": "text_align",
+      "label": "Text alignment",
+      "options": [
+        { "value": "left", "label": "Left" },
+        { "value": "center", "label": "Center" },
+        { "value": "right", "label": "Right" }
+      ],
+      "default": "left"
+    },
+    {
+      "type": "select",
+      "id": "vertical_align",
+      "label": "Vertical alignment",
+      "options": [
+        { "value": "flex-start", "label": "Top" },
+        { "value": "center", "label": "Center" },
+        { "value": "flex-end", "label": "Bottom" }
+      ],
+      "default": "center"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "range",
+      "id": "overlay_opacity",
+      "label": "Overlay darkness",
+      "min": 0,
+      "max": 80,
+      "step": 5,
+      "unit": "%",
+      "default": 35
+    },
+    {
+      "type": "header",
+      "content": "Visibility"
+    },
+    {
+      "type": "checkbox",
+      "id": "mobile_only",
+      "label": "Show on mobile only",
+      "info": "Hide this hero on desktop (≥768px)",
+      "default": false
+    }
+  ],
+  "presets": [
+    {
+      "name": "Image hero",
+      "category": "Image"
+    }
+  ]
+}
+{% endschema %}

@@ -1,7 +1,33 @@
 {% comment %}
-  Store location with embedded Google Map.
-  Used in footer to give shoppers a quick visual of where the bakery is.
+  Multi-location store widget. The embedded Google Map iframe was removed
+  in favor of a "Get directions" pillbox link to keep the footer focused.
+
+  Locations are configured as section blocks (type: "location"). One block
+  may be marked is_primary (flagship).
+
+  Legacy single-location settings (heading/address/phone/maps_link) remain
+  as fallback if no "location" blocks are configured yet, so existing footer
+  config keeps working without re-setup.
 {% endcomment %}
+
+{%- comment -%} Visit Us is homepage-only — subsequent pages get a minimal layout. {%- endcomment -%}
+{%- if request.page_type == 'index' -%}
+{%- liquid
+  assign location_blocks = section.blocks | where: 'type', 'location'
+  assign hours_blocks = section.blocks | where: 'type', 'hours'
+
+  # Pick the primary location (first marked is_primary, else first location, else legacy)
+  assign primary = null
+  for b in location_blocks
+    if b.settings.is_primary
+      assign primary = b
+      break
+    endif
+  endfor
+  if primary == null and location_blocks.size > 0
+    assign primary = location_blocks[0]
+  endif
+-%}
 
 <style>
   .store-location-section--{{ section.id }} {
@@ -14,111 +40,293 @@
     margin: 0 auto;
     display: grid;
     grid-template-columns: 1fr;
-    gap: 20px;
+    grid-template-areas:
+      "intro"
+      "locations";
+    gap: 14px;
   }
+  .store-location-section--{{ section.id }} .store-location__phone-line {
+    margin: 8px 0 6px;
+  }
+  .store-location-section--{{ section.id }} .store-location__directions-line {
+    margin: 6px 0 12px;
+  }
+  .store-location-section--{{ section.id }} .store-location__call-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    background: #570522;
+    color: #ffffff !important;
+    border: 1px solid #2e0212;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-decoration: none !important;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.18),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.22),
+      0 1px 0 rgba(46, 2, 18, 0.4),
+      0 2px 4px rgba(46, 2, 18, 0.18);
+    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.3);
+    transition: background 180ms ease, color 180ms ease, border-color 180ms ease, transform 80ms ease;
+  }
+  .store-location-section--{{ section.id }} .store-location__call-btn:hover {
+    background: #ba5b28;
+    border-color: #6e3514;
+  }
+  .store-location-section--{{ section.id }} .store-location__call-btn:active {
+    transform: translateY(1px);
+  }
+  .store-location-section--{{ section.id }} .store-location__call-icon {
+    flex-shrink: 0;
+  }
+  .store-location-section--{{ section.id }} .store-location__directions-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    background: transparent;
+    color: #570522 !important;
+    border: 1.5px solid #570522;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-decoration: none !important;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.35),
+      inset 0 -1px 0 rgba(46, 2, 18, 0.10),
+      0 1px 0 rgba(46, 2, 18, 0.18),
+      0 2px 4px rgba(46, 2, 18, 0.10);
+    transition: background 180ms ease, color 180ms ease, border-color 180ms ease, transform 80ms ease;
+  }
+  .store-location-section--{{ section.id }} .store-location__directions-btn:hover {
+    background: #570522;
+    color: #fffaf2 !important;
+    border-color: #2e0212;
+    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.3);
+  }
+  .store-location-section--{{ section.id }} .store-location__directions-btn:focus-visible {
+    outline: 2px solid #570522;
+    outline-offset: 2px;
+  }
+  .store-location-section--{{ section.id }} .store-location__call-btn:focus-visible {
+    outline: 2px solid #2e0212;
+    outline-offset: 2px;
+  }
+  .store-location-section--{{ section.id }} .store-location__directions-btn:active {
+    transform: translateY(1px);
+  }
+  .store-location-section--{{ section.id }} .store-location__directions-icon {
+    flex-shrink: 0;
+  }
+  .store-location-section--{{ section.id }} .store-location__intro-area { grid-area: intro; }
+  .store-location-section--{{ section.id }} .store-location__locations { grid-area: locations; }
+
   .store-location-section--{{ section.id }} .store-location__heading {
     font-size: 22px;
-    margin: 0 0 8px;
+    margin: 0 0 6px;
     color: {{ section.settings.text_color }};
+  }
+  .store-location-section--{{ section.id }} .store-location__intro {
+    margin: 0 0 12px;
+    font-size: 14px;
+    line-height: 1.5;
+    opacity: 0.85;
+  }
+  .store-location-section--{{ section.id }} .store-location__locations {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  .store-location-section--{{ section.id }} .store-location__card {
+    padding: 14px 16px;
+    border-radius: 10px;
+    background: rgba(87, 5, 34, 0.06);
+    border: 1px solid rgba(87, 5, 34, 0.18);
+    transition: background 200ms ease, border-color 200ms ease;
+  }
+  .store-location-section--{{ section.id }} .store-location__card[data-status="coming-soon"] {
+    opacity: 0.78;
+  }
+  .store-location-section--{{ section.id }} .store-location__card-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+  .store-location-section--{{ section.id }} .store-location__card-name {
+    font-size: 15px;
+    font-weight: 700;
+    margin: 0;
+  }
+  .store-location-section--{{ section.id }} .store-location__tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 700;
+    background: rgba(87, 5, 34, 0.14);
+    color: {{ section.settings.text_color }};
+  }
+  .store-location-section--{{ section.id }} .store-location__tag--primary {
+    background: #570522;
+    color: #fff;
+  }
+  .store-location-section--{{ section.id }} .store-location__tag--soon {
+    background: rgba(87, 5, 34, 0.14);
   }
   .store-location-section--{{ section.id }} .store-location__line {
     margin: 4px 0;
     line-height: 1.45;
-    font-size: 15px;
+    font-size: 14px;
   }
   .store-location-section--{{ section.id }} .store-location__line a {
     color: {{ section.settings.text_color }};
     text-decoration: underline;
   }
   .store-location-section--{{ section.id }} .store-location__hours {
-    margin-top: 12px;
+    margin-top: 10px;
   }
   .store-location-section--{{ section.id }} .store-location__hours-row {
     display: flex;
     justify-content: space-between;
     padding: 3px 0;
-    font-size: 14px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 13px;
+    border-bottom: 1px solid rgba(87, 5, 34, 0.14);
   }
   .store-location-section--{{ section.id }} .store-location__hours-row:last-child {
     border-bottom: none;
   }
-  .store-location-section--{{ section.id }} .store-location__map {
-    width: 100%;
-    aspect-ratio: 16 / 11;
-    border: 0;
-    border-radius: 8px;
-    overflow: hidden;
-    background: rgba(255, 255, 255, 0.05);
-  }
+
   @media screen and (min-width: 768px) {
     .store-location-section--{{ section.id }} {
-      padding: 48px 24px;
-    }
-    .store-location-section--{{ section.id }} .store-location__inner {
-      grid-template-columns: 1fr 1.2fr;
-      gap: 40px;
-      align-items: center;
+      padding: 36px 24px;
     }
     .store-location-section--{{ section.id }} .store-location__heading {
       font-size: 28px;
+    }
+    .store-location-section--{{ section.id }} .store-location__locations {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+    }
+    .store-location-section--{{ section.id }} .store-location__phone-line,
+    .store-location-section--{{ section.id }} .store-location__directions-line {
+      display: inline-block;
+      margin: 8px 10px 12px 0;
     }
   }
 </style>
 
 <section class="store-location-section--{{ section.id }}">
   <div class="store-location__inner">
-    <div class="store-location__details">
+    <div class="store-location__intro-area">
       {% if section.settings.heading != blank %}
         <h2 class="store-location__heading">{{ section.settings.heading }}</h2>
       {% endif %}
+      {% if section.settings.intro != blank %}
+        <p class="store-location__intro">{{ section.settings.intro }}</p>
+      {% endif %}
 
-      {% if section.settings.address != blank %}
-        <p class="store-location__line">
-          {% if section.settings.maps_link != blank %}
-            <a href="{{ section.settings.maps_link }}" target="_blank" rel="noopener">
-              {{ section.settings.address | newline_to_br }}
+      {%- comment -%} Legacy single-location: pull address + hours into the upper-left quadrant {%- endcomment -%}
+      {%- if location_blocks.size == 0 -%}
+        {% if section.settings.address != blank %}
+          {%- assign address_inline = section.settings.address | newline_to_br | replace: '<br />', ', ' | replace: '<br>', ', ' -%}
+          <p class="store-location__line">
+            {%- if section.settings.maps_link != blank -%}
+              <a href="{{ section.settings.maps_link }}" target="_blank" rel="noopener">{{ address_inline }}</a>
+            {%- else -%}
+              {{ address_inline }}
+            {%- endif -%}
+          </p>
+        {% endif %}
+        {% if section.settings.phone != blank %}
+          {%- assign phone_clean = section.settings.phone | replace: '-', '' | replace: ' ', '' | replace: '(', '' | replace: ')', '' -%}
+          <p class="store-location__phone-line">
+            <a class="store-location__call-btn" href="tel:{{ phone_clean }}" aria-label="Call {{ section.settings.phone }}">
+              <svg class="store-location__call-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.37 1.9.72 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.35 1.85.59 2.81.72A2 2 0 0 1 22 16.92z"/>
+              </svg>
+              <span class="store-location__call-text">{{ section.settings.phone }}</span>
             </a>
-          {% else %}
-            {{ section.settings.address | newline_to_br }}
-          {% endif %}
-        </p>
-      {% endif %}
-
-      {% if section.settings.phone != blank %}
-        <p class="store-location__line">
-          <a href="tel:{{ section.settings.phone | replace: '-', '' | replace: ' ', '' | replace: '(', '' | replace: ')', '' }}">
-            {{ section.settings.phone }}
-          </a>
-        </p>
-      {% endif %}
-
-      <div class="store-location__hours">
-        {% for block in section.blocks %}
-          <div class="store-location__hours-row" {{ block.shopify_attributes }}>
-            <span>{{ block.settings.day }}</span>
-            <span>{{ block.settings.hours }}</span>
+          </p>
+        {% endif %}
+        {% if section.settings.maps_link != blank %}
+          <p class="store-location__directions-line">
+            <a class="store-location__directions-btn" href="{{ section.settings.maps_link }}" target="_blank" rel="noopener" aria-label="Get directions in Google Maps">
+              <svg class="store-location__directions-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                <circle cx="12" cy="10" r="3"/>
+              </svg>
+              <span class="store-location__directions-text">Get directions</span>
+            </a>
+          </p>
+        {% endif %}
+        {% if hours_blocks.size > 0 %}
+          <div class="store-location__hours">
+            {% for block in hours_blocks %}
+              <div class="store-location__hours-row" {{ block.shopify_attributes }}>
+                <span>{{ block.settings.day }}</span>
+                <span>{{ block.settings.hours }}</span>
+              </div>
+            {% endfor %}
           </div>
-        {% endfor %}
-      </div>
+        {% endif %}
+      {%- endif -%}
     </div>
 
-    <div class="store-location__map-wrapper">
-      <iframe
-        class="store-location__map"
-        src="https://maps.google.com/maps?q={{ section.settings.address | url_encode }}&output=embed"
-        loading="lazy"
-        referrerpolicy="no-referrer-when-downgrade"
-        allowfullscreen
-        title="Map to {{ section.settings.heading | default: 'our store' }}"
-      ></iframe>
+    <div class="store-location__locations">
+        {%- if location_blocks.size > 0 -%}
+          {%- for b in location_blocks -%}
+            <div
+              class="store-location__card"
+              data-status="{% if b.settings.coming_soon %}coming-soon{% else %}open{% endif %}"
+              {{ b.shopify_attributes }}
+            >
+              <div class="store-location__card-header">
+                <h3 class="store-location__card-name">{{ b.settings.name | escape }}</h3>
+                {%- if b.settings.is_primary -%}
+                  <span class="store-location__tag store-location__tag--primary">Flagship</span>
+                {%- endif -%}
+                {%- if b.settings.coming_soon -%}
+                  <span class="store-location__tag store-location__tag--soon">Coming soon</span>
+                {%- endif -%}
+              </div>
+              {% if b.settings.address != blank %}
+                <p class="store-location__line">
+                  {%- if b.settings.maps_link != blank -%}
+                    <a href="{{ b.settings.maps_link }}" target="_blank" rel="noopener">{{ b.settings.address | newline_to_br }}</a>
+                  {%- else -%}
+                    {{ b.settings.address | newline_to_br }}
+                  {%- endif -%}
+                </p>
+              {% endif %}
+              {% if b.settings.phone != blank %}
+                <p class="store-location__line">
+                  <a href="tel:{{ b.settings.phone | replace: '-', '' | replace: ' ', '' | replace: '(', '' | replace: ')', '' }}">
+                    {{ b.settings.phone }}
+                  </a>
+                </p>
+              {% endif %}
+              {% if b.settings.hours != blank %}
+                <p class="store-location__line">{{ b.settings.hours | newline_to_br }}</p>
+              {% endif %}
+            </div>
+          {%- endfor -%}
+        {%- endif -%}
     </div>
   </div>
 </section>
+{%- endif -%}
 
 {% schema %}
 {
-  "name": "Store location + map",
+  "name": "Store locations + map",
   "settings": [
     {
       "type": "text",
@@ -128,9 +336,18 @@
     },
     {
       "type": "textarea",
+      "id": "intro",
+      "label": "Intro text",
+      "info": "Optional copy shown under the heading"
+    },
+    {
+      "type": "header",
+      "content": "Legacy fallback (no Location blocks)"
+    },
+    {
+      "type": "textarea",
       "id": "address",
-      "label": "Address",
-      "default": "328 E 75th Street\nChicago, IL 60619"
+      "label": "Address"
     },
     {
       "type": "url",
@@ -140,26 +357,42 @@
     {
       "type": "text",
       "id": "phone",
-      "label": "Phone",
-      "default": "773-570-7676"
+      "label": "Phone"
+    },
+    {
+      "type": "header",
+      "content": "Style"
     },
     {
       "type": "color",
       "id": "background_color",
       "label": "Background color",
-      "default": "#5b2512"
+      "default": "#e68c3b"
     },
     {
       "type": "color",
       "id": "text_color",
       "label": "Text color",
-      "default": "#ffffff"
+      "default": "#570522"
     }
   ],
   "blocks": [
     {
+      "type": "location",
+      "name": "Location",
+      "settings": [
+        { "type": "text", "id": "name", "label": "Name", "default": "75th Street" },
+        { "type": "textarea", "id": "address", "label": "Address" },
+        { "type": "url", "id": "maps_link", "label": "Google Maps link" },
+        { "type": "text", "id": "phone", "label": "Phone" },
+        { "type": "textarea", "id": "hours", "label": "Hours", "info": "One line per day, free text" },
+        { "type": "checkbox", "id": "is_primary", "label": "Flagship (centers the map on this location)", "default": false },
+        { "type": "checkbox", "id": "coming_soon", "label": "Coming soon", "default": false }
+      ]
+    },
+    {
       "type": "hours",
-      "name": "Hours row",
+      "name": "Hours row (legacy)",
       "settings": [
         { "type": "text", "id": "day", "label": "Day", "default": "Monday" },
         { "type": "text", "id": "hours", "label": "Hours", "default": "Closed" }
@@ -168,11 +401,22 @@
   ],
   "presets": [
     {
-      "name": "Store location + map",
+      "name": "Store locations + map",
       "blocks": [
-        { "type": "hours", "settings": { "day": "Monday", "hours": "Closed" } },
-        { "type": "hours", "settings": { "day": "Tue – Sat", "hours": "10:00 am – 6:00 pm" } },
-        { "type": "hours", "settings": { "day": "Sunday", "hours": "12:00 pm – 5:00 pm" } }
+        {
+          "type": "location",
+          "settings": {
+            "name": "75th Street (Flagship)",
+            "address": "328 E 75th Street\nChicago, IL 60619",
+            "phone": "773-570-7676",
+            "hours": "Mon: Closed\nTue–Sat: 10:00 am – 6:00 pm\nSun: 12:00 pm – 5:00 pm",
+            "is_primary": true,
+            "coming_soon": false
+          }
+        },
+        { "type": "location", "settings": { "name": "Downtown", "address": "Chicago, IL", "coming_soon": true } },
+        { "type": "location", "settings": { "name": "Evanston", "address": "Evanston, IL", "coming_soon": true } },
+        { "type": "location", "settings": { "name": "University of Chicago", "address": "Hyde Park, Chicago, IL", "coming_soon": true } }
       ]
     }
   ]

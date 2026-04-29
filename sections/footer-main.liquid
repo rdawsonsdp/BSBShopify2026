@@ -1,3 +1,5 @@
+{%- comment -%} Footer is homepage-only — subsequent pages get a minimal layout. {%- endcomment -%}
+{%- if request.page_type == 'index' -%}
 {% assign show_social_block = false %}
 {% if
  settings.sm_facebook_link != blank or
@@ -192,6 +194,7 @@
     </div>
   </div>
 </footer>
+{%- endif -%}
 
 {% schema %}
   {

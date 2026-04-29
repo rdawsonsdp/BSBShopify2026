@@ -1,0 +1,129 @@
+{%- comment -%}
+  Two collapsible info boxes under the product description:
+    1) Allergen Information   → product.metafields.bsb.allergens
+    2) Serving & Storage      → product.metafields.bsb.serving_storage
+  Falls back to sample placeholder text if metafield not set.
+{%- endcomment -%}
+
+{%- liquid
+  assign allergens = product.metafields.bsb.allergens | default: 'Contains eggs, dairy, wheat (gluten), and soy. Made in a facility that also handles peanuts and tree nuts.'
+  assign serving = product.metafields.bsb.serving_storage | default: 'Serves 8–10. Refrigerate; best within 3 days. Bring to room temperature 30 minutes before serving. Pairs beautifully with coffee, tea, or sparkling rosé.'
+-%}
+
+<div class="bsb-info-boxes">
+  <details class="bsb-info-box">
+    <summary class="bsb-info-box__summary">
+      <span class="bsb-info-box__icon" aria-hidden="true">⚠</span>
+      <span class="bsb-info-box__title">Allergen Information</span>
+      <span class="bsb-info-box__chevron" aria-hidden="true">▾</span>
+    </summary>
+    <div class="bsb-info-box__body">
+      {%- if allergens.type == 'rich_text_field' -%}
+        {{ allergens | metafield_tag }}
+      {%- else -%}
+        <p>{{ allergens | newline_to_br }}</p>
+      {%- endif -%}
+    </div>
+  </details>
+
+  <details class="bsb-info-box">
+    <summary class="bsb-info-box__summary">
+      <span class="bsb-info-box__icon" aria-hidden="true">🍰</span>
+      <span class="bsb-info-box__title">Serving &amp; Storage</span>
+      <span class="bsb-info-box__chevron" aria-hidden="true">▾</span>
+    </summary>
+    <div class="bsb-info-box__body">
+      {%- if serving.type == 'rich_text_field' -%}
+        {{ serving | metafield_tag }}
+      {%- else -%}
+        <p>{{ serving | newline_to_br }}</p>
+      {%- endif -%}
+    </div>
+  </details>
+</div>
+
+<style>
+  .bsb-info-boxes {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 10px 0 14px;
+  }
+  .bsb-info-box {
+    /* Beveled enamelware look — subtle square corners, inset highlight, soft drop shadow. */
+    background: #f7ead6;
+    color: #5b2512;
+    border: 1px solid rgba(91, 37, 18, 0.32);
+    border-radius: 4px;
+    overflow: hidden;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.55),
+      inset 0 -1px 0 rgba(91, 37, 18, 0.10),
+      0 1px 2px rgba(91, 37, 18, 0.10);
+    transition: background 180ms ease, border-color 180ms ease, box-shadow 180ms ease, transform 80ms ease;
+  }
+  .bsb-info-box:hover {
+    background: #f0dec0;
+    border-color: rgba(91, 37, 18, 0.45);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.6),
+      inset 0 -1px 0 rgba(91, 37, 18, 0.14),
+      0 2px 5px rgba(91, 37, 18, 0.16);
+  }
+  .bsb-info-box:active {
+    transform: translateY(1px);
+    box-shadow:
+      inset 0 1px 2px rgba(91, 37, 18, 0.18),
+      0 1px 2px rgba(91, 37, 18, 0.10);
+  }
+  .bsb-info-box[open] {
+    background: #f0dec0;
+    border-color: rgba(91, 37, 18, 0.4);
+  }
+  .bsb-info-box__summary {
+    list-style: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    font-weight: 500;
+    font-size: 13px;
+    letter-spacing: 0.01em;
+    user-select: none;
+  }
+  .bsb-info-box__summary::-webkit-details-marker { display: none; }
+  .bsb-info-box__summary:focus-visible {
+    outline: 2px solid rgba(186, 91, 40, 0.5);
+    outline-offset: -2px;
+  }
+  .bsb-info-box__icon {
+    font-size: 13px;
+    flex-shrink: 0;
+    opacity: 0.7;
+  }
+  .bsb-info-box__title { flex: 1; }
+  .bsb-info-box__chevron {
+    transition: transform 200ms ease;
+    font-size: 11px;
+    opacity: 0.55;
+  }
+  .bsb-info-box[open] .bsb-info-box__chevron {
+    transform: rotate(180deg);
+  }
+  .bsb-info-box__body {
+    padding: 2px 14px 12px;
+    font-size: 13px;
+    line-height: 1.5;
+    color: rgba(91, 37, 18, 0.72);
+    animation: bsb-info-fade 200ms ease;
+  }
+  .bsb-info-box__body p {
+    margin: 0 0 6px;
+  }
+  .bsb-info-box__body p:last-child { margin-bottom: 0; }
+  @keyframes bsb-info-fade {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>

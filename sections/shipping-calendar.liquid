@@ -1,0 +1,685 @@
+{% comment %}
+  LIFT: Anxiety + Clarity — eliminates "when will it arrive" uncertainty by making
+  the schedule explicit. Interactive calendar lets visitors pre-visualize their
+  own order timeline. The Mon/Tue/Wed-only ship rhythm is one of the two most
+  important facts on the page (along with packaging) — surfacing it visually
+  defuses the "is my cake stuck in a warehouse?" fear.
+{% endcomment %}
+
+<section class="shipping-calendar shipping-calendar--{{ section.id }}" data-section-id="{{ section.id }}" aria-label="{{ section.settings.heading | default: 'Shipping calendar' | escape }}">
+  <div class="shipping-calendar__inner">
+    {% if section.settings.eyebrow != blank %}
+      <p class="shipping-calendar__eyebrow">{{ section.settings.eyebrow | escape }}</p>
+    {% endif %}
+    {% if section.settings.heading != blank %}
+      <h2 class="shipping-calendar__heading">{{ section.settings.heading | escape }}</h2>
+    {% endif %}
+    {% if section.settings.subheading != blank %}
+      <p class="shipping-calendar__subheading">{{ section.settings.subheading | escape }}</p>
+    {% endif %}
+
+    <ol class="shipping-calendar__days" role="list">
+      {%- comment -%} Day status table — hardcoded shipping rhythm.
+        Sun: Closed | Mon: Ship → Wed | Tue: Ship + Arrival | Wed: Ship + Arrival
+        Thu: Arrival only | Fri: Arrival only | Sat: Closed
+      {%- endcomment -%}
+
+      <li class="shipping-calendar__day shipping-calendar__day--closed" data-day="sun" data-role="closed">
+        <button type="button" class="shipping-calendar__tile" aria-pressed="false" aria-label="Sunday — closed, no shipping">
+          <span class="shipping-calendar__dow" aria-hidden="true">Sun</span>
+          <span class="shipping-calendar__pills">
+            <span class="shipping-calendar__pill shipping-calendar__pill--closed">Closed</span>
+          </span>
+          <span class="visually-hidden">Sunday: closed. UPS does not deliver and we don't ship.</span>
+        </button>
+      </li>
+
+      <li class="shipping-calendar__day shipping-calendar__day--ship" data-day="mon" data-role="ship" data-pair="wed">
+        <button type="button" class="shipping-calendar__tile" aria-pressed="false" aria-label="Monday — ship day, arrives Wednesday">
+          <span class="shipping-calendar__dow" aria-hidden="true">Mon</span>
+          <span class="shipping-calendar__pills">
+            <span class="shipping-calendar__pill shipping-calendar__pill--ship">Ship day</span>
+          </span>
+          <span class="visually-hidden">Monday: ship day. Cakes shipped Monday arrive Wednesday.</span>
+        </button>
+      </li>
+
+      <li class="shipping-calendar__day shipping-calendar__day--both" data-day="tue" data-role="both" data-pair-ship="thu" data-pair-arrival="mon">
+        <button type="button" class="shipping-calendar__tile" aria-pressed="false" aria-label="Tuesday — ship day and arrival day">
+          <span class="shipping-calendar__dow" aria-hidden="true">Tue</span>
+          <span class="shipping-calendar__pills">
+            <span class="shipping-calendar__pill shipping-calendar__pill--ship">Ship</span>
+            <span class="shipping-calendar__pill shipping-calendar__pill--arrival">Arrives</span>
+          </span>
+          <span class="visually-hidden">Tuesday: both a ship day (arriving Thursday) and the arrival day for shipments that left earlier in the week.</span>
+        </button>
+      </li>
+
+      <li class="shipping-calendar__day shipping-calendar__day--both" data-day="wed" data-role="both" data-pair-ship="fri" data-pair-arrival="mon">
+        <button type="button" class="shipping-calendar__tile" aria-pressed="false" aria-label="Wednesday — ship day and arrival day">
+          <span class="shipping-calendar__dow" aria-hidden="true">Wed</span>
+          <span class="shipping-calendar__pills">
+            <span class="shipping-calendar__pill shipping-calendar__pill--ship">Ship</span>
+            <span class="shipping-calendar__pill shipping-calendar__pill--arrival">Arrives</span>
+          </span>
+          <span class="visually-hidden">Wednesday: both a ship day (arriving Friday) and the arrival day for Monday shipments.</span>
+        </button>
+      </li>
+
+      <li class="shipping-calendar__day shipping-calendar__day--arrival" data-day="thu" data-role="arrival" data-pair="tue">
+        <button type="button" class="shipping-calendar__tile" aria-pressed="false" aria-label="Thursday — arrival day from Tuesday shipments">
+          <span class="shipping-calendar__dow" aria-hidden="true">Thu</span>
+          <span class="shipping-calendar__pills">
+            <span class="shipping-calendar__pill shipping-calendar__pill--arrival">Arrival day</span>
+          </span>
+          <span class="visually-hidden">Thursday: arrival day. Cakes shipped Tuesday arrive today.</span>
+        </button>
+      </li>
+
+      <li class="shipping-calendar__day shipping-calendar__day--arrival" data-day="fri" data-role="arrival" data-pair="wed">
+        <button type="button" class="shipping-calendar__tile" aria-pressed="false" aria-label="Friday — arrival day from Wednesday shipments">
+          <span class="shipping-calendar__dow" aria-hidden="true">Fri</span>
+          <span class="shipping-calendar__pills">
+            <span class="shipping-calendar__pill shipping-calendar__pill--arrival">Arrival day</span>
+          </span>
+          <span class="visually-hidden">Friday: arrival day. Cakes shipped Wednesday arrive today.</span>
+        </button>
+      </li>
+
+      <li class="shipping-calendar__day shipping-calendar__day--closed" data-day="sat" data-role="closed">
+        <button type="button" class="shipping-calendar__tile" aria-pressed="false" aria-label="Saturday — closed, no shipping or delivery">
+          <span class="shipping-calendar__dow" aria-hidden="true">Sat</span>
+          <span class="shipping-calendar__pills">
+            <span class="shipping-calendar__pill shipping-calendar__pill--closed">Closed</span>
+          </span>
+          <span class="visually-hidden">Saturday: closed. No outgoing shipments and no UPS delivery.</span>
+        </button>
+      </li>
+    </ol>
+
+    <div class="shipping-calendar__live" role="status" aria-live="polite" aria-atomic="true" data-default="Tap a day to see its shipping path.">Tap a day to see its shipping path.</div>
+
+    <div class="shipping-calendar__explainer">
+      <div class="shipping-calendar__col shipping-calendar__col--why">
+        <h3 class="shipping-calendar__col-heading">Why we ship early week</h3>
+        {% if section.settings.explanation_text != blank %}
+          <div class="shipping-calendar__col-body rte">{{ section.settings.explanation_text }}</div>
+        {% endif %}
+      </div>
+      <div class="shipping-calendar__col shipping-calendar__col--cutoffs">
+        <h3 class="shipping-calendar__col-heading">Cutoff times</h3>
+        {% comment %} TODO: confirm cutoff times with Stephanie before publishing. {% endcomment %}
+        <ul class="shipping-calendar__cutoffs" role="list">
+          {% if section.settings.cutoff_sun != blank %}
+            <li class="shipping-calendar__cutoff">{{ section.settings.cutoff_sun | escape }}</li>
+          {% endif %}
+          {% if section.settings.cutoff_mon != blank %}
+            <li class="shipping-calendar__cutoff">{{ section.settings.cutoff_mon | escape }}</li>
+          {% endif %}
+          {% if section.settings.cutoff_tue != blank %}
+            <li class="shipping-calendar__cutoff">{{ section.settings.cutoff_tue | escape }}</li>
+          {% endif %}
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .shipping-calendar--{{ section.id }} {
+    background: {{ section.settings.background_color }};
+    color: {{ section.settings.text_color }};
+    padding: 36px 16px;
+  }
+  .shipping-calendar--{{ section.id }} .shipping-calendar__inner {
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  .shipping-calendar--{{ section.id }} .shipping-calendar__eyebrow {
+    font-size: 12px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    font-weight: 700;
+    margin: 0 0 8px;
+    opacity: 0.75;
+    text-align: center;
+  }
+  .shipping-calendar--{{ section.id }} .shipping-calendar__heading {
+    font-size: clamp(22px, 4vw, 32px);
+    font-weight: 800;
+    margin: 0 0 8px;
+    text-align: center;
+    color: inherit;
+    line-height: 1.2;
+  }
+  .shipping-calendar--{{ section.id }} .shipping-calendar__subheading {
+    margin: 0 auto 28px;
+    max-width: 600px;
+    text-align: center;
+    font-size: 15px;
+    line-height: 1.5;
+    opacity: 0.85;
+  }
+
+  /* visually-hidden — for screen-reader-only content */
+  .shipping-calendar--{{ section.id }} .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  /* 7-day strip */
+  .shipping-calendar--{{ section.id }} .shipping-calendar__days {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 18px;
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+  }
+  .shipping-calendar--{{ section.id }} .shipping-calendar__day {
+    margin: 0;
+    padding: 0;
+  }
+  .shipping-calendar--{{ section.id }} .shipping-calendar__tile {
+    width: 100%;
+    min-height: 110px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+    padding: 10px 4px;
+    background: rgba(255, 255, 255, 0.55);
+    border: 1.5px solid rgba(91, 37, 18, 0.15);
+    border-radius: 6px;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+    transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease, background 180ms ease;
+  }
+  .shipping-calendar--{{ section.id }} .shipping-calendar__tile:hover,
+  .shipping-calendar--{{ section.id }} .shipping-calendar__tile:focus-visible {
+    border-color: {{ section.settings.ship_color }};
+    box-shadow: 0 2px 8px rgba(91, 37, 18, 0.14);
+    outline: none;
+  }
+  .shipping-calendar--{{ section.id }} .shipping-calendar__day--closed .shipping-calendar__tile {
+    background: rgba(91, 37, 18, 0.04);
+    cursor: default;
+    opacity: 0.7;
+  }
+  .shipping-calendar--{{ section.id }} .shipping-calendar__day--closed .shipping-calendar__tile:hover {
+    border-color: rgba(91, 37, 18, 0.15);
+    box-shadow: none;
+  }
+  .shipping-calendar--{{ section.id }} .shipping-calendar__dow {
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: inherit;
+    opacity: 0.85;
+  }
+  .shipping-calendar--{{ section.id }} .shipping-calendar__pills {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    align-items: stretch;
+    width: 100%;
+    padding: 0 4px;
+  }
+  .shipping-calendar--{{ section.id }} .shipping-calendar__pill {
+    display: block;
+    text-align: center;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 4px 4px;
+    border-radius: 3px;
+    line-height: 1.15;
+  }
+  .shipping-calendar--{{ section.id }} .shipping-calendar__pill--ship {
+    background: {{ section.settings.ship_color }};
+    color: #fffaf2;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.18),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.18);
+  }
+  .shipping-calendar--{{ section.id }} .shipping-calendar__pill--arrival {
+    background: {{ section.settings.arrival_color }};
+    color: #fffaf2;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.20),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.16);
+  }
+  .shipping-calendar--{{ section.id }} .shipping-calendar__pill--closed {
+    background: transparent;
+    color: rgba(91, 37, 18, 0.55);
+    border: 1px dashed rgba(91, 37, 18, 0.3);
+  }
+
+  /* Active + connected pulse states */
+  .shipping-calendar--{{ section.id }} .shipping-calendar__tile[aria-pressed="true"] {
+    border-color: {{ section.settings.ship_color }};
+    background: #fffaf2;
+    box-shadow: 0 4px 14px rgba(91, 37, 18, 0.22);
+    transform: translateY(-1px);
+  }
+  .shipping-calendar--{{ section.id }} .shipping-calendar__day.is-connected .shipping-calendar__tile {
+    border-color: {{ section.settings.arrival_color }};
+    background: #fffaf2;
+  }
+  .shipping-calendar--{{ section.id }} .shipping-calendar__day.is-connected .shipping-calendar__pill--arrival {
+    background: #e68c3b;
+  }
+  .shipping-calendar--{{ section.id }} .shipping-calendar__day.is-pulsing .shipping-calendar__tile {
+    animation: shipping-calendar-pulse-{{ section.id }} 600ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  @keyframes shipping-calendar-pulse-{{ section.id }} {
+    0%   { transform: scale(1); }
+    35%  { transform: scale(1.06); }
+    70%  { transform: scale(0.99); }
+    100% { transform: scale(1); }
+  }
+
+  /* Live region */
+  .shipping-calendar--{{ section.id }} .shipping-calendar__live {
+    margin: 6px auto 28px;
+    max-width: 640px;
+    text-align: center;
+    font-size: 15px;
+    line-height: 1.5;
+    padding: 14px 18px;
+    background: #f7ead6;
+    border-radius: 6px;
+    color: {{ section.settings.text_color }};
+    min-height: 1.5em;
+    font-weight: 600;
+  }
+
+  /* Explainer */
+  .shipping-calendar--{{ section.id }} .shipping-calendar__explainer {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 24px;
+    margin-top: 8px;
+  }
+  .shipping-calendar--{{ section.id }} .shipping-calendar__col {
+    padding: 0;
+  }
+  .shipping-calendar--{{ section.id }} .shipping-calendar__col-heading {
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: {{ section.settings.ship_color }};
+    margin: 0 0 12px;
+  }
+  .shipping-calendar--{{ section.id }} .shipping-calendar__col-body {
+    font-size: 15px;
+    line-height: 1.55;
+    color: rgba(91, 37, 18, 0.85);
+  }
+  .shipping-calendar--{{ section.id }} .shipping-calendar__col-body p {
+    margin: 0 0 10px;
+  }
+  .shipping-calendar--{{ section.id }} .shipping-calendar__col-body p:last-child {
+    margin-bottom: 0;
+  }
+  .shipping-calendar--{{ section.id }} .shipping-calendar__cutoffs {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .shipping-calendar--{{ section.id }} .shipping-calendar__cutoff {
+    font-size: 14px;
+    line-height: 1.5;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(91, 37, 18, 0.12);
+    color: rgba(91, 37, 18, 0.9);
+  }
+  .shipping-calendar--{{ section.id }} .shipping-calendar__cutoff:last-child {
+    border-bottom: none;
+  }
+
+  /* Mobile pill text scaling */
+  @media screen and (max-width: 520px) {
+    .shipping-calendar--{{ section.id }} .shipping-calendar__days {
+      gap: 4px;
+    }
+    .shipping-calendar--{{ section.id }} .shipping-calendar__tile {
+      padding: 8px 2px;
+      min-height: 96px;
+    }
+    .shipping-calendar--{{ section.id }} .shipping-calendar__dow {
+      font-size: 11px;
+    }
+    .shipping-calendar--{{ section.id }} .shipping-calendar__pill {
+      font-size: 9px;
+      padding: 3px 2px;
+      letter-spacing: 0.04em;
+    }
+    .shipping-calendar--{{ section.id }} .shipping-calendar__pills {
+      padding: 0 2px;
+    }
+  }
+
+  @media screen and (min-width: 768px) {
+    .shipping-calendar--{{ section.id }} {
+      padding: 56px 24px;
+    }
+    .shipping-calendar--{{ section.id }} .shipping-calendar__days {
+      gap: 10px;
+    }
+    .shipping-calendar--{{ section.id }} .shipping-calendar__tile {
+      min-height: 130px;
+      padding: 14px 8px;
+    }
+    .shipping-calendar--{{ section.id }} .shipping-calendar__pill {
+      font-size: 11px;
+      padding: 5px 6px;
+    }
+    .shipping-calendar--{{ section.id }} .shipping-calendar__explainer {
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .shipping-calendar--{{ section.id }} .shipping-calendar__tile,
+    .shipping-calendar--{{ section.id }} .shipping-calendar__day.is-pulsing .shipping-calendar__tile {
+      transition: none;
+      animation: none;
+    }
+  }
+</style>
+
+<script>
+  (function () {
+    var root = document.querySelector('.shipping-calendar[data-section-id="{{ section.id }}"]');
+    if (!root) return;
+
+    var tiles = root.querySelectorAll('.shipping-calendar__day');
+    var live = root.querySelector('.shipping-calendar__live');
+    var defaultLive = live ? (live.getAttribute('data-default') || '') : '';
+
+    var prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // Cutoff text from schema settings — used when a ship day is activated
+    var cutoffByShip = {
+      mon: {{ section.settings.cutoff_sun | default: '' | json }},
+      tue: {{ section.settings.cutoff_mon | default: '' | json }},
+      wed: {{ section.settings.cutoff_tue | default: '' | json }}
+    };
+
+    var dayNames = {
+      sun: 'Sunday', mon: 'Monday', tue: 'Tuesday', wed: 'Wednesday',
+      thu: 'Thursday', fri: 'Friday', sat: 'Saturday'
+    };
+
+    // ship → arrival pairs and reverse
+    var shipToArrival = { mon: 'wed', tue: 'thu', wed: 'fri' };
+    var arrivalToShip = { wed: 'mon', thu: 'tue', fri: 'wed' };
+
+    function getDay(code) {
+      for (var i = 0; i < tiles.length; i++) {
+        if (tiles[i].getAttribute('data-day') === code) return tiles[i];
+      }
+      return null;
+    }
+
+    function clearAll() {
+      for (var i = 0; i < tiles.length; i++) {
+        tiles[i].classList.remove('is-connected', 'is-pulsing');
+        var btn = tiles[i].querySelector('.shipping-calendar__tile');
+        if (btn) btn.setAttribute('aria-pressed', 'false');
+      }
+    }
+
+    function pulse(el) {
+      if (!el || prefersReducedMotion) return;
+      el.classList.remove('is-pulsing');
+      // force reflow so animation restarts if re-triggered
+      void el.offsetWidth;
+      el.classList.add('is-pulsing');
+      setTimeout(function () {
+        el.classList.remove('is-pulsing');
+      }, 650);
+    }
+
+    function announce(msg) {
+      if (!live) return;
+      live.textContent = msg;
+    }
+
+    function activateShip(shipCode) {
+      var arrivalCode = shipToArrival[shipCode];
+      var shipEl = getDay(shipCode);
+      var arrivalEl = getDay(arrivalCode);
+      if (!shipEl || !arrivalEl) return;
+
+      clearAll();
+      var btn = shipEl.querySelector('.shipping-calendar__tile');
+      if (btn) btn.setAttribute('aria-pressed', 'true');
+      arrivalEl.classList.add('is-connected');
+      pulse(arrivalEl);
+
+      var cutoff = cutoffByShip[shipCode];
+      var msg;
+      if (cutoff) {
+        msg = cutoff + '. Ships ' + dayNames[shipCode] + ', arrives ' + dayNames[arrivalCode] + '.';
+      } else {
+        msg = 'Orders shipped ' + dayNames[shipCode] + ' arrive ' + dayNames[arrivalCode] + '.';
+      }
+      announce(msg);
+    }
+
+    function activateArrival(arrivalCode) {
+      var shipCode = arrivalToShip[arrivalCode];
+      var arrivalEl = getDay(arrivalCode);
+      var shipEl = getDay(shipCode);
+      if (!arrivalEl || !shipEl) return;
+
+      clearAll();
+      var btn = arrivalEl.querySelector('.shipping-calendar__tile');
+      if (btn) btn.setAttribute('aria-pressed', 'true');
+      shipEl.classList.add('is-connected');
+      pulse(shipEl);
+
+      var cutoff = cutoffByShip[shipCode];
+      var msg;
+      if (cutoff) {
+        msg = 'Arrives ' + dayNames[arrivalCode] + ' from ' + dayNames[shipCode] + ' shipments. ' + cutoff + '.';
+      } else {
+        msg = dayNames[arrivalCode] + ' arrivals come from ' + dayNames[shipCode] + ' shipments.';
+      }
+      announce(msg);
+    }
+
+    function activateBoth(dayCode) {
+      // Tue and Wed are both ship + arrival — treat the click as "show the ship-side path"
+      // (the arrival-side connection is implicit since the cell itself is the arrival).
+      activateShip(dayCode);
+    }
+
+    function clearActive() {
+      clearAll();
+      announce(defaultLive);
+    }
+
+    function handleActivate(dayEl) {
+      if (!dayEl) return;
+      var role = dayEl.getAttribute('data-role');
+      var code = dayEl.getAttribute('data-day');
+      var btn = dayEl.querySelector('.shipping-calendar__tile');
+
+      if (role === 'closed') {
+        clearAll();
+        announce(dayNames[code] + ': closed. We don\'t ship and UPS doesn\'t deliver.');
+        return;
+      }
+
+      // Toggle off if already active
+      if (btn && btn.getAttribute('aria-pressed') === 'true') {
+        clearActive();
+        return;
+      }
+
+      if (role === 'ship') activateShip(code);
+      else if (role === 'arrival') activateArrival(code);
+      else if (role === 'both') activateBoth(code);
+    }
+
+    // Click handlers
+    for (var i = 0; i < tiles.length; i++) {
+      (function (dayEl) {
+        var btn = dayEl.querySelector('.shipping-calendar__tile');
+        if (!btn) return;
+        btn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          handleActivate(dayEl);
+        });
+      })(tiles[i]);
+    }
+
+    // Keyboard navigation across tiles
+    var tileButtons = root.querySelectorAll('.shipping-calendar__tile');
+    function focusIndex(idx) {
+      if (idx < 0) idx = 0;
+      if (idx > tileButtons.length - 1) idx = tileButtons.length - 1;
+      if (tileButtons[idx]) tileButtons[idx].focus();
+    }
+
+    for (var j = 0; j < tileButtons.length; j++) {
+      (function (btn, idx) {
+        btn.addEventListener('keydown', function (e) {
+          switch (e.key) {
+            case 'ArrowRight':
+              e.preventDefault();
+              focusIndex(idx + 1);
+              break;
+            case 'ArrowLeft':
+              e.preventDefault();
+              focusIndex(idx - 1);
+              break;
+            case 'Home':
+              e.preventDefault();
+              focusIndex(0);
+              break;
+            case 'End':
+              e.preventDefault();
+              focusIndex(tileButtons.length - 1);
+              break;
+          }
+        });
+      })(tileButtons[j], j);
+    }
+
+    // Click outside to clear
+    document.addEventListener('click', function (e) {
+      if (!root.contains(e.target)) {
+        clearActive();
+      }
+    });
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "Shipping calendar",
+  "settings": [
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow",
+      "default": "NATIONWIDE SHIPPING"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "We ship Monday, Tuesday, and Wednesday."
+    },
+    {
+      "type": "textarea",
+      "id": "subheading",
+      "label": "Subheading",
+      "default": "Why those three days? So your cake never sits in a warehouse over the weekend."
+    },
+    {
+      "type": "header",
+      "content": "Why this rhythm"
+    },
+    {
+      "type": "richtext",
+      "id": "explanation_text",
+      "label": "Explanation",
+      "default": "<p>UPS doesn't deliver on Sundays, and we won't let your cake sit in a warehouse over a weekend. Shipping Monday through Wednesday means your cake is always in motion, never waiting. It arrives Tuesday through Friday — in time for the weekend you're celebrating.</p>"
+    },
+    {
+      "type": "header",
+      "content": "Cutoff times"
+    },
+    {
+      "type": "text",
+      "id": "cutoff_sun",
+      "label": "Sunday cutoff",
+      "default": "Order by Sunday 6 PM CT for Tuesday delivery"
+    },
+    {
+      "type": "text",
+      "id": "cutoff_mon",
+      "label": "Monday cutoff",
+      "default": "Order by Monday 6 PM CT for Wednesday delivery"
+    },
+    {
+      "type": "text",
+      "id": "cutoff_tue",
+      "label": "Tuesday cutoff",
+      "default": "Order by Tuesday 6 PM CT for Thursday or Friday delivery"
+    },
+    {
+      "type": "header",
+      "content": "Colors"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background",
+      "default": "#fffaf2"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text",
+      "default": "#570522"
+    },
+    {
+      "type": "color",
+      "id": "ship_color",
+      "label": "Ship-day fill",
+      "default": "#570522"
+    },
+    {
+      "type": "color",
+      "id": "arrival_color",
+      "label": "Arrival-day fill",
+      "default": "#ba5b28"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Shipping calendar",
+      "category": "Storytelling"
+    }
+  ]
+}
+{% endschema %}

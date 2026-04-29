@@ -349,3 +349,37 @@ We highly recommend labelling changes, or App installs, so these can also be upd
     margin-top: 64px;
   }
 }
+
+/* Cart page: shrink the BSB logo banner — too much wasted space on mobile */
+#shopify-section-image-with-text-block .image-text-block--wrapper,
+#shopify-section-image-with-text-block .image-text-block-row---mobile--image,
+#shopify-section-image-with-text-block .homepage-image--text-block--placeholder {
+  max-height: 200px;
+  overflow: hidden;
+}
+#shopify-section-image-with-text-block .image-text-block--wrapper .img,
+#shopify-section-image-with-text-block .feature-row__image,
+#shopify-section-image-with-text-block .icon--placeholder {
+  max-height: 200px;
+  height: auto;
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
+  margin: 0 auto;
+  display: block;
+}
+@media screen and (max-width: 767px) {
+  #shopify-section-image-with-text-block .image-text-block--wrapper,
+  #shopify-section-image-with-text-block .image-text-block-row---mobile--image,
+  #shopify-section-image-with-text-block .homepage-image--text-block--placeholder {
+    max-height: 110px;
+  }
+  #shopify-section-image-with-text-block .image-text-block--wrapper .img,
+  #shopify-section-image-with-text-block .feature-row__image,
+  #shopify-section-image-with-text-block .icon--placeholder {
+    max-height: 110px;
+  }
+  #shopify-section-image-with-text-block {
+    padding: 8px 0;
+  }
+}

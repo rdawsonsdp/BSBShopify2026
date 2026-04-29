@@ -146,7 +146,7 @@
       padding: 56px 24px;
     }
     .events-process--{{ section.id }} .events-process__steps {
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
       gap: 32px;
     }
     .events-process--{{ section.id }} .events-process__title {
@@ -158,7 +158,7 @@
 {% schema %}
 {
   "name": "Events process",
-  "max_blocks": 6,
+  "max_blocks": 8,
   "settings": [
     {
       "type": "text",

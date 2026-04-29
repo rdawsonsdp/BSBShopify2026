@@ -1,0 +1,415 @@
+{% comment %}
+  LIFT: Anxiety + Distraction reduction — collapses three anxiety-relief
+  sections (how it travels / when it arrives / before you order) into a
+  scannable click-to-expand tile row. Visitor sees the headlines, clicks
+  the one that addresses their specific worry.
+{% endcomment %}
+
+<section class="shipping-tiles shipping-tiles--{{ section.id }}" data-section-id="{{ section.id }}" aria-label="{{ section.settings.heading | default: 'Shipping info' | escape }}">
+  <div class="shipping-tiles__inner">
+    {% if section.settings.eyebrow != blank %}
+      <p class="shipping-tiles__eyebrow">{{ section.settings.eyebrow | escape }}</p>
+    {% endif %}
+    {% if section.settings.heading != blank %}
+      <h2 class="shipping-tiles__heading">{{ section.settings.heading | escape }}</h2>
+    {% endif %}
+    {% if section.settings.subheading != blank %}
+      <p class="shipping-tiles__subheading">{{ section.settings.subheading | escape }}</p>
+    {% endif %}
+
+    <div class="shipping-tiles__grid">
+      {% for block in section.blocks %}
+        <button
+          class="shipping-tiles__tile"
+          type="button"
+          aria-expanded="false"
+          aria-controls="shipping-tiles__panel-{{ section.id }}-{{ forloop.index }}"
+          data-tile-index="{{ forloop.index0 }}"
+          style="--tile-col: {{ forloop.index }};"
+          {{ block.shopify_attributes }}>
+          {% if block.settings.icon != blank %}
+            <span class="shipping-tiles__icon" aria-hidden="true">{{ block.settings.icon }}</span>
+          {% endif %}
+          <span class="shipping-tiles__title">{{ block.settings.title | escape }}</span>
+          {% if block.settings.teaser != blank %}
+            <span class="shipping-tiles__teaser">{{ block.settings.teaser | escape }}</span>
+          {% endif %}
+          <span class="shipping-tiles__cta" aria-hidden="true">
+            <span class="shipping-tiles__cta-label">Read more</span>
+            <span class="shipping-tiles__chevron">▾</span>
+          </span>
+        </button>
+        <div
+          class="shipping-tiles__panel"
+          id="shipping-tiles__panel-{{ section.id }}-{{ forloop.index }}"
+          data-panel-index="{{ forloop.index0 }}"
+          role="region"
+          aria-label="{{ block.settings.title | escape }}"
+          hidden>
+          <div class="shipping-tiles__panel-inner">
+            {% if block.settings.title != blank %}
+              <h3 class="shipping-tiles__panel-heading">
+                {% if block.settings.icon != blank %}
+                  <span aria-hidden="true">{{ block.settings.icon }}</span>
+                {% endif %}
+                {{ block.settings.title | escape }}
+              </h3>
+            {% endif %}
+            <div class="shipping-tiles__panel-body rte">{{ block.settings.panel_body }}</div>
+            <button class="shipping-tiles__panel-close" type="button" data-close-tile="{{ forloop.index0 }}" aria-label="Close {{ block.settings.title | escape }}">
+              Close <span aria-hidden="true">×</span>
+            </button>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<style>
+  .shipping-tiles--{{ section.id }} {
+    background: {{ section.settings.background_color }};
+    color: {{ section.settings.text_color }};
+    padding: 36px 16px;
+  }
+  .shipping-tiles--{{ section.id }} .shipping-tiles__inner {
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  .shipping-tiles--{{ section.id }} .shipping-tiles__eyebrow {
+    font-size: 12px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    font-weight: 700;
+    margin: 0 0 8px;
+    opacity: 0.75;
+    text-align: center;
+  }
+  .shipping-tiles--{{ section.id }} .shipping-tiles__heading {
+    font-size: clamp(22px, 4vw, 30px);
+    font-weight: 800;
+    margin: 0 0 8px;
+    text-align: center;
+    color: inherit;
+  }
+  .shipping-tiles--{{ section.id }} .shipping-tiles__subheading {
+    margin: 0 auto 24px;
+    max-width: 600px;
+    text-align: center;
+    font-size: 15px;
+    line-height: 1.5;
+    opacity: 0.85;
+  }
+
+  .shipping-tiles--{{ section.id }} .shipping-tiles__grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+    margin: 0;
+  }
+  @media screen and (min-width: 768px) {
+    .shipping-tiles--{{ section.id }} .shipping-tiles__grid {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px 14px;
+    }
+    .shipping-tiles--{{ section.id }} .shipping-tiles__grid .shipping-tiles__tile {
+      grid-row: 1;
+      grid-column: var(--tile-col, auto);
+    }
+    .shipping-tiles--{{ section.id }} .shipping-tiles__grid .shipping-tiles__panel {
+      grid-column: 1 / -1;
+    }
+  }
+
+  .shipping-tiles--{{ section.id }} .shipping-tiles__tile {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    background: {{ section.settings.tile_color }};
+    color: inherit;
+    border: 1px solid rgba(91, 37, 18, 0.18);
+    border-radius: 4px;
+    padding: 16px 18px;
+    text-align: left;
+    cursor: pointer;
+    font: inherit;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.55),
+      inset 0 -1px 0 rgba(91, 37, 18, 0.08),
+      0 1px 2px rgba(91, 37, 18, 0.10);
+    transition: transform 120ms ease, box-shadow 180ms ease, border-color 180ms ease, background 180ms ease;
+  }
+  .shipping-tiles--{{ section.id }} .shipping-tiles__tile:hover {
+    transform: translateY(-1px);
+    border-color: rgba(91, 37, 18, 0.32);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.6),
+      0 4px 10px rgba(91, 37, 18, 0.14);
+  }
+  .shipping-tiles--{{ section.id }} .shipping-tiles__tile:focus-visible {
+    outline: 2px solid {{ section.settings.accent_color }};
+    outline-offset: 2px;
+  }
+  .shipping-tiles--{{ section.id }} .shipping-tiles__tile.is-active {
+    border-color: {{ section.settings.accent_color }};
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.55),
+      0 4px 12px rgba(91, 37, 18, 0.18);
+  }
+  .shipping-tiles--{{ section.id }} .shipping-tiles__tile.is-active .shipping-tiles__chevron {
+    transform: rotate(180deg);
+  }
+
+  .shipping-tiles--{{ section.id }} .shipping-tiles__icon {
+    font-size: 24px;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .shipping-tiles--{{ section.id }} .shipping-tiles__title {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: {{ section.settings.text_color }};
+    line-height: 1.3;
+  }
+  .shipping-tiles--{{ section.id }} .shipping-tiles__teaser {
+    font-size: 13px;
+    font-style: italic;
+    line-height: 1.4;
+    color: rgba(91, 37, 18, 0.78);
+  }
+  .shipping-tiles--{{ section.id }} .shipping-tiles__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    color: {{ section.settings.accent_color }};
+  }
+  .shipping-tiles--{{ section.id }} .shipping-tiles__chevron {
+    font-size: 12px;
+    transition: transform 200ms ease;
+  }
+
+  .shipping-tiles--{{ section.id }} .shipping-tiles__panel {
+    background: {{ section.settings.tile_color }};
+    border: 1px solid {{ section.settings.accent_color }};
+    border-radius: 4px;
+    padding: 22px 20px 18px;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.5),
+      0 6px 18px rgba(91, 37, 18, 0.10);
+    animation: shipping-tiles-fade 220ms ease;
+  }
+  @media screen and (min-width: 768px) {
+    .shipping-tiles--{{ section.id }} .shipping-tiles__panel {
+      padding: 28px 26px 22px;
+    }
+  }
+  .shipping-tiles--{{ section.id }} .shipping-tiles__panel-inner {
+    max-width: 760px;
+    margin: 0 auto;
+  }
+  .shipping-tiles--{{ section.id }} .shipping-tiles__panel-heading {
+    font-size: clamp(18px, 3vw, 22px);
+    font-weight: 800;
+    color: {{ section.settings.text_color }};
+    margin: 0 0 14px;
+    line-height: 1.25;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .shipping-tiles--{{ section.id }} .shipping-tiles__panel-body {
+    font-size: 14px;
+    line-height: 1.6;
+    color: rgba(91, 37, 18, 0.85);
+  }
+  .shipping-tiles--{{ section.id }} .shipping-tiles__panel-body p {
+    margin: 0 0 10px;
+  }
+  .shipping-tiles--{{ section.id }} .shipping-tiles__panel-body p:last-child {
+    margin-bottom: 0;
+  }
+  .shipping-tiles--{{ section.id }} .shipping-tiles__panel-body ul {
+    list-style: disc;
+    padding-left: 22px;
+    margin: 0 0 12px;
+  }
+  .shipping-tiles--{{ section.id }} .shipping-tiles__panel-body li {
+    margin-bottom: 6px;
+  }
+  .shipping-tiles--{{ section.id }} .shipping-tiles__panel-body strong {
+    color: {{ section.settings.text_color }};
+  }
+  .shipping-tiles--{{ section.id }} .shipping-tiles__panel-close {
+    margin-top: 14px;
+    background: transparent;
+    color: {{ section.settings.accent_color }};
+    border: 1px solid {{ section.settings.accent_color }};
+    border-radius: 999px;
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 160ms ease, color 160ms ease;
+  }
+  .shipping-tiles--{{ section.id }} .shipping-tiles__panel-close:hover {
+    background: {{ section.settings.accent_color }};
+    color: #fffaf2;
+  }
+
+  @keyframes shipping-tiles-fade {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .shipping-tiles--{{ section.id }} .shipping-tiles__panel { animation: none; }
+    .shipping-tiles--{{ section.id }} .shipping-tiles__tile { transition: none; }
+    .shipping-tiles--{{ section.id }} .shipping-tiles__chevron { transition: none; }
+  }
+
+  @media screen and (min-width: 768px) {
+    .shipping-tiles--{{ section.id }} {
+      padding: 56px 24px;
+    }
+    .shipping-tiles--{{ section.id }} .shipping-tiles__title {
+      font-size: 16px;
+    }
+  }
+</style>
+
+<script>
+  (function () {
+    var sectionId = '{{ section.id }}';
+    var root = document.querySelector('.shipping-tiles--' + sectionId);
+    if (!root) return;
+    var tiles = root.querySelectorAll('.shipping-tiles__tile');
+    var panels = root.querySelectorAll('.shipping-tiles__panel');
+    if (!tiles.length || !panels.length) return;
+
+    function closeAll() {
+      tiles.forEach(function (t, i) {
+        t.setAttribute('aria-expanded', 'false');
+        t.classList.remove('is-active');
+        if (panels[i]) panels[i].hidden = true;
+      });
+    }
+
+    function openTile(index) {
+      var tile = tiles[index];
+      var panel = panels[index];
+      if (!tile || !panel) return;
+      tile.setAttribute('aria-expanded', 'true');
+      tile.classList.add('is-active');
+      panel.hidden = false;
+      // Move focus to the panel heading for accessibility
+      setTimeout(function () {
+        var heading = panel.querySelector('.shipping-tiles__panel-heading');
+        if (heading) {
+          heading.setAttribute('tabindex', '-1');
+          heading.focus({ preventScroll: false });
+        }
+      }, 50);
+    }
+
+    tiles.forEach(function (tile, i) {
+      tile.addEventListener('click', function () {
+        var isOpen = tile.getAttribute('aria-expanded') === 'true';
+        closeAll();
+        if (!isOpen) openTile(i);
+      });
+      tile.addEventListener('keydown', function (e) {
+        if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+          e.preventDefault();
+          var next = e.key === 'ArrowRight' ? (i + 1) % tiles.length : (i - 1 + tiles.length) % tiles.length;
+          tiles[next].focus();
+        } else if (e.key === 'Home') {
+          e.preventDefault();
+          tiles[0].focus();
+        } else if (e.key === 'End') {
+          e.preventDefault();
+          tiles[tiles.length - 1].focus();
+        }
+      });
+    });
+
+    var closers = root.querySelectorAll('[data-close-tile]');
+    closers.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var idx = parseInt(btn.getAttribute('data-close-tile'), 10);
+        closeAll();
+        if (tiles[idx]) tiles[idx].focus();
+      });
+    });
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "Shipping info tiles",
+  "max_blocks": 6,
+  "settings": [
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow", "default": "GOOD TO KNOW" },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Everything you need to know about ordering." },
+    { "type": "textarea", "id": "subheading", "label": "Subheading", "default": "Tap a tile to read more." },
+    { "type": "header", "content": "Colors" },
+    { "type": "color", "id": "background_color", "label": "Background", "default": "#f7ead6" },
+    { "type": "color", "id": "text_color", "label": "Text", "default": "#570522" },
+    { "type": "color", "id": "tile_color", "label": "Tile background", "default": "#fffaf2" },
+    { "type": "color", "id": "accent_color", "label": "Accent (border + chevron)", "default": "#ba5b28" }
+  ],
+  "blocks": [
+    {
+      "type": "tile",
+      "name": "Tile",
+      "settings": [
+        { "type": "text", "id": "icon", "label": "Icon (emoji or short text)" },
+        { "type": "text", "id": "title", "label": "Title" },
+        { "type": "text", "id": "teaser", "label": "Teaser (one line)" },
+        { "type": "richtext", "id": "panel_body", "label": "Expanded content" }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Shipping info tiles",
+      "category": "Storytelling",
+      "blocks": [
+        {
+          "type": "tile",
+          "settings": {
+            "icon": "📦",
+            "title": "How your cake travels",
+            "teaser": "Frozen solid, insulated, 2-Day Air.",
+            "panel_body": "<p><strong>Every order is packed by hand the morning it ships.</strong></p><ul><li><strong>❄️ Baked fresh, frozen solid.</strong> We freeze every cake the night before shipment so it travels cold and arrives at peak freshness.</li><li><strong>📦 Insulated and cushioned.</strong> Each cake is wrapped, sealed, and nested inside an insulated liner with gel ice packs. The shipping box is built for the journey.</li><li><strong>💌 Sealed with a story.</strong> Inside every box: a card from Stephanie, serving and storage instructions, and a freshness seal so you know it hasn't been opened.</li><li><strong>✈️ 2-Day Air, climate controlled.</strong> Most orders ship Free Nationwide 2-Day Air so your cake spends as little time in transit as possible.</li></ul>"
+          }
+        },
+        {
+          "type": "tile",
+          "settings": {
+            "icon": "❄️",
+            "title": "When your cake arrives",
+            "teaser": "Open, refrigerate, serve.",
+            "panel_body": "<p><strong>A few minutes of care will keep it perfect until you're ready to celebrate.</strong></p><p><strong>📦 Open right away.</strong></p><ul><li>Inspect the box. The freshness seal should be intact.</li><li>The cake will be cold or partially frozen — that's intentional.</li><li>Remove the cake from the insulated liner and the ice packs.</li></ul><p><strong>❄️ Refrigerate immediately.</strong></p><ul><li>Place the cake in the refrigerator if you're not serving today.</li><li>For best taste, remove the cake from the fridge <strong>30–45 minutes before serving</strong>.</li><li>Do not leave the cake on the counter overnight.</li></ul><p><strong>🍰 Serving and storage.</strong></p><ul><li>Cut with a clean knife, wiping between slices for the best presentation.</li><li>Store leftovers refrigerated in an airtight container for up to 7 days.</li><li>You can freeze slices for up to 1 month.</li></ul><p><em>Questions when your cake arrives? Call us at (773) 570-7676. We answer.</em></p>"
+          }
+        },
+        {
+          "type": "tile",
+          "settings": {
+            "icon": "🚫",
+            "title": "Before you order",
+            "teaser": "A few honest things to know.",
+            "panel_body": "<p><strong>We're upfront about what nationwide shipping can and can't do.</strong></p><p><strong>🚫 No cake writing on shipped cakes.</strong> Lettering and decorations don't survive a 2-day journey. For \"Happy Birthday\" cakes, we recommend local pickup or delivery.</p><p><strong>⏱️ We can't guarantee specific delivery times.</strong> UPS gives us a delivery date, not an hour. Plan to be home or have someone available that day.</p><p><strong>🍰 Some flavors don't ship.</strong> We've kept the shipping menu focused on what we know travels beautifully. If you want something not on the shipping list, call or email us first — we'll let you know what's possible.</p><p><em>Questions about your order? Call (773) 570-7676 or email shipping@brownsugarbakery.com</em></p>"
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

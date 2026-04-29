@@ -1,0 +1,334 @@
+{% comment %}
+  LIFT: Brand presence + Anxiety reduction — puts Stephanie / the kitchen on
+  screen above the fold so visitors see who they're trusting with their cake.
+  Desktop uses a looping muted video; mobile uses a poster image to keep
+  payload light. Falls back to image if no video is uploaded.
+{% endcomment %}
+
+<section class="media-hero media-hero--{{ section.id }}" aria-label="{{ section.settings.heading | default: 'Hero' | escape }}">
+  {% if section.settings.video != blank %}
+    <video class="media-hero__video"
+      autoplay muted loop playsinline preload="metadata"
+      {% if section.settings.image != blank %}poster="{{ section.settings.image | image_url: width: 1600 }}"{% endif %}
+      aria-hidden="true">
+      {% for source in section.settings.video.sources %}
+        <source src="{{ source.url }}" type="{{ source.mime_type }}">
+      {% endfor %}
+    </video>
+  {% endif %}
+
+  {% if section.settings.image != blank %}
+    {{ section.settings.image | image_url: width: 1600 | image_tag:
+      loading: 'eager',
+      sizes: '100vw',
+      class: 'media-hero__image',
+      alt: section.settings.image_alt | default: section.settings.heading
+    }}
+  {% elsif section.settings.fallback_asset != blank %}
+    <img
+      class="media-hero__image"
+      src="{{ section.settings.fallback_asset | asset_url }}"
+      alt="{{ section.settings.image_alt | default: section.settings.heading | escape }}"
+      loading="eager">
+  {% else %}
+    <div class="media-hero__placeholder" aria-hidden="true">
+      {{ 'lifestyle-1' | placeholder_svg_tag: 'media-hero__image' }}
+    </div>
+  {% endif %}
+
+  {% if section.settings.overlay_opacity > 0 %}
+    <div class="media-hero__overlay" aria-hidden="true"></div>
+  {% endif %}
+
+  <div class="media-hero__inner">
+    {% if section.settings.eyebrow != blank %}
+      <p class="media-hero__eyebrow">{{ section.settings.eyebrow | escape }}</p>
+    {% endif %}
+    {% if section.settings.heading != blank %}
+      {%- assign tag = section.settings.heading_tag | default: 'h1' -%}
+      <{{ tag }} class="media-hero__heading">{{ section.settings.heading | escape }}</{{ tag }}>
+    {% endif %}
+    {% if section.settings.subheading != blank %}
+      <p class="media-hero__subheading">{{ section.settings.subheading | escape }}</p>
+    {% endif %}
+    {% if section.settings.button_label != blank and section.settings.button_link != blank %}
+      <a href="{{ section.settings.button_link }}" class="media-hero__cta">
+        {{ section.settings.button_label | escape }}
+        <span aria-hidden="true">→</span>
+      </a>
+    {% endif %}
+  </div>
+</section>
+
+<style>
+  .media-hero--{{ section.id }} {
+    position: relative;
+    overflow: hidden;
+    min-height: 320px;
+    background: {{ section.settings.fallback_color }};
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .media-hero--{{ section.id }} .media-hero__image,
+  .media-hero--{{ section.id }} .media-hero__placeholder {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    z-index: 0;
+  }
+  .media-hero--{{ section.id }} .media-hero__placeholder svg,
+  .media-hero--{{ section.id }} .media-hero__placeholder img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /* Mobile: hide video, show image */
+  .media-hero--{{ section.id }} .media-hero__video {
+    display: none;
+  }
+
+  @media screen and (min-width: 768px) {
+    .media-hero--{{ section.id }} {
+      min-height: 480px;
+    }
+    {% if section.settings.video != blank %}
+      .media-hero--{{ section.id }} .media-hero__video {
+        display: block;
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        z-index: 0;
+      }
+      .media-hero--{{ section.id }} .media-hero__image,
+      .media-hero--{{ section.id }} .media-hero__placeholder {
+        display: none;
+      }
+    {% endif %}
+  }
+
+  @media screen and (min-width: 1100px) {
+    .media-hero--{{ section.id }} {
+      min-height: 560px;
+    }
+  }
+
+  .media-hero--{{ section.id }} .media-hero__overlay {
+    position: absolute;
+    inset: 0;
+    background: {{ section.settings.overlay_color }};
+    opacity: {{ section.settings.overlay_opacity | divided_by: 100.0 }};
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  .media-hero--{{ section.id }} .media-hero__inner {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    color: {{ section.settings.text_color }};
+    padding: 56px 20px;
+    max-width: 820px;
+    margin: 0 auto;
+  }
+
+  .media-hero--{{ section.id }} .media-hero__eyebrow {
+    font-size: 12px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    font-weight: 700;
+    margin: 0 0 12px;
+    opacity: 0.95;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+  }
+  .media-hero--{{ section.id }} .media-hero__heading {
+    font-size: clamp(28px, 6vw, 52px);
+    font-weight: 800;
+    line-height: 1.1;
+    margin: 0 0 14px;
+    color: inherit;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+  }
+  .media-hero--{{ section.id }} .media-hero__subheading {
+    font-size: clamp(15px, 2.4vw, 19px);
+    line-height: 1.5;
+    margin: 0 auto 22px;
+    max-width: 640px;
+    color: inherit;
+    opacity: 0.95;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+  }
+  .media-hero--{{ section.id }} .media-hero__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 28px;
+    background: {{ section.settings.button_bg_color }};
+    color: {{ section.settings.button_text_color }};
+    border: 1px solid #2e0212;
+    border-radius: 5px;
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    text-decoration: none;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.22),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.28),
+      0 2px 0 rgba(46, 2, 18, 0.5),
+      0 4px 10px rgba(0, 0, 0, 0.25);
+    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.3);
+    transition: background 180ms ease, transform 80ms ease;
+  }
+  .media-hero--{{ section.id }} .media-hero__cta:hover {
+    background: #e68c3b;
+    color: #570522;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.25);
+  }
+  .media-hero--{{ section.id }} .media-hero__cta:active {
+    transform: translateY(2px);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .media-hero--{{ section.id }} .media-hero__video {
+      display: none !important;
+    }
+    .media-hero--{{ section.id }} .media-hero__image,
+    .media-hero--{{ section.id }} .media-hero__placeholder {
+      display: block !important;
+    }
+  }
+</style>
+
+{% schema %}
+{
+  "name": "Media hero",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Media (desktop video, mobile image)"
+    },
+    {
+      "type": "video",
+      "id": "video",
+      "label": "Background video (desktop only)",
+      "info": "Loops muted on desktop ≥768px. Mobile shows the image instead to save bandwidth."
+    },
+    {
+      "type": "image_picker",
+      "id": "image",
+      "label": "Background image (mobile + video poster)"
+    },
+    {
+      "type": "text",
+      "id": "fallback_asset",
+      "label": "Fallback theme asset filename",
+      "info": "Used only if the Background image above is empty. Filename of an image in the theme assets/ folder (e.g., shipping-hero-placeholder.jpg)."
+    },
+    {
+      "type": "text",
+      "id": "image_alt",
+      "label": "Image alt text"
+    },
+    {
+      "type": "header",
+      "content": "Overlay text"
+    },
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading"
+    },
+    {
+      "type": "select",
+      "id": "heading_tag",
+      "label": "Heading tag",
+      "options": [
+        { "value": "h1", "label": "H1" },
+        { "value": "h2", "label": "H2" }
+      ],
+      "default": "h1"
+    },
+    {
+      "type": "textarea",
+      "id": "subheading",
+      "label": "Subheading"
+    },
+    {
+      "type": "header",
+      "content": "Call to action"
+    },
+    {
+      "type": "text",
+      "id": "button_label",
+      "label": "Button label"
+    },
+    {
+      "type": "url",
+      "id": "button_link",
+      "label": "Button link"
+    },
+    {
+      "type": "header",
+      "content": "Colors"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text color (overlay)",
+      "default": "#fffaf2"
+    },
+    {
+      "type": "color",
+      "id": "overlay_color",
+      "label": "Overlay color",
+      "default": "#570522"
+    },
+    {
+      "type": "range",
+      "id": "overlay_opacity",
+      "label": "Overlay opacity",
+      "min": 0,
+      "max": 80,
+      "step": 5,
+      "unit": "%",
+      "default": 35
+    },
+    {
+      "type": "color",
+      "id": "fallback_color",
+      "label": "Fallback background (no media)",
+      "default": "#570522"
+    },
+    {
+      "type": "color",
+      "id": "button_bg_color",
+      "label": "Button background",
+      "default": "#570522"
+    },
+    {
+      "type": "color",
+      "id": "button_text_color",
+      "label": "Button text",
+      "default": "#fffaf2"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Media hero",
+      "category": "Image"
+    }
+  ]
+}
+{% endschema %}

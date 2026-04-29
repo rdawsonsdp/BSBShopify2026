@@ -1,0 +1,205 @@
+{
+  "sections": {
+    "main": {
+      "type": "template--page",
+      "disabled": true,
+      "settings": {}
+    },
+    "pickup_header": {
+      "type": "media-hero",
+      "settings": {
+        "eyebrow": "AVAILABLE TODAY · 328 E 75TH STREET",
+        "heading": "What we baked today.",
+        "heading_tag": "h1",
+        "subheading": "Fresh from the 75th Street kitchen, ready for pickup. Tap any item to order through Clover.",
+        "button_label": "Browse what's available",
+        "button_link": "#available-today",
+        "fallback_asset": "shipping-hero-placeholder.jpg",
+        "image_alt": "Brown Sugar Bakery kitchen — fresh from the oven",
+        "text_color": "#fffaf2",
+        "overlay_color": "#570522",
+        "overlay_opacity": 40,
+        "fallback_color": "#570522",
+        "button_bg_color": "#570522",
+        "button_text_color": "#fffaf2"
+      }
+    },
+    "pickup_how_it_works": {
+      "type": "events-process",
+      "blocks": {
+        "step_1": {
+          "type": "step",
+          "settings": {
+            "icon": "👀",
+            "title": "See what's fresh today.",
+            "body": "<p>Browse the live menu below. Stock is checked in real time so you know it's actually there.</p>"
+          }
+        },
+        "step_2": {
+          "type": "step",
+          "settings": {
+            "icon": "🛒",
+            "title": "Order through Clover.",
+            "body": "<p>Tap any item to be taken to our Clover ordering page where you'll complete checkout.</p>"
+          }
+        },
+        "step_3": {
+          "type": "step",
+          "settings": {
+            "icon": "🥡",
+            "title": "Pick up at the counter.",
+            "body": "<p>Walk in to 328 E 75th Street and grab your order. Or just come by — we'd love to see you.</p>"
+          }
+        }
+      },
+      "block_order": ["step_1", "step_2", "step_3"],
+      "settings": {
+        "eyebrow": "HOW IT WORKS",
+        "heading": "Same-day pickup, three steps.",
+        "subheading": "Browse here. Order through Clover. Walk in to pick up.",
+        "background_color": "#fffaf2",
+        "text_color": "#570522"
+      }
+    },
+    "pickup_catalog": {
+      "type": "same-day-catalog",
+      "settings": {
+        "eyebrow": "AVAILABLE TODAY",
+        "heading": "What's on the shelves right now.",
+        "subheading": "Tap any item to order through Clover. Stock updates every hour.",
+        "background_color": "#f7ead6",
+        "text_color": "#570522",
+        "card_color": "#fffaf2",
+        "accent_color": "#ba5b28"
+      }
+    },
+    "pickup_visit": {
+      "type": "pickup-store-info",
+      "blocks": {
+        "hrs_mon": { "type": "hours_row", "settings": { "day": "Mon", "open_time": "09:00", "close_time": "18:00", "is_closed": false } },
+        "hrs_tue": { "type": "hours_row", "settings": { "day": "Tue", "open_time": "09:00", "close_time": "18:00", "is_closed": false } },
+        "hrs_wed": { "type": "hours_row", "settings": { "day": "Wed", "open_time": "09:00", "close_time": "18:00", "is_closed": false } },
+        "hrs_thu": { "type": "hours_row", "settings": { "day": "Thu", "open_time": "09:00", "close_time": "18:00", "is_closed": false } },
+        "hrs_fri": { "type": "hours_row", "settings": { "day": "Fri", "open_time": "09:00", "close_time": "19:00", "is_closed": false } },
+        "hrs_sat": { "type": "hours_row", "settings": { "day": "Sat", "open_time": "09:00", "close_time": "19:00", "is_closed": false } },
+        "hrs_sun": { "type": "hours_row", "settings": { "day": "Sun", "open_time": "10:00", "close_time": "16:00", "is_closed": false } }
+      },
+      "block_order": ["hrs_mon", "hrs_tue", "hrs_wed", "hrs_thu", "hrs_fri", "hrs_sat", "hrs_sun"],
+      "settings": {
+        "eyebrow": "VISIT US",
+        "heading": "Stop by 75th Street.",
+        "subheading": "Same-day pickup, walk-in welcome. Here's how to find us.",
+        "address_line_1": "328 E 75th Street",
+        "address_line_2": "Chicago, IL 60619",
+        "phone_display": "(773) 570-7676",
+        "phone_tel": "7735707676",
+        "directions_url": "https://www.google.com/maps/dir/?api=1&destination=328+E+75th+Street+Chicago+IL+60619",
+        "background_color": "#fffaf2",
+        "text_color": "#570522",
+        "card_color": "#f7ead6",
+        "accent_color": "#ba5b28"
+      }
+    },
+    "pickup_also_available": {
+      "type": "shipping-info-tiles",
+      "blocks": {
+        "tile_1": {
+          "type": "tile",
+          "settings": {
+            "icon": "📅",
+            "title": "Pre-order for pickup",
+            "teaser": "Custom cakes, 48+ hours ahead.",
+            "panel_body": "<p>Need a specific cake for a date a few days out? Our pre-order pickup catalog has the full menu — caramel, German chocolate, pineapple, and more. Order ahead, pick up fresh on your day.</p><p><a href=\"/collections/all\">Browse pickup cakes →</a></p>"
+          }
+        },
+        "tile_2": {
+          "type": "tile",
+          "settings": {
+            "icon": "🚚",
+            "title": "Local delivery",
+            "teaser": "Around Chicago, your address to ours.",
+            "panel_body": "<p>We deliver around Chicago for orders that are too big to carry, or for the days you can't get away. Schedule a delivery window and we'll bring it to you.</p><p>Call <a href=\"tel:7735707676\">(773) 570-7676</a> to set up local delivery.</p>"
+          }
+        },
+        "tile_3": {
+          "type": "tile",
+          "settings": {
+            "icon": "✈️",
+            "title": "Nationwide shipping",
+            "teaser": "All 50 states, 2-Day Air, packed cold.",
+            "panel_body": "<p>Need cake somewhere else in the country? We ship Mon–Wed for Tue–Fri delivery, packed cold and insulated.</p><p><a href=\"/pages/ship-nationwide\">See nationwide shipping →</a></p>"
+          }
+        }
+      },
+      "block_order": ["tile_1", "tile_2", "tile_3"],
+      "settings": {
+        "eyebrow": "ALSO AVAILABLE",
+        "heading": "Don't see what you want for today?",
+        "subheading": "These options are always within reach.",
+        "background_color": "#f7ead6",
+        "text_color": "#570522",
+        "tile_color": "#fffaf2",
+        "accent_color": "#ba5b28"
+      }
+    },
+    "pickup_trust": {
+      "type": "events-trust-band",
+      "blocks": {
+        "stat_1": {
+          "type": "stat",
+          "settings": {
+            "number": "Updated hourly",
+            "label": "Live menu sync from our 75th Street kitchen"
+          }
+        },
+        "stat_2": {
+          "type": "stat",
+          "settings": {
+            "number": "20+ years",
+            "label": "On the South Side, baking what Chicago grew up on"
+          }
+        },
+        "stat_3": {
+          "type": "stat",
+          "settings": {
+            "number": "James Beard",
+            "label": "Nominated for Stephanie's work"
+          }
+        }
+      },
+      "block_order": ["stat_1", "stat_2", "stat_3"],
+      "settings": {
+        "eyebrow": "TRUSTED",
+        "heading": "Two decades on 75th Street.",
+        "background_color": "#fffaf2",
+        "text_color": "#570522",
+        "accent_color": "#ba5b28"
+      }
+    },
+    "pickup_cta": {
+      "type": "events-closing-cta",
+      "settings": {
+        "eyebrow": "",
+        "heading": "See you on 75th Street.",
+        "subheading": "Today's menu, fresh from our kitchen.",
+        "button_label": "Browse today's menu",
+        "button_link": "#available-today",
+        "microcopy": "Order through Clover, pick up at the counter — or just come by.",
+        "background_color": "#ba5b28",
+        "text_color": "#f7ead6",
+        "button_bg_color": "#570522",
+        "button_text_color": "#ffffff"
+      }
+    }
+  },
+  "order": [
+    "main",
+    "pickup_header",
+    "pickup_how_it_works",
+    "pickup_catalog",
+    "pickup_visit",
+    "pickup_also_available",
+    "pickup_trust",
+    "pickup_cta"
+  ]
+}

@@ -105,7 +105,7 @@
         "events_url": "/pages/events?view=events",
         "events_sub": "Weddings, corporate, custom orders",
         "shipping_label": "Shipping",
-        "shipping_url": "shopify://collections/nationwide-shipping",
+        "shipping_url": "/pages/ship-nationwide?view=ship-nationwide",
         "shipping_sub": "Arrives fresh in 2-3 days",
         "candy_label": "Shop Candy",
         "candy_url": "/pages/candy?view=candy",

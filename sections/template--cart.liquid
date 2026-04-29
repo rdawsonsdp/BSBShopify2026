@@ -225,7 +225,7 @@
 						<input id="cart_submit" type="submit" value="{{ 'cart.general.checkout' | t }}" name="checkout" class="btn" />
 					</div>
 
-					{% if additional_checkout_buttons and settings.enable-additional-checkout-buttons %}
+					{% if additional_checkout_buttons %}
 						<div class="additional-checkout-buttons additional-checkout-buttons--vertical">
 							{{ content_for_additional_checkout_buttons }}
 						</div>

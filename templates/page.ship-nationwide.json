@@ -1,0 +1,219 @@
+{
+  "sections": {
+    "main": {
+      "type": "template--page",
+      "disabled": true,
+      "settings": {}
+    },
+    "shipping_header": {
+      "type": "media-hero",
+      "settings": {
+        "eyebrow": "NATIONWIDE SHIPPING · ALL 50 STATES",
+        "heading": "We bake in Chicago. We deliver everywhere.",
+        "heading_tag": "h1",
+        "subheading": "Two decades of South Side cake, packed with care and shipped fresh to your door — anywhere in the country.",
+        "button_label": "Shop nationwide shipping",
+        "button_link": "/collections/nationwide-shipping",
+        "fallback_asset": "shipping-hero-placeholder.jpg",
+        "image_alt": "Brown Sugar Bakery team packing a cake for nationwide shipping",
+        "text_color": "#fffaf2",
+        "overlay_color": "#570522",
+        "overlay_opacity": 40,
+        "fallback_color": "#570522",
+        "button_bg_color": "#570522",
+        "button_text_color": "#fffaf2"
+      }
+    },
+    "shipping_trust": {
+      "type": "events-trust-band",
+      "blocks": {
+        "stat_1": {
+          "type": "stat",
+          "settings": {
+            "number": "All 50 states",
+            "label": "Shipped to every state in the country"
+          }
+        },
+        "stat_2": {
+          "type": "stat",
+          "settings": {
+            "number": "2-Day Air",
+            "label": "Most orders arrive within 48 hours of shipping"
+          }
+        },
+        "stat_3": {
+          "type": "stat",
+          "settings": {
+            "number": "20+ years",
+            "label": "Of getting cake right"
+          }
+        }
+      },
+      "block_order": ["stat_1", "stat_2", "stat_3"],
+      "settings": {
+        "eyebrow": "TRUSTED",
+        "heading": "Two decades of shipping cake nationwide",
+        "background_color": "#fffaf2",
+        "text_color": "#570522",
+        "accent_color": "#ba5b28"
+      }
+    },
+    "shipping_calendar": {
+      "type": "shipping-calendar",
+      "settings": {
+        "eyebrow": "OUR SHIPPING RHYTHM",
+        "background_color": "#f7ead6",
+        "text_color": "#570522"
+      }
+    },
+    "shipping_info_tiles": {
+      "type": "shipping-info-tiles",
+      "blocks": {
+        "tile_1": {
+          "type": "tile",
+          "settings": {
+            "icon": "📦",
+            "title": "How your cake travels",
+            "teaser": "Frozen solid, insulated, 2-Day Air.",
+            "panel_body": "<p><strong>Every order is packed by hand the morning it ships.</strong></p><ul><li><strong>❄️ Baked fresh, frozen solid.</strong> We freeze every cake the night before shipment so it travels cold and arrives at peak freshness.</li><li><strong>📦 Insulated and cushioned.</strong> Each cake is wrapped, sealed, and nested inside an insulated liner with gel ice packs. The shipping box is built for the journey.</li><li><strong>💌 Sealed with a story.</strong> Inside every box: a card from Stephanie, serving and storage instructions, and a freshness seal so you know it hasn't been opened.</li><li><strong>✈️ 2-Day Air, climate controlled.</strong> Most orders ship Free Nationwide 2-Day Air so your cake spends as little time in transit as possible.</li></ul>"
+          }
+        },
+        "tile_2": {
+          "type": "tile",
+          "settings": {
+            "icon": "❄️",
+            "title": "When your cake arrives",
+            "teaser": "Open, refrigerate, serve.",
+            "panel_body": "<p><strong>A few minutes of care will keep it perfect until you're ready to celebrate.</strong></p><p><strong>📦 Open right away.</strong></p><ul><li>Inspect the box. The freshness seal should be intact.</li><li>The cake will be cold or partially frozen — that's intentional.</li><li>Remove the cake from the insulated liner and the ice packs.</li></ul><p><strong>❄️ Refrigerate immediately.</strong></p><ul><li>Place the cake in the refrigerator if you're not serving today.</li><li>For best taste, remove the cake from the fridge <strong>30–45 minutes before serving</strong>.</li><li>Do not leave the cake on the counter overnight.</li></ul><p><strong>🍰 Serving and storage.</strong></p><ul><li>Cut with a clean knife, wiping between slices for the best presentation.</li><li>Store leftovers refrigerated in an airtight container for up to 7 days.</li><li>You can freeze slices for up to 1 month.</li></ul><p><em>Questions when your cake arrives? Call us at (773) 570-7676. We answer.</em></p>"
+          }
+        },
+        "tile_3": {
+          "type": "tile",
+          "settings": {
+            "icon": "🚫",
+            "title": "Before you order",
+            "teaser": "A few honest things to know.",
+            "panel_body": "<p><strong>We're upfront about what nationwide shipping can and can't do.</strong></p><p><strong>🚫 No cake writing on shipped cakes.</strong> Lettering and decorations don't survive a 2-day journey. For \"Happy Birthday\" cakes, we recommend local pickup or delivery.</p><p><strong>⏱️ We can't guarantee specific delivery times.</strong> UPS gives us a delivery date, not an hour. Plan to be home or have someone available that day.</p><p><strong>🍰 Some flavors don't ship.</strong> We've kept the shipping menu focused on what we know travels beautifully. If you want something not on the shipping list, call or email us first — we'll let you know what's possible.</p><p><em>Questions about your order? Call (773) 570-7676 or email shipping@brownsugarbakery.com</em></p>"
+          }
+        }
+      },
+      "block_order": ["tile_1", "tile_2", "tile_3"],
+      "settings": {
+        "eyebrow": "GOOD TO KNOW",
+        "heading": "Everything you need to know about ordering.",
+        "subheading": "Tap a tile to read more.",
+        "background_color": "#fffaf2",
+        "text_color": "#570522",
+        "tile_color": "#f7ead6",
+        "accent_color": "#ba5b28"
+      }
+    },
+    "shipping_featured": {
+      "type": "collection--featured-collection",
+      "blocks": {
+        "product_card_title": { "type": "product-card-title", "settings": {} },
+        "product_card_price": { "type": "product-card-price", "settings": {} }
+      },
+      "block_order": ["product_card_title", "product_card_price"],
+      "settings": {
+        "title": "These travel best.",
+        "subheading": "Our most-shipped cakes — the ones our nationwide customers come back for.",
+        "collection": "shipping-favorites",
+        "show-view-all": false,
+        "products-per-row": 4,
+        "products-per-row-mobile": 2,
+        "max-products": 4
+      }
+    },
+    "shipping_browse_cta": {
+      "type": "page-banner-strip",
+      "settings": {
+        "eyebrow": "MORE TO CHOOSE FROM",
+        "heading": "Browse the full shipping menu",
+        "heading_tag": "h2",
+        "subheading": "Everything we ship nationwide, in one place.",
+        "button_label": "Browse our full shipping menu",
+        "button_link": "/collections/nationwide-shipping",
+        "text_align": "center",
+        "background_color": "#fffaf2",
+        "text_color": "#570522",
+        "padding_y": 36,
+        "padding_y_desktop": 56
+      }
+    },
+    "shipping_faq": {
+      "type": "faq-accordion",
+      "blocks": {
+        "q1": {
+          "type": "qa",
+          "settings": {
+            "question": "How long does the cake stay fresh after it arrives?",
+            "answer": "<p>Refrigerated, our cakes are at their best within 5–7 days of delivery. We recommend taking the cake out of the fridge 30–45 minutes before serving so it comes to room temperature — that's when the caramel really sings. You can also freeze slices for up to a month if you want to stretch it.</p>"
+          }
+        },
+        "q2": {
+          "type": "qa",
+          "settings": {
+            "question": "Do you ship in the summer or during heat waves?",
+            "answer": "<p>Yes — but carefully. From late May through September, every cake ships with insulated liners and gel ice packs, and we recommend 2-Day Air so the box doesn't sit on a porch in the heat. If your delivery zone is in a heat wave the week you order, we'll reach out before we ship. We'd rather hold the order a day than send you a melted cake.</p>"
+          }
+        },
+        "q3": {
+          "type": "qa",
+          "settings": {
+            "question": "What happens if I'm not home when the cake arrives?",
+            "answer": "<p>UPS will leave the package at the door if it's a safe location. The insulated liner and ice packs will keep the cake cold for several hours. If you know you'll be away that day, leave a note in the order with delivery instructions, or have a neighbor watch for the box. Refrigerate as soon as possible after pickup.</p>"
+          }
+        },
+        "q4": {
+          "type": "qa",
+          "settings": {
+            "question": "Can I change the shipping address after placing an order?",
+            "answer": "<p>If we haven't packed the order yet, yes — call us at (773) 570-7676 right away and we'll update it. Once a cake is packed and labeled (usually the morning of ship day), the address is locked. UPS rerouting fees may apply if a change is needed in transit.</p>"
+          }
+        },
+        "q5": {
+          "type": "qa",
+          "settings": {
+            "question": "What if the cake arrives damaged?",
+            "answer": "<p>Take a photo of the box and the cake exactly as it arrived, then call us at (773) 570-7676 or email shipping@brownsugarbakery.com within 48 hours. We stand behind every cake — if something went wrong in transit, we'll make it right with a replacement or a refund.</p>"
+          }
+        }
+      },
+      "block_order": ["q1", "q2", "q3", "q4", "q5"],
+      "settings": {
+        "eyebrow": "QUESTIONS",
+        "heading": "Shipping FAQ",
+        "subheading": "",
+        "background_color": "#f7ead6",
+        "text_color": "#570522"
+      }
+    },
+    "shipping_cta": {
+      "type": "events-closing-cta",
+      "settings": {
+        "eyebrow": "",
+        "heading": "Cake from Chicago, anywhere you are.",
+        "subheading": "Order by Tuesday 6 PM CT for end-of-week delivery.",
+        "button_label": "Shop nationwide shipping",
+        "button_link": "/collections/nationwide-shipping",
+        "microcopy": "Free 2-Day Air on qualifying orders. Packed cold, baked fresh.",
+        "background_color": "#ba5b28",
+        "text_color": "#f7ead6",
+        "button_bg_color": "#570522",
+        "button_text_color": "#ffffff"
+      }
+    }
+  },
+  "order": [
+    "main",
+    "shipping_header",
+    "shipping_trust",
+    "shipping_calendar",
+    "shipping_info_tiles",
+    "shipping_featured",
+    "shipping_browse_cta",
+    "shipping_faq",
+    "shipping_cta"
+  ]
+}

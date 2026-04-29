@@ -1,0 +1,267 @@
+{% comment %}
+  LIFT: Anxiety reduction — pre-emptively answers visitor's quiet "what do I
+  do when this arrives?" / "what can I expect?" questions before they have to
+  ask. Three callouts, beveled enamelware styling, mobile-stacks. Reused on
+  the same page for both arrival instructions and limitation honesty — same
+  DOM, different content.
+{% endcomment %}
+
+{%- liquid
+  assign callout_blocks = section.blocks | where: 'type', 'callout'
+-%}
+
+<section class="shipping-callouts shipping-callouts--{{ section.id }}" aria-label="{{ section.settings.heading | default: 'Shipping callouts' | escape }}">
+  <div class="shipping-callouts__inner">
+    {% if section.settings.eyebrow != blank %}
+      <p class="shipping-callouts__eyebrow">{{ section.settings.eyebrow | escape }}</p>
+    {% endif %}
+    {% if section.settings.heading != blank %}
+      <h2 class="shipping-callouts__heading">{{ section.settings.heading | escape }}</h2>
+    {% endif %}
+    {% if section.settings.subheading != blank %}
+      <p class="shipping-callouts__subheading">{{ section.settings.subheading | escape }}</p>
+    {% endif %}
+
+    {%- if callout_blocks.size > 0 -%}
+      <ul class="shipping-callouts__grid">
+        {%- for block in callout_blocks -%}
+          <li class="bsb-info-box shipping-callouts__item" {{ block.shopify_attributes }}>
+            {% if block.settings.icon != blank %}
+              <span class="shipping-callouts__icon" aria-hidden="true">{{ block.settings.icon }}</span>
+            {% endif %}
+            {% if block.settings.title != blank %}
+              <h3 class="shipping-callouts__title">{{ block.settings.title | escape }}</h3>
+            {% endif %}
+            {% if block.settings.body != blank %}
+              <div class="shipping-callouts__body rte">{{ block.settings.body }}</div>
+            {% endif %}
+          </li>
+        {%- endfor -%}
+      </ul>
+    {%- endif -%}
+
+    {% if section.settings.microcopy != blank %}
+      <p class="shipping-callouts__microcopy">{{ section.settings.microcopy | escape | newline_to_br }}</p>
+    {% endif %}
+  </div>
+</section>
+
+<style>
+  .shipping-callouts--{{ section.id }} {
+    background: {{ section.settings.background_color }};
+    color: {{ section.settings.text_color }};
+    padding: 36px 16px;
+  }
+  .shipping-callouts--{{ section.id }} .shipping-callouts__inner {
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  .shipping-callouts--{{ section.id }} .shipping-callouts__eyebrow {
+    font-size: 12px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    font-weight: 700;
+    margin: 0 0 8px;
+    opacity: 0.75;
+    text-align: center;
+    color: {{ section.settings.accent_color }};
+  }
+  .shipping-callouts--{{ section.id }} .shipping-callouts__heading {
+    font-size: clamp(22px, 4vw, 32px);
+    font-weight: 800;
+    margin: 0 0 8px;
+    text-align: center;
+    color: inherit;
+  }
+  .shipping-callouts--{{ section.id }} .shipping-callouts__subheading {
+    margin: 0 auto 28px;
+    max-width: 620px;
+    text-align: center;
+    font-size: 15px;
+    line-height: 1.5;
+    opacity: 0.85;
+  }
+  .shipping-callouts--{{ section.id }} .shipping-callouts__grid {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  /* Beveled enamelware (matches .bsb-info-box pattern) */
+  .shipping-callouts--{{ section.id }} .shipping-callouts__item {
+    background: {{ section.settings.box_color }};
+    color: {{ section.settings.text_color }};
+    border: 1px solid rgba(91, 37, 18, 0.18);
+    border-radius: 4px;
+    padding: 20px 18px;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.55),
+      inset 0 -1px 0 rgba(91, 37, 18, 0.10),
+      0 1px 2px rgba(91, 37, 18, 0.10),
+      0 6px 16px rgba(91, 37, 18, 0.08);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  .shipping-callouts--{{ section.id }} .shipping-callouts__icon {
+    font-size: 28px;
+    line-height: 1;
+    margin-bottom: 10px;
+    color: {{ section.settings.accent_color }};
+    display: inline-block;
+  }
+  .shipping-callouts--{{ section.id }} .shipping-callouts__title {
+    font-size: 17px;
+    font-weight: 700;
+    color: {{ section.settings.text_color }};
+    margin: 0 0 8px;
+    line-height: 1.3;
+  }
+  .shipping-callouts--{{ section.id }} .shipping-callouts__body {
+    font-size: 14px;
+    line-height: 1.55;
+    color: rgba(91, 37, 18, 0.78);
+    width: 100%;
+    text-align: left;
+  }
+  .shipping-callouts--{{ section.id }} .shipping-callouts__body p {
+    margin: 0 0 8px;
+  }
+  .shipping-callouts--{{ section.id }} .shipping-callouts__body p:last-child {
+    margin-bottom: 0;
+  }
+  .shipping-callouts--{{ section.id }} .shipping-callouts__body ul,
+  .shipping-callouts--{{ section.id }} .shipping-callouts__body ol {
+    margin: 0;
+    padding-left: 18px;
+  }
+  .shipping-callouts--{{ section.id }} .shipping-callouts__body li {
+    margin: 0 0 6px;
+  }
+  .shipping-callouts--{{ section.id }} .shipping-callouts__body li:last-child {
+    margin-bottom: 0;
+  }
+  .shipping-callouts--{{ section.id }} .shipping-callouts__body strong {
+    color: {{ section.settings.text_color }};
+    font-weight: 700;
+  }
+  .shipping-callouts--{{ section.id }} .shipping-callouts__microcopy {
+    margin: 22px auto 0;
+    max-width: 620px;
+    text-align: center;
+    font-size: 14px;
+    line-height: 1.5;
+    font-style: italic;
+    color: rgba(91, 37, 18, 0.7);
+  }
+
+  @media screen and (min-width: 600px) {
+    .shipping-callouts--{{ section.id }} .shipping-callouts__grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 18px;
+    }
+  }
+
+  @media screen and (min-width: 768px) {
+    .shipping-callouts--{{ section.id }} {
+      padding: 56px 24px;
+    }
+    .shipping-callouts--{{ section.id }} .shipping-callouts__grid {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 22px;
+    }
+    .shipping-callouts--{{ section.id }} .shipping-callouts__item {
+      padding: 24px 22px;
+    }
+    .shipping-callouts--{{ section.id }} .shipping-callouts__title {
+      font-size: 18px;
+    }
+    .shipping-callouts--{{ section.id }} .shipping-callouts__microcopy {
+      margin-top: 28px;
+      font-size: 15px;
+    }
+  }
+</style>
+
+{% schema %}
+{
+  "name": "Shipping callouts",
+  "max_blocks": 6,
+  "settings": [
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "When your cake arrives"
+    },
+    {
+      "type": "textarea",
+      "id": "subheading",
+      "label": "Subheading"
+    },
+    {
+      "type": "textarea",
+      "id": "microcopy",
+      "label": "Microcopy (italic line below grid)"
+    },
+    {
+      "type": "header",
+      "content": "Colors"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Section background",
+      "default": "#fffaf2"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text / titles",
+      "default": "#570522"
+    },
+    {
+      "type": "color",
+      "id": "box_color",
+      "label": "Callout box fill",
+      "default": "#f7ead6"
+    },
+    {
+      "type": "color",
+      "id": "accent_color",
+      "label": "Accent (icons / eyebrow)",
+      "default": "#ba5b28"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "callout",
+      "name": "Callout",
+      "settings": [
+        { "type": "text", "id": "icon", "label": "Icon (emoji or short text)" },
+        { "type": "text", "id": "title", "label": "Title" },
+        { "type": "richtext", "id": "body", "label": "Body" }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Shipping callouts",
+      "category": "Storytelling",
+      "blocks": [
+        { "type": "callout", "settings": { "icon": "📦", "title": "Open right away", "body": "<ul><li>Inspect the box. The freshness seal should be intact.</li><li>The cake will be cold or partially frozen — that's intentional.</li><li>Remove the cake from the insulated liner and the ice packs.</li></ul>" } },
+        { "type": "callout", "settings": { "icon": "❄️", "title": "Refrigerate immediately", "body": "<ul><li>Place the cake in the refrigerator if you're not serving today.</li><li>For best taste, remove the cake from the fridge <strong>30–45 minutes before serving</strong> to come to room temperature.</li><li>Do not leave the cake on the counter overnight.</li></ul>" } },
+        { "type": "callout", "settings": { "icon": "🍰", "title": "Serving and storage", "body": "<ul><li>Cut with a clean knife, wiping between slices for the best presentation.</li><li>Store leftovers refrigerated in an airtight container for up to 7 days.</li><li>You can freeze slices for up to 1 month.</li></ul>" } }
+      ]
+    }
+  ]
+}
+{% endschema %}

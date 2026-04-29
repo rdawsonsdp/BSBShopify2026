@@ -1,0 +1,613 @@
+{% comment %}
+  LIFT: Anxiety reduction — directly answers "is what I want there right now?"
+  for the same-day visitor on a phone. Live stock badges, category filters,
+  search, and a clear deep-link handoff to Clover for checkout. Card visuals
+  mimic the Shopify product card pattern so the visitor can't tell they're
+  crossing a system boundary.
+{% endcomment %}
+
+<section class="same-day-catalog same-day-catalog--{{ section.id }}" data-section-id="{{ section.id }}" id="available-today" aria-label="Available today">
+  <div class="same-day-catalog__inner">
+    {% if section.settings.eyebrow != blank %}
+      <p class="same-day-catalog__eyebrow">{{ section.settings.eyebrow | escape }}</p>
+    {% endif %}
+    {% if section.settings.heading != blank %}
+      <h2 class="same-day-catalog__heading">{{ section.settings.heading | escape }}</h2>
+    {% endif %}
+    {% if section.settings.subheading != blank %}
+      <p class="same-day-catalog__subheading">{{ section.settings.subheading | escape }}</p>
+    {% endif %}
+
+    <p class="same-day-catalog__freshness" role="status" aria-live="polite">
+      <span class="same-day-catalog__freshness-dot" aria-hidden="true">🟢</span>
+      <span data-freshness-text>Updated just now</span>
+    </p>
+
+    <div class="same-day-catalog__degraded" data-degraded hidden>
+      ⚠️ Live stock check is temporarily unavailable. Call (773) 570-7676 to confirm before you come in.
+    </div>
+
+    <div class="same-day-catalog__filters" data-filters role="group" aria-label="Filter by category">
+      <button class="same-day-catalog__pill is-active" type="button" data-filter="all" aria-pressed="true">All</button>
+      <button class="same-day-catalog__pill" type="button" data-filter="Cakes" aria-pressed="false">Cakes</button>
+      <button class="same-day-catalog__pill" type="button" data-filter="Cookies" aria-pressed="false">Cookies</button>
+      <button class="same-day-catalog__pill" type="button" data-filter="Pies" aria-pressed="false">Pies</button>
+      <button class="same-day-catalog__pill" type="button" data-filter="Candy" aria-pressed="false">Candy</button>
+      <button class="same-day-catalog__pill" type="button" data-filter="Other" aria-pressed="false">Other</button>
+    </div>
+
+    <div class="same-day-catalog__search">
+      <label for="same-day-catalog__search-{{ section.id }}" class="same-day-catalog__search-label">Search</label>
+      <input
+        type="search"
+        id="same-day-catalog__search-{{ section.id }}"
+        class="same-day-catalog__search-input"
+        data-search
+        placeholder="Search the menu…"
+        aria-label="Search the menu"
+        autocomplete="off">
+    </div>
+
+    <p class="same-day-catalog__loading" data-loading hidden>Loading today's menu…</p>
+
+    <ul class="same-day-catalog__grid" data-grid role="list"></ul>
+
+    <p class="same-day-catalog__empty" data-empty hidden>No matches. Try another search or category.</p>
+  </div>
+</section>
+
+<style>
+  .same-day-catalog--{{ section.id }} {
+    background: {{ section.settings.background_color }};
+    color: {{ section.settings.text_color }};
+    padding: 36px 16px;
+  }
+  .same-day-catalog--{{ section.id }} .same-day-catalog__inner {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  .same-day-catalog--{{ section.id }} .same-day-catalog__eyebrow {
+    font-size: 12px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    font-weight: 700;
+    margin: 0 0 8px;
+    opacity: 0.75;
+    text-align: center;
+    color: {{ section.settings.accent_color }};
+  }
+  .same-day-catalog--{{ section.id }} .same-day-catalog__heading {
+    font-size: clamp(22px, 4vw, 32px);
+    font-weight: 800;
+    margin: 0 0 8px;
+    text-align: center;
+    color: inherit;
+  }
+  .same-day-catalog--{{ section.id }} .same-day-catalog__subheading {
+    margin: 0 auto 14px;
+    max-width: 620px;
+    text-align: center;
+    font-size: 15px;
+    line-height: 1.5;
+    opacity: 0.85;
+  }
+  .same-day-catalog--{{ section.id }} .same-day-catalog__freshness {
+    margin: 0 auto 22px;
+    text-align: center;
+    font-size: 13px;
+    line-height: 1.4;
+    color: rgba(91, 37, 18, 0.75);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .same-day-catalog--{{ section.id }} .same-day-catalog__freshness-dot {
+    font-size: 10px;
+    line-height: 1;
+  }
+
+  .same-day-catalog--{{ section.id }} .same-day-catalog__degraded {
+    background: #f7ead6;
+    color: {{ section.settings.text_color }};
+    border: 1px solid {{ section.settings.accent_color }};
+    border-radius: 4px;
+    padding: 12px 14px;
+    font-size: 14px;
+    line-height: 1.45;
+    margin: 0 auto 18px;
+    max-width: 720px;
+    text-align: center;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.5),
+      0 1px 2px rgba(91, 37, 18, 0.10);
+  }
+
+  .same-day-catalog--{{ section.id }} .same-day-catalog__filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin: 0 0 14px;
+  }
+  .same-day-catalog--{{ section.id }} .same-day-catalog__pill {
+    background: transparent;
+    color: {{ section.settings.text_color }};
+    border: 1px solid rgba(91, 37, 18, 0.32);
+    border-radius: 999px;
+    padding: 7px 14px;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    transition: background 160ms ease, color 160ms ease, border-color 160ms ease, transform 80ms ease;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.45),
+      0 1px 2px rgba(91, 37, 18, 0.08);
+  }
+  .same-day-catalog--{{ section.id }} .same-day-catalog__pill:hover {
+    background: #f7ead6;
+    border-color: {{ section.settings.accent_color }};
+  }
+  .same-day-catalog--{{ section.id }} .same-day-catalog__pill:focus-visible {
+    outline: 2px solid {{ section.settings.accent_color }};
+    outline-offset: 2px;
+  }
+  .same-day-catalog--{{ section.id }} .same-day-catalog__pill.is-active {
+    background: {{ section.settings.text_color }};
+    color: #fffaf2;
+    border-color: {{ section.settings.text_color }};
+  }
+  .same-day-catalog--{{ section.id }} .same-day-catalog__pill:active {
+    transform: translateY(1px);
+  }
+
+  .same-day-catalog--{{ section.id }} .same-day-catalog__search {
+    margin: 0 auto 22px;
+    max-width: 520px;
+  }
+  .same-day-catalog--{{ section.id }} .same-day-catalog__search-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0,0,0,0);
+    white-space: nowrap;
+    border: 0;
+  }
+  .same-day-catalog--{{ section.id }} .same-day-catalog__search-input {
+    width: 100%;
+    box-sizing: border-box;
+    background: #fffaf2;
+    color: {{ section.settings.text_color }};
+    border: 1px solid rgba(91, 37, 18, 0.32);
+    border-radius: 4px;
+    padding: 10px 14px;
+    font: inherit;
+    font-size: 15px;
+    line-height: 1.4;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.55),
+      0 1px 2px rgba(91, 37, 18, 0.06);
+    transition: border-color 160ms ease, box-shadow 160ms ease;
+  }
+  .same-day-catalog--{{ section.id }} .same-day-catalog__search-input::placeholder {
+    color: rgba(91, 37, 18, 0.45);
+    font-style: italic;
+  }
+  .same-day-catalog--{{ section.id }} .same-day-catalog__search-input:focus-visible {
+    outline: none;
+    border-color: {{ section.settings.text_color }};
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.55),
+      0 0 0 2px rgba(186, 91, 40, 0.25);
+  }
+
+  .same-day-catalog--{{ section.id }} .same-day-catalog__loading,
+  .same-day-catalog--{{ section.id }} .same-day-catalog__empty {
+    text-align: center;
+    padding: 28px 16px;
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.5;
+    color: rgba(91, 37, 18, 0.75);
+    font-style: italic;
+  }
+
+  .same-day-catalog--{{ section.id }} .same-day-catalog__grid {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 18px 14px;
+  }
+  @media screen and (min-width: 768px) {
+    .same-day-catalog--{{ section.id }} .same-day-catalog__grid {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px 18px;
+    }
+  }
+  @media screen and (min-width: 1100px) {
+    .same-day-catalog--{{ section.id }} .same-day-catalog__grid {
+      grid-template-columns: repeat(4, 1fr);
+      gap: 28px 22px;
+    }
+  }
+
+  .same-day-catalog--{{ section.id }} .same-day-catalog__card {
+    list-style: none;
+  }
+  .same-day-catalog--{{ section.id }} .same-day-catalog__card[hidden] {
+    display: none;
+  }
+  .same-day-catalog--{{ section.id }} .same-day-catalog__link {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    background: {{ section.settings.card_color }};
+    border: 1px solid rgba(91, 37, 18, 0.15);
+    border-radius: 4px;
+    overflow: hidden;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.55),
+      inset 0 -1px 0 rgba(91, 37, 18, 0.08),
+      0 1px 2px rgba(91, 37, 18, 0.10),
+      0 4px 12px rgba(91, 37, 18, 0.06);
+    transition: transform 200ms cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 220ms ease, border-color 200ms ease;
+  }
+  .same-day-catalog--{{ section.id }} .same-day-catalog__link:hover {
+    transform: translateY(-2px);
+    border-color: rgba(91, 37, 18, 0.28);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.55),
+      0 4px 10px rgba(91, 37, 18, 0.14),
+      0 14px 28px rgba(91, 37, 18, 0.12);
+  }
+  .same-day-catalog--{{ section.id }} .same-day-catalog__link:focus-visible {
+    outline: 2px solid {{ section.settings.accent_color }};
+    outline-offset: 2px;
+  }
+
+  .same-day-catalog--{{ section.id }} .same-day-catalog__media {
+    position: relative;
+    aspect-ratio: 1 / 1;
+    background: rgba(91, 37, 18, 0.06);
+    overflow: hidden;
+  }
+  .same-day-catalog--{{ section.id }} .same-day-catalog__photo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 600ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .same-day-catalog--{{ section.id }} .same-day-catalog__link:hover .same-day-catalog__photo {
+    transform: scale(1.04);
+  }
+  .same-day-catalog--{{ section.id }} .same-day-catalog__placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #f7ead6 0%, #fffaf2 60%, #e68c3b22 100%);
+    color: {{ section.settings.accent_color }};
+    font-size: 36px;
+    line-height: 1;
+  }
+
+  .same-day-catalog--{{ section.id }} .same-day-catalog__badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    border-radius: 999px;
+    padding: 4px 9px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    line-height: 1.2;
+    white-space: nowrap;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    box-shadow: 0 1px 2px rgba(91, 37, 18, 0.18);
+  }
+  .same-day-catalog--{{ section.id }} .same-day-catalog__badge--in-stock {
+    background: {{ section.settings.accent_color }};
+    color: #ffffff;
+  }
+  .same-day-catalog--{{ section.id }} .same-day-catalog__badge--sold-out {
+    background: rgba(91, 37, 18, 0.55);
+    color: #fffaf2;
+  }
+  .same-day-catalog--{{ section.id }} .same-day-catalog__badge--unknown {
+    background: #e68c3b;
+    color: #570522;
+  }
+
+  .same-day-catalog--{{ section.id }} .same-day-catalog__caption {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 12px 12px 14px;
+  }
+  .same-day-catalog--{{ section.id }} .same-day-catalog__name {
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.3;
+    color: {{ section.settings.text_color }};
+  }
+  .same-day-catalog--{{ section.id }} .same-day-catalog__price {
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.2;
+    color: rgba(91, 37, 18, 0.78);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .same-day-catalog--{{ section.id }} .same-day-catalog__link,
+    .same-day-catalog--{{ section.id }} .same-day-catalog__photo,
+    .same-day-catalog--{{ section.id }} .same-day-catalog__pill {
+      transition: none;
+    }
+  }
+
+  @media screen and (min-width: 768px) {
+    .same-day-catalog--{{ section.id }} {
+      padding: 56px 24px;
+    }
+    .same-day-catalog--{{ section.id }} .same-day-catalog__name {
+      font-size: 15px;
+    }
+  }
+</style>
+
+<script>
+  (function () {
+    var SECTION_ID = {{ section.id | json }};
+    var root = document.querySelector('[data-section-id="' + SECTION_ID + '"]');
+    if (!root) return;
+
+    var grid = root.querySelector('[data-grid]');
+    var emptyEl = root.querySelector('[data-empty]');
+    var loadingEl = root.querySelector('[data-loading]');
+    var freshnessTextEl = root.querySelector('[data-freshness-text]');
+    var pills = root.querySelectorAll('[data-filter]');
+    var searchInput = root.querySelector('[data-search]');
+
+    if (!grid) return;
+
+    // ---------- MOCK DATA (v1) ----------
+    // v2 cutover: replace this block with a Supabase fetch returning the same
+    // shape (id, name, slug, category, price, in_stock, image_url). Render
+    // logic below stays untouched.
+    var MOCK_PRODUCTS = [
+      { id: "YAYDC45AGEV3G", name: "Cinnamon Roll", slug: "cinn-roll", category: "Pastries", price: 4.50, in_stock: true, image_url: "" },
+      { id: "Y5XVAWNG7NRT8", name: "Pineapple Upsidedown", slug: "pineapple-upsidedown", category: "Cakes", price: 8.50, in_stock: true, image_url: "" },
+      { id: "M0CKID01", name: "Caramel Cake (8\")", slug: "caramel-cake-8", category: "Cakes", price: 65.00, in_stock: true, image_url: "" },
+      { id: "M0CKID02", name: "German Chocolate Cake", slug: "german-chocolate-cake", category: "Cakes", price: 65.00, in_stock: false, image_url: "" },
+      { id: "M0CKID03", name: "Sweet Potato Pie", slug: "sweet-potato-pie", category: "Pies", price: 32.00, in_stock: true, image_url: "" },
+      { id: "M0CKID04", name: "Peach Cobbler", slug: "peach-cobbler", category: "Pies", price: 38.00, in_stock: true, image_url: "" },
+      { id: "M0CKID05", name: "Tea Cookies", slug: "tea-cookies", category: "Cookies", price: 12.00, in_stock: true, image_url: "" },
+      { id: "M0CKID06", name: "Caramel Pecan Brittle", slug: "caramel-pecan-brittle", category: "Candy", price: 18.00, in_stock: true, image_url: "" },
+      { id: "M0CKID07", name: "Meltaways (Box of 12)", slug: "meltaways-box-of-12", category: "Candy", price: 32.00, in_stock: true, image_url: "" },
+      { id: "M0CKID08", name: "Banana Pudding (1/2 pan)", slug: "banana-pudding-half-pan", category: "Other", price: 45.00, in_stock: false, image_url: "" }
+    ];
+
+    var CLOVER_BASE = 'https://brownsugarbakery-chgo.cloveronline.com/menu/';
+
+    var state = {
+      filter: 'all',
+      query: ''
+    };
+
+    function escapeHtml(s) {
+      if (s == null) return '';
+      return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function escapeAttr(s) { return escapeHtml(s); }
+
+    function formatPrice(n) {
+      var num = Number(n);
+      if (isNaN(num)) return '';
+      return '$' + num.toFixed(2);
+    }
+
+    function cloverUrlFor(p) {
+      return CLOVER_BASE + encodeURIComponent(p.slug) + '-' + encodeURIComponent(p.id);
+    }
+
+    function badgeFor(p) {
+      if (p.in_stock === false) {
+        return '<span class="same-day-catalog__badge same-day-catalog__badge--sold-out" data-badge>⚪ Sold out</span>';
+      }
+      if (p.in_stock === null || typeof p.in_stock === 'undefined') {
+        return '<span class="same-day-catalog__badge same-day-catalog__badge--unknown" data-badge>🟡 Call to confirm</span>';
+      }
+      return '<span class="same-day-catalog__badge same-day-catalog__badge--in-stock" data-badge>🟢 In stock</span>';
+    }
+
+    function mediaFor(p) {
+      if (p.image_url) {
+        return '<img src="' + escapeAttr(p.image_url) + '" alt="' + escapeAttr(p.name) + '" loading="lazy" class="same-day-catalog__photo">';
+      }
+      return '<div class="same-day-catalog__placeholder" aria-hidden="true">🍰</div>';
+    }
+
+    function cardHtml(p) {
+      var category = p.category || 'Other';
+      var nameLower = (p.name || '').toLowerCase();
+      var li = '<li class="same-day-catalog__card" data-card data-category="' + escapeAttr(category) + '" data-name="' + escapeAttr(nameLower) + '">' +
+        '<a class="same-day-catalog__link" href="' + escapeAttr(cloverUrlFor(p)) + '" target="_blank" rel="noopener noreferrer">' +
+          '<div class="same-day-catalog__media">' +
+            mediaFor(p) +
+            badgeFor(p) +
+          '</div>' +
+          '<div class="same-day-catalog__caption">' +
+            '<span class="same-day-catalog__name">' + escapeHtml(p.name) + '</span>' +
+            '<span class="same-day-catalog__price">' + escapeHtml(formatPrice(p.price)) + '</span>' +
+          '</div>' +
+        '</a>' +
+      '</li>';
+      return li;
+    }
+
+    function render(products) {
+      var html = '';
+      for (var i = 0; i < products.length; i++) {
+        html += cardHtml(products[i]);
+      }
+      grid.innerHTML = html;
+    }
+
+    function applyFilters() {
+      var cards = grid.querySelectorAll('[data-card]');
+      var visible = 0;
+      var q = state.query.trim().toLowerCase();
+      var f = state.filter;
+      for (var i = 0; i < cards.length; i++) {
+        var card = cards[i];
+        var cat = card.getAttribute('data-category') || '';
+        var name = card.getAttribute('data-name') || '';
+        var matchesFilter = (f === 'all') || (cat === f);
+        var matchesQuery = (q === '') || (name.indexOf(q) !== -1);
+        var show = matchesFilter && matchesQuery;
+        if (show) {
+          card.hidden = false;
+          visible++;
+        } else {
+          card.hidden = true;
+        }
+      }
+      if (emptyEl) emptyEl.hidden = visible !== 0;
+    }
+
+    function setFilter(value) {
+      state.filter = value;
+      for (var i = 0; i < pills.length; i++) {
+        var pill = pills[i];
+        var isActive = pill.getAttribute('data-filter') === value;
+        pill.classList.toggle('is-active', isActive);
+        pill.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+      }
+      applyFilters();
+    }
+
+    // 200ms debounce
+    function debounce(fn, ms) {
+      var t = null;
+      return function () {
+        var args = arguments;
+        var ctx = this;
+        clearTimeout(t);
+        t = setTimeout(function () { fn.apply(ctx, args); }, ms);
+      };
+    }
+
+    function wire() {
+      for (var i = 0; i < pills.length; i++) {
+        (function (pill) {
+          pill.addEventListener('click', function () {
+            setFilter(pill.getAttribute('data-filter'));
+          });
+        })(pills[i]);
+      }
+      if (searchInput) {
+        searchInput.addEventListener('input', debounce(function () {
+          state.query = searchInput.value || '';
+          applyFilters();
+        }, 200));
+      }
+    }
+
+    function updateFreshness() {
+      // v1 mock: hardcoded. v2: compute from data fetched_at timestamp.
+      if (freshnessTextEl) freshnessTextEl.textContent = 'Updated just now';
+    }
+
+    function init() {
+      if (loadingEl) loadingEl.hidden = false;
+      // Render mock data on first paint
+      render(MOCK_PRODUCTS);
+      applyFilters();
+      updateFreshness();
+      if (loadingEl) loadingEl.hidden = true;
+      wire();
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "Same-day catalog",
+  "settings": [
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow",
+      "default": "AVAILABLE TODAY"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "What we baked today."
+    },
+    {
+      "type": "textarea",
+      "id": "subheading",
+      "label": "Subheading",
+      "default": "Fresh from the 75th Street kitchen, ready for pickup. Tap any item to order through Clover."
+    },
+    {
+      "type": "header",
+      "content": "Colors"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Section background",
+      "default": "#fffaf2"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text",
+      "default": "#570522"
+    },
+    {
+      "type": "color",
+      "id": "card_color",
+      "label": "Card background",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "accent_color",
+      "label": "Accent (badge + focus ring)",
+      "default": "#ba5b28"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Same-day catalog",
+      "category": "Storytelling"
+    }
+  ]
+}
+{% endschema %}

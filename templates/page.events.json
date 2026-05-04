@@ -6,19 +6,22 @@
       "settings": {}
     },
     "events_header": {
-      "type": "page-banner-strip",
+      "type": "media-hero",
       "settings": {
-        "eyebrow": "EVENTS · WEDDINGS · CORPORATE · ANNIVERSARIES",
+        "eyebrow": "GALAS · WEDDINGS · CORPORATE · ANNIVERSARIES",
         "heading": "Let us be a part of your special event.",
         "heading_tag": "h1",
-        "subheading": "From intimate dinners to 300-guest galas — Brown Sugar Bakery has been the centerpiece of Chicago's celebrations for two decades. Tell us what you're planning and we'll bake it.",
+        "subheading": "From intimate dinners to 300-guest galas — for two decades, we've helped Chicago make memories with cake. Tell us what you're planning. We'll bake it.",
         "button_label": "",
         "button_link": "",
-        "text_align": "center",
-        "background_color": "#f7ead6",
-        "text_color": "#570522",
-        "padding_y": 32,
-        "padding_y_desktop": 64
+        "fallback_asset": "events-hero-bg.jpg",
+        "image_alt": "Stephanie Hart and the Brown Sugar Bakery team styling an event dessert spread",
+        "text_color": "#fffaf2",
+        "overlay_color": "#3a1612",
+        "overlay_opacity": 50,
+        "fallback_color": "#570522",
+        "button_bg_color": "#ba5b28",
+        "button_text_color": "#ffffff"
       }
     },
     "events_inspiration": {
@@ -27,22 +30,22 @@
         "img_1": {
           "type": "image",
           "settings": {
-            "kicker": "WEDDING",
-            "caption": "The cake-cutting moment, made yours"
+            "kicker": "GALA",
+            "caption": "Chicago Urban League Gala — 350 guests"
           }
         },
         "img_2": {
           "type": "image",
           "settings": {
-            "kicker": "BIRTHDAY",
-            "caption": "Bespoke for the birthday girl"
+            "kicker": "CORPORATE",
+            "caption": "Loop holiday party — 200 guests"
           }
         },
         "img_3": {
           "type": "image",
           "settings": {
-            "kicker": "ANNIVERSARY",
-            "caption": "Fifty years, one cake"
+            "kicker": "FUNDRAISER",
+            "caption": "Nonprofit annual benefit — 250 guests"
           }
         },
         "img_4": {
@@ -51,13 +54,41 @@
             "kicker": "WEDDING",
             "caption": "Tiered, classic, made on 75th"
           }
+        },
+        "img_5": {
+          "type": "image",
+          "settings": {
+            "kicker": "GALA",
+            "caption": "Black-tie dessert table — 500 guests"
+          }
+        },
+        "img_6": {
+          "type": "image",
+          "settings": {
+            "kicker": "ANNIVERSARY",
+            "caption": "Fifty years, one cake"
+          }
+        },
+        "img_7": {
+          "type": "image",
+          "settings": {
+            "kicker": "BIRTHDAY",
+            "caption": "Milestone birthday — bespoke"
+          }
+        },
+        "img_8": {
+          "type": "image",
+          "settings": {
+            "kicker": "CORPORATE",
+            "caption": "West Loop client appreciation — 150 guests"
+          }
         }
       },
-      "block_order": ["img_1", "img_2", "img_3", "img_4"],
+      "block_order": ["img_1", "img_2", "img_3", "img_4", "img_5", "img_6", "img_7", "img_8"],
       "settings": {
         "eyebrow": "INSPIRATION",
-        "heading": "Desserts for every kind of event",
-        "subheading": "Cakes, cupcakes, minis, candy spreads, dessert tables — your concept, your colors, your guest count.",
+        "heading": "Diana Ross gets around.",
+        "subheading": "Caramel cake — our lead Supreme — has shown up at galas, weddings, corporate floors, fundraisers, milestone birthdays. We make memories with cake. — Stephanie",
         "background_color": "#fffaf2",
         "text_color": "#570522"
       }
@@ -77,8 +108,8 @@
           "type": "step",
           "settings": {
             "icon": "📞",
-            "title": "We'll reach out within 48 hours",
-            "body": "<p>A real person from our team — not a chatbot — will call or email to walk through your concept, pricing, and timeline.</p>"
+            "title": "I'll reach out within 48 hours",
+            "body": "<p>I'll call or email — me, or someone from my team. Never a chatbot. We'll walk through your concept, your pricing, and your timeline. — Stephanie</p>"
           }
         },
         "step_3": {
@@ -86,7 +117,7 @@
           "settings": {
             "icon": "🎂",
             "title": "We bake. You enjoy your event.",
-            "body": "<p>We confirm the design, deliver or arrange pickup, and you focus on your guests.</p>"
+            "body": "<p>We confirm the design, deliver to your venue or arrange pickup, and you focus on your guests. That's the whole job.</p>"
           }
         }
       },
@@ -100,89 +131,62 @@
       }
     },
     "events_form": {
-      "type": "events-inquiry-form",
+      "type": "events-planner-wizard",
       "settings": {
-        "eyebrow": "EVENT INQUIRY",
-        "heading": "Tell us about your event",
-        "subheading": "The more we know, the better we can plan. Takes about two minutes.",
+        "eyebrow": "OUR EVENT PLANNER",
+        "heading": "Plan your event in four steps.",
+        "subheading": "Tell us what you're picturing — I'll come back to you within 48 hours. — Stephanie",
         "endpoint_url": "",
         "supabase_anon_key": "",
         "background_color": "#fffaf2",
         "text_color": "#570522"
       }
     },
-    "events_featured_products": {
-      "type": "events-featured-products",
+    "events_logo_band": {
+      "type": "logo-band",
+      "blocks": {
+        "logo_1": { "type": "logo", "settings": { "alt": "Logo 1" } },
+        "logo_2": { "type": "logo", "settings": { "alt": "Logo 2" } },
+        "logo_3": { "type": "logo", "settings": { "alt": "Logo 3" } },
+        "logo_4": { "type": "logo", "settings": { "alt": "Logo 4" } },
+        "logo_5": { "type": "logo", "settings": { "alt": "Logo 5" } },
+        "logo_6": { "type": "logo", "settings": { "alt": "Logo 6" } },
+        "logo_7": { "type": "logo", "settings": { "alt": "Logo 7" } },
+        "logo_8": { "type": "logo", "settings": { "alt": "Logo 8" } }
+      },
+      "block_order": ["logo_1", "logo_2", "logo_3", "logo_4", "logo_5", "logo_6", "logo_7", "logo_8"],
       "settings": {
-        "eyebrow": "EVENT FAVORITES",
-        "heading": "Event Dessert Favorites",
-        "subheading": "Tested at hundreds of celebrations. Sized and styled for events of every kind.",
-        "collection": "event-favorites",
-        "products_to_show": 9,
-        "desktop_columns": "3",
-        "cta_label": "Browse all event favorites",
-        "cta_link": "/collections/event-favorites",
-        "background_color": "#f7ead6",
+        "eyebrow": "WE'VE SHOWN UP HERE",
+        "heading": "Some of the rooms we've been in.",
+        "subheading": "",
+        "grayscale": true,
+        "background_color": "#fffaf2",
         "text_color": "#570522"
       }
     },
-    "events_trust": {
-      "type": "events-trust-band",
-      "blocks": {
-        "stat_1": {
-          "type": "stat",
-          "settings": {
-            "number": "20+ years",
-            "label": "On the South Side"
-          }
-        },
-        "stat_2": {
-          "type": "stat",
-          "settings": {
-            "number": "James Beard",
-            "label": "Nominated for Stephanie Hart"
-          }
-        },
-        "stat_3": {
-          "type": "stat",
-          "settings": {
-            "number": "Featured in",
-            "label": "Food Network · QVC · Rachael Ray · WGN-TV"
-          }
-        }
-      },
-      "block_order": ["stat_1", "stat_2", "stat_3"],
+    "events_form_bottom": {
+      "type": "events-planner-wizard",
       "settings": {
-        "eyebrow": "TRUSTED",
-        "heading": "Two decades of celebrations",
-        "background_color": "#fffaf2",
-        "text_color": "#570522",
-        "accent_color": "#ba5b28"
-      }
-    },
-    "events_cta": {
-      "type": "events-closing-cta",
-      "settings": {
-        "heading": "Whatever you're planning, we can bake it.",
-        "subheading": "Tell us your date — we'll do the rest.",
-        "button_label": "Send my event details",
-        "button_link": "#event-inquiry",
-        "microcopy": "We will respond within 48 hours.",
-        "background_color": "#ba5b28",
-        "text_color": "#f7ead6",
-        "button_bg_color": "#570522",
-        "button_text_color": "#ffffff"
+        "eyebrow": "",
+        "heading": "",
+        "subheading": "",
+        "button_label": "Open our event planner",
+        "transparent_card": true,
+        "trigger_microcopy": "",
+        "endpoint_url": "",
+        "supabase_anon_key": "",
+        "background_color": "#570522",
+        "text_color": "#f7ead6"
       }
     }
   },
   "order": [
     "main",
     "events_header",
-    "events_inspiration",
-    "events_process",
     "events_form",
-    "events_featured_products",
-    "events_trust",
-    "events_cta"
+    "events_process",
+    "events_logo_band",
+    "events_inspiration",
+    "events_form_bottom"
   ]
 }

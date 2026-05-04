@@ -222,7 +222,6 @@
                     </div>
                   {%- endif -%}
 
-                  {% render 'writing-option-enhance' %}
 
                 {% when 'product-options' %}
 
@@ -269,6 +268,7 @@
 
                     {% render 'product-select', section_id: section.id, variants: product.variants %}
                   </div>
+                  <div class="bsb-gpo-mount" data-gpo-mount></div>
                 {% when 'quantity-selector' %}
 
                   <div class="quantity-controls__outer selector-wrapper col-md-6 col-sm-12 col-12" {{ block.shopify_attributes }}>

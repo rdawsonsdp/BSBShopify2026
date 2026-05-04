@@ -1,0 +1,541 @@
+{%- comment -%}
+  Judge.me featured-reviews carousel — fetches the featured_carousel widget HTML
+  from Judge.me's public API (CORS-enabled) and injects it.
+
+  The /api/v1/reviews endpoint is NOT CORS-enabled, so client-side filtering by
+  product is not possible without a server-side proxy. The widget endpoint
+  returns reviews curated as "featured" in the Judge.me admin → Reviews →
+  mark as featured.
+
+  Token: public Judge.me token (read-only, safe to expose).
+{%- endcomment -%}
+
+<section class="bsb-reviews-section bsb-reviews-section--{{ section.id }}" aria-label="{{ section.settings.heading | default: 'Customer reviews' | escape }}">
+  <div class="bsb-reviews-section__inner">
+    {% if section.settings.eyebrow != blank %}
+      <p class="bsb-reviews-section__eyebrow">{{ section.settings.eyebrow | escape }}</p>
+    {% endif %}
+    {% if section.settings.heading != blank %}
+      <h2 class="bsb-reviews-section__heading">{{ section.settings.heading | escape }}</h2>
+    {% endif %}
+    {% if section.settings.subheading != blank %}
+      <p class="bsb-reviews-section__subheading">{{ section.settings.subheading | escape }}</p>
+    {% endif %}
+    <div class="bsb-reviews-carousel">
+      <button type="button" class="bsb-reviews-arrow bsb-reviews-arrow--prev" aria-label="Previous review" data-bsb-reviews-prev>
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" d="M15 6l-6 6 6 6"/></svg>
+      </button>
+      <button type="button" class="bsb-reviews-arrow bsb-reviews-arrow--next" aria-label="Next review" data-bsb-reviews-next>
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" d="M9 6l6 6-6 6"/></svg>
+      </button>
+      <div class="bsb-reviews-mount" id="bsb-reviews-mount-{{ section.id }}">
+        <p class="bsb-reviews-loading">Loading reviews…</p>
+      </div>
+    </div>
+    {% if section.settings.all_reviews_url != blank %}
+      <a href="{{ section.settings.all_reviews_url }}" target="_blank" rel="noopener" class="bsb-reviews-all-link">See all reviews on Judge.me →</a>
+    {% endif %}
+  </div>
+</section>
+
+<div class="bsb-reviews-modal bsb-reviews-modal--{{ section.id }}" id="bsb-reviews-modal-{{ section.id }}" hidden aria-hidden="true">
+  <div class="bsb-reviews-modal__backdrop" data-bsb-reviews-modal-close></div>
+  <div class="bsb-reviews-modal__card" role="dialog" aria-modal="true" aria-label="Review detail">
+    <button type="button" class="bsb-reviews-modal__close" data-bsb-reviews-modal-close aria-label="Close review">&times;</button>
+    <div class="bsb-reviews-modal__body" data-bsb-reviews-modal-body></div>
+  </div>
+</div>
+
+<style>
+  .bsb-reviews-section--{{ section.id }} {
+    background: {{ section.settings.background_color | default: '#fffaf2' }};
+    color: {{ section.settings.text_color | default: '#570522' }};
+    padding: 32px 16px;
+  }
+  .bsb-reviews-section--{{ section.id }} .bsb-reviews-section__inner {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  .bsb-reviews-section--{{ section.id }} .bsb-reviews-section__eyebrow {
+    font-size: 12px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    font-weight: 700;
+    margin: 0 0 8px;
+    opacity: 0.75;
+    text-align: center;
+  }
+  .bsb-reviews-section--{{ section.id }} .bsb-reviews-section__heading {
+    font-size: clamp(22px, 4vw, 32px);
+    font-weight: 800;
+    margin: 0 0 8px;
+    text-align: center;
+    color: inherit;
+  }
+  .bsb-reviews-section--{{ section.id }} .bsb-reviews-section__subheading {
+    font-size: 15px;
+    line-height: 1.5;
+    margin: 0 auto 24px;
+    max-width: 640px;
+    text-align: center;
+    opacity: 0.85;
+  }
+  .bsb-reviews-section--{{ section.id }} .bsb-reviews-mount {
+    min-height: 220px;
+  }
+  .bsb-reviews-section--{{ section.id }} .bsb-reviews-loading {
+    text-align: center;
+    margin: 60px 0;
+    opacity: 0.6;
+    font-size: 14px;
+  }
+  /* Make Judge.me's injected widget visible (their default has display:none until init) */
+  .bsb-reviews-section--{{ section.id }} .jdgm-carousel,
+  .bsb-reviews-section--{{ section.id }} .jdgm-widget {
+    display: block !important;
+  }
+  /* Force horizontal scrolling carousel layout regardless of Judge.me defaults */
+  .bsb-reviews-section--{{ section.id }} .jdgm-carousel__item-container {
+    overflow: visible !important;
+    height: auto !important;
+  }
+  .bsb-reviews-section--{{ section.id }} .jdgm-carousel__item-wrapper {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    align-items: flex-start !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    scroll-snap-type: x mandatory;
+    gap: 16px;
+    padding: 4px 4px 18px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    transform: none !important;
+    width: 100% !important;
+    height: auto !important;
+  }
+  .bsb-reviews-section--{{ section.id }} .jdgm-carousel__item-wrapper::-webkit-scrollbar {
+    display: none;
+  }
+  .bsb-reviews-section--{{ section.id }} .jdgm-carousel-item {
+    flex: 0 0 auto !important;
+    width: 85vw !important;
+    max-width: 720px !important;
+    scroll-snap-align: center;
+    position: static !important;
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+    margin: 0 !important;
+    background: #ffffff !important;
+    border-radius: 10px !important;
+    border: 1px solid rgba(91, 37, 18, 0.14) !important;
+    box-shadow: 0 4px 14px rgba(91, 37, 18, 0.10) !important;
+    padding: 32px 28px !important;
+    box-sizing: border-box !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    align-self: flex-start !important;
+  }
+  /* Hide all images and product/avatar/timestamp metadata inside cards */
+  .bsb-reviews-section--{{ section.id }} .jdgm-carousel-item img,
+  .bsb-reviews-modal--{{ section.id }} .jdgm-carousel-item img,
+  .bsb-reviews-section--{{ section.id }} .jdgm-carousel-item picture,
+  .bsb-reviews-modal--{{ section.id }} .jdgm-carousel-item picture,
+  .bsb-reviews-section--{{ section.id }} .jdgm-carousel-item__product,
+  .bsb-reviews-modal--{{ section.id }} .jdgm-carousel-item__product,
+  .bsb-reviews-section--{{ section.id }} .jdgm-carousel-item__product-image,
+  .bsb-reviews-modal--{{ section.id }} .jdgm-carousel-item__product-image,
+  .bsb-reviews-section--{{ section.id }} .jdgm-carousel-item__product-link,
+  .bsb-reviews-modal--{{ section.id }} .jdgm-carousel-item__product-link,
+  .bsb-reviews-section--{{ section.id }} .jdgm-carousel-item__product-title,
+  .bsb-reviews-modal--{{ section.id }} .jdgm-carousel-item__product-title,
+  .bsb-reviews-section--{{ section.id }} .jdgm-carousel-item__reviewer-avatar,
+  .bsb-reviews-modal--{{ section.id }} .jdgm-carousel-item__reviewer-avatar,
+  .bsb-reviews-section--{{ section.id }} .jdgm-carousel-item__avatar,
+  .bsb-reviews-modal--{{ section.id }} .jdgm-carousel-item__avatar,
+  .bsb-reviews-section--{{ section.id }} .jdgm-carousel-item__timestamp,
+  .bsb-reviews-modal--{{ section.id }} .jdgm-carousel-item__timestamp,
+  .bsb-reviews-section--{{ section.id }} .jdgm-carousel-item__review-pictures,
+  .bsb-reviews-modal--{{ section.id }} .jdgm-carousel-item__review-pictures {
+    display: none !important;
+  }
+  /* Force review body fully visible — Judge.me's defaults sometimes truncate or hide */
+  .bsb-reviews-section--{{ section.id }} .jdgm-carousel-item__review,
+  .bsb-reviews-section--{{ section.id }} .jdgm-carousel-item__review-content {
+    display: flex !important;
+    flex-direction: column !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+  .bsb-reviews-section--{{ section.id }} .jdgm-carousel-item__review-rating {
+    font-size: 22px !important;
+    margin: 0 0 16px !important;
+    text-align: center !important;
+    order: 2;
+  }
+  .bsb-reviews-section--{{ section.id }} .jdgm-carousel-item__review-content {
+    order: 3;
+  }
+  .bsb-reviews-section--{{ section.id }} .jdgm-carousel-item__review-title {
+    font-size: clamp(18px, 2.4vw, 22px) !important;
+    font-weight: 800 !important;
+    color: #570522 !important;
+    margin: 0 0 8px !important;
+    text-align: center !important;
+    order: 1;
+    display: block !important;
+  }
+  .bsb-reviews-section--{{ section.id }} .jdgm-carousel-item__review-body {
+    font-size: clamp(15px, 1.7vw, 17px) !important;
+    line-height: 1.6 !important;
+    color: #2e1208 !important;
+    margin: 0 0 16px !important;
+    text-align: left !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    display: block !important;
+    visibility: visible !important;
+    white-space: normal !important;
+    text-overflow: clip !important;
+    -webkit-line-clamp: unset !important;
+  }
+  .bsb-reviews-section--{{ section.id }} .jdgm-carousel-item__review-body p {
+    margin: 0 0 10px !important;
+  }
+  .bsb-reviews-section--{{ section.id }} .jdgm-carousel-item__reviewer-name,
+  .bsb-reviews-section--{{ section.id }} .jdgm-carousel-item__reviewer {
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    color: #570522 !important;
+    text-align: center !important;
+    margin: 4px 0 0 !important;
+    display: block !important;
+  }
+  .bsb-reviews-section--{{ section.id }} .bsb-reviews-judgeme-link {
+    display: inline-block;
+    margin-top: 8px;
+    font-size: 13px;
+    color: #ba5b28;
+    text-decoration: underline;
+    text-align: center;
+  }
+  .bsb-reviews-section--{{ section.id }} .bsb-reviews-judgeme-link-wrap {
+    text-align: center;
+    margin-top: 12px;
+  }
+  .bsb-reviews-section--{{ section.id }} .bsb-reviews-all-link {
+    display: block;
+    text-align: center;
+    margin-top: 18px;
+    font-size: 14px;
+    color: #570522;
+    font-weight: 700;
+    text-decoration: underline;
+  }
+  /* Hint that cards are clickable */
+  .bsb-reviews-section--{{ section.id }} .jdgm-carousel-item {
+    cursor: pointer;
+  }
+  .bsb-reviews-section--{{ section.id }} .jdgm-carousel-item:hover {
+    box-shadow: 0 6px 22px rgba(91, 37, 18, 0.18) !important;
+  }
+  /* Modal */
+  .bsb-reviews-modal--{{ section.id }} {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .bsb-reviews-modal--{{ section.id }}[hidden] {
+    display: none;
+  }
+  .bsb-reviews-modal--{{ section.id }} .bsb-reviews-modal__backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(58, 22, 18, 0.7);
+  }
+  .bsb-reviews-modal--{{ section.id }} .bsb-reviews-modal__card {
+    position: relative;
+    z-index: 1;
+    background: #ffffff;
+    color: #2e1208;
+    border-radius: 12px;
+    padding: 48px 36px 32px;
+    max-width: 640px;
+    width: 100%;
+    max-height: 85vh;
+    overflow-y: auto;
+    box-shadow: 0 18px 48px rgba(0, 0, 0, 0.35);
+  }
+  .bsb-reviews-modal--{{ section.id }} .bsb-reviews-modal__close {
+    position: absolute;
+    top: 10px;
+    right: 14px;
+    background: none;
+    border: 0;
+    font-size: 32px;
+    line-height: 1;
+    color: #570522;
+    cursor: pointer;
+    padding: 4px 10px;
+    border-radius: 4px;
+  }
+  .bsb-reviews-modal--{{ section.id }} .bsb-reviews-modal__close:hover {
+    background: rgba(87, 5, 34, 0.08);
+  }
+  /* Inside the modal, override carousel-item constraints so the full review shows */
+  .bsb-reviews-modal--{{ section.id }} .jdgm-carousel-item {
+    width: 100% !important;
+    max-width: none !important;
+    flex: none !important;
+    box-shadow: none !important;
+    border: 0 !important;
+    padding: 0 !important;
+    cursor: default;
+    min-height: 0 !important;
+    display: block !important;
+  }
+  .bsb-reviews-modal--{{ section.id }} .jdgm-carousel-item__review {
+    display: flex !important;
+    flex-direction: column !important;
+    height: auto !important;
+  }
+  .bsb-reviews-modal--{{ section.id }} .jdgm-carousel-item__review-title {
+    font-size: clamp(20px, 2.6vw, 26px) !important;
+  }
+  .bsb-reviews-modal--{{ section.id }} .jdgm-carousel-item__review-rating {
+    font-size: 26px !important;
+  }
+  .bsb-reviews-modal--{{ section.id }} .jdgm-carousel-item__review-body {
+    font-size: 16px !important;
+    line-height: 1.7 !important;
+  }
+  /* Carousel container + arrows */
+  .bsb-reviews-section--{{ section.id }} .bsb-reviews-carousel {
+    position: relative;
+  }
+  .bsb-reviews-section--{{ section.id }} .bsb-reviews-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 0;
+    background: rgba(255, 255, 255, 0.92);
+    color: #570522;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+    transition: opacity 150ms ease, transform 80ms ease;
+    opacity: 0.92;
+  }
+  .bsb-reviews-section--{{ section.id }} .bsb-reviews-arrow:hover { opacity: 1; }
+  .bsb-reviews-section--{{ section.id }} .bsb-reviews-arrow:active { transform: translateY(calc(-50% + 1px)); }
+  .bsb-reviews-section--{{ section.id }} .bsb-reviews-arrow--prev { left: 8px; }
+  .bsb-reviews-section--{{ section.id }} .bsb-reviews-arrow--next { right: 8px; }
+  @media (min-width: 768px) {
+    .bsb-reviews-section--{{ section.id }} .jdgm-carousel-item {
+      width: clamp(320px, 32vw, 380px) !important;
+    }
+  }
+  @media (min-width: 768px) {
+    .bsb-reviews-section--{{ section.id }} {
+      padding: 48px 24px;
+    }
+  }
+</style>
+
+<script>
+  (function () {
+    var apiToken = {{ section.settings.api_token | json }};
+    var shopDomain = {{ section.settings.shop_domain | default: shop.permanent_domain | json }};
+    var sectionEl = document.querySelector('.bsb-reviews-section--{{ section.id }}');
+    var mount = document.getElementById('bsb-reviews-mount-{{ section.id }}');
+    if (!apiToken || !shopDomain || !mount || !sectionEl) return;
+
+    var prev = sectionEl.querySelector('[data-bsb-reviews-prev]');
+    var next = sectionEl.querySelector('[data-bsb-reviews-next]');
+    function track() {
+      return mount.querySelector('.jdgm-carousel__item-wrapper');
+    }
+    function step(t) {
+      var first = t && t.firstElementChild;
+      return first ? first.getBoundingClientRect().width + 16 : (t ? t.clientWidth : 0);
+    }
+    function advance(dir) {
+      var t = track();
+      if (!t) return;
+      var atEnd = t.scrollLeft + t.clientWidth >= t.scrollWidth - 5;
+      var atStart = t.scrollLeft <= 5;
+      if (dir > 0 && atEnd) { t.scrollTo({ left: 0, behavior: 'smooth' }); }
+      else if (dir < 0 && atStart) { t.scrollTo({ left: t.scrollWidth, behavior: 'smooth' }); }
+      else { t.scrollBy({ left: dir * step(t), behavior: 'smooth' }); }
+    }
+    if (prev) prev.addEventListener('click', function () { advance(-1); });
+    if (next) next.addEventListener('click', function () { advance(1); });
+
+    var url = 'https://judge.me/api/v1/widgets/featured_carousel'
+      + '?api_token=' + encodeURIComponent(apiToken)
+      + '&shop_domain=' + encodeURIComponent(shopDomain);
+
+    var allReviewsUrl = {{ section.settings.all_reviews_url | default: '' | json }};
+
+    fetch(url)
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (data && data.error) throw new Error(data.error);
+        var html = data && (data.featured_carousel || data.widget || '');
+        if (!html) {
+          mount.innerHTML = '<p class="bsb-reviews-loading">No featured reviews yet. Mark some as featured in Judge.me admin.</p>';
+          return;
+        }
+        // Strip Judge.me's inline <style> blocks — they include height-clamping rules that hide the review body
+        html = html.replace(/<style[\s\S]*?<\/style>/gi, '');
+        mount.innerHTML = html;
+        // Reorder each card: title → stars → body → name → link
+        var items = mount.querySelectorAll('.jdgm-carousel-item');
+        var modal = document.getElementById('bsb-reviews-modal-{{ section.id }}');
+        var modalBody = modal && modal.querySelector('[data-bsb-reviews-modal-body]');
+
+        function openModal(card) {
+          if (!modal || !modalBody) return;
+          modalBody.innerHTML = '';
+          modalBody.appendChild(card.cloneNode(true));
+          modal.hidden = false;
+          modal.setAttribute('aria-hidden', 'false');
+          document.body.style.overflow = 'hidden';
+        }
+        function closeModal() {
+          if (!modal) return;
+          modal.hidden = true;
+          modal.setAttribute('aria-hidden', 'true');
+          document.body.style.overflow = '';
+        }
+        if (modal) {
+          modal.querySelectorAll('[data-bsb-reviews-modal-close]').forEach(function (el) {
+            el.addEventListener('click', closeModal);
+          });
+          document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && !modal.hidden) closeModal();
+          });
+        }
+
+        items.forEach(function (card) {
+          var review = card.querySelector('.jdgm-carousel-item__review');
+          if (!review) return;
+          var content = card.querySelector('.jdgm-carousel-item__review-content');
+          var title = card.querySelector('.jdgm-carousel-item__review-title');
+          if (title && review && title.parentElement !== review) {
+            review.insertBefore(title, review.firstChild);
+          }
+          if (allReviewsUrl) {
+            var existing = card.querySelector('.bsb-reviews-judgeme-link-wrap');
+            if (!existing) {
+              var wrap = document.createElement('div');
+              wrap.className = 'bsb-reviews-judgeme-link-wrap';
+              var a = document.createElement('a');
+              a.href = allReviewsUrl;
+              a.target = '_blank';
+              a.rel = 'noopener';
+              a.className = 'bsb-reviews-judgeme-link';
+              a.textContent = 'Read on Judge.me →';
+              wrap.appendChild(a);
+              card.appendChild(wrap);
+            }
+          }
+          // Click-to-expand: open modal with the full review (skip clicks on the link)
+          card.addEventListener('click', function (e) {
+            if (e.target.closest('a')) return;
+            openModal(card);
+          });
+        });
+        // Trigger Judge.me's loader to initialize the injected carousel
+        if (window.jdgm && typeof window.jdgm.init === 'function') {
+          window.jdgm.init();
+        }
+      })
+      .catch(function (err) {
+        mount.innerHTML = '<p class="bsb-reviews-loading">Reviews are taking a moment to load. (' + (err.message || 'fetch error') + ')</p>';
+        console.error('Judge.me reviews load error:', err);
+      });
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "Judge.me carousel",
+  "settings": [
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Customers are saying"
+    },
+    {
+      "type": "text",
+      "id": "subheading",
+      "label": "Subheading"
+    },
+    {
+      "type": "header",
+      "content": "Judge.me API"
+    },
+    {
+      "type": "paragraph",
+      "content": "Uses Judge.me's featured_carousel widget endpoint (CORS-enabled). Mark reviews as Featured in Judge.me admin → Reviews to control which appear here. Use a PUBLIC token (read-only) — safe to expose."
+    },
+    {
+      "type": "text",
+      "id": "api_token",
+      "label": "Judge.me public API token"
+    },
+    {
+      "type": "text",
+      "id": "shop_domain",
+      "label": "Shop domain",
+      "default": "brown-sugar-bakery-chicago.myshopify.com"
+    },
+    {
+      "type": "url",
+      "id": "all_reviews_url",
+      "label": "Judge.me reviews page URL",
+      "info": "Get from Judge.me admin → Reviews → public reviews URL. Example: https://judge.me/reviews/stores/brown-sugar-bakery-chicago.myshopify.com"
+    },
+    {
+      "type": "header",
+      "content": "Colors"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background",
+      "default": "#fffaf2"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text",
+      "default": "#570522"
+    }
+  ],
+  "presets": [
+    { "name": "Judge.me carousel", "category": "Reviews" }
+  ]
+}
+{% endschema %}

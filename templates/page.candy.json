@@ -5,6 +5,71 @@
       "disabled": true,
       "settings": {}
     },
+    "candy_postcards_carousel": {
+      "type": "inspiration-grid",
+      "blocks": {
+        "img_1": {
+          "type": "image",
+          "settings": {
+            "fallback_filename": "BSB-Postcard-Box-Main.webp",
+            "caption": "The Chicago Postcard Box",
+            "link": ""
+          }
+        },
+        "img_2": {
+          "type": "image",
+          "settings": {
+            "fallback_filename": "BSB-Postcard-Mag-Mile.webp",
+            "caption": "Magnificent Mile",
+            "link": ""
+          }
+        },
+        "img_3": {
+          "type": "image",
+          "settings": {
+            "fallback_filename": "BSB-Postcard-fountain.webp",
+            "caption": "Buckingham Fountain",
+            "link": ""
+          }
+        },
+        "img_4": {
+          "type": "image",
+          "settings": {
+            "fallback_filename": "BSB-Postcard-Lakefront.webp",
+            "caption": "Lakefront Skyline",
+            "link": ""
+          }
+        },
+        "img_5": {
+          "type": "image",
+          "settings": {
+            "fallback_filename": "BSB-Postcard-Millinum-plaza.webp",
+            "caption": "Millennium Plaza",
+            "link": ""
+          }
+        },
+        "img_6": {
+          "type": "image",
+          "settings": {
+            "fallback_filename": "BSB-Train-Car.webp",
+            "caption": "The Chicago L Train",
+            "link": ""
+          }
+        }
+      },
+      "block_order": ["img_1", "img_2", "img_3", "img_4", "img_5", "img_6"],
+      "settings": {
+        "display_mode": "carousel",
+        "desktop_layout": "carousel",
+        "auto_advance_seconds": 5,
+        "media_aspect_ratio": "wide",
+        "eyebrow": "",
+        "heading": "",
+        "subheading": "",
+        "background_color": "#fffaf2",
+        "text_color": "#570522"
+      }
+    },
     "candy_header": {
       "type": "page-banner-strip",
       "settings": {
@@ -19,6 +84,19 @@
         "text_color": "#570522",
         "padding_y": 32,
         "padding_y_desktop": 64
+      }
+    },
+    "candy_story_image": {
+      "type": "image-hero",
+      "settings": {
+        "fallback_filename": "candy-story-image.jpg",
+        "image_alt": "Brown Sugar Bakery candy",
+        "eyebrow": "",
+        "heading": "",
+        "subheading": "",
+        "button_label": "",
+        "button_link": "",
+        "overlay_opacity": 0
       }
     },
     "candy_heritage": {
@@ -41,6 +119,7 @@
         "img_1": {
           "type": "image",
           "settings": {
+            "fallback_filename": "candy-collage-1.jpg",
             "kicker": "MELTAWAYS",
             "caption": "The 1940 original — three layers, one bite"
           }
@@ -48,6 +127,7 @@
         "img_2": {
           "type": "image",
           "settings": {
+            "fallback_filename": "candy-collage-2.jpg",
             "kicker": "CARAMELS",
             "caption": "Hand-cut, never machine-pressed"
           }
@@ -55,6 +135,7 @@
         "img_3": {
           "type": "image",
           "settings": {
+            "fallback_filename": "candy-collage-3.jpg",
             "kicker": "TRUFFLES",
             "caption": "Shells thin enough to hear"
           }
@@ -62,6 +143,7 @@
         "img_4": {
           "type": "image",
           "settings": {
+            "fallback_filename": "candy-collage-1.jpg",
             "kicker": "BRITTLES & FUDGE",
             "caption": "Cooked the long way, the way Paul did it"
           }
@@ -77,18 +159,19 @@
       }
     },
     "candy_featured": {
-      "type": "events-featured-products",
+      "type": "collection--featured-collection",
+      "blocks": {
+        "product_card_title": { "type": "product-card-title", "settings": {} },
+        "product_card_price": { "type": "product-card-price", "settings": {} }
+      },
+      "block_order": ["product_card_title", "product_card_price"],
       "settings": {
-        "eyebrow": "FAVORITES TO START WITH",
-        "heading": "A few good places to begin.",
-        "subheading": "Not the full shelf — just the boxes our regulars come back for. A good first taste of the kitchen.",
         "collection": "candy-collection",
-        "products_to_show": 6,
-        "desktop_columns": "3",
-        "cta_label": "See more candy favorites",
-        "cta_link": "/collections/candy-collection",
-        "background_color": "#fffaf2",
-        "text_color": "#570522"
+        "title": "Shop our classic candy collection.",
+        "subheading": "",
+        "grid": 3,
+        "rows": 5,
+        "show_view_all": true
       }
     },
     "candy_wholesale_form": {
@@ -164,31 +247,17 @@
         "background_color": "#fffaf2",
         "text_color": "#570522"
       }
-    },
-    "candy_cta": {
-      "type": "events-closing-cta",
-      "settings": {
-        "eyebrow": "",
-        "heading": "Sweeten the next occasion.",
-        "subheading": "Ship a tin nationwide. Stock a corporate gift program. Pick up a box on 75th.",
-        "button_label": "Shop the candy collection",
-        "button_link": "/collections/candy-collection",
-        "microcopy": "Hand-poured in Chicago. Boxed the same week it ships.",
-        "background_color": "#ba5b28",
-        "text_color": "#f7ead6",
-        "button_bg_color": "#570522",
-        "button_text_color": "#ffffff"
-      }
     }
   },
   "order": [
     "main",
+    "candy_postcards_carousel",
     "candy_header",
+    "candy_story_image",
     "candy_heritage",
     "candy_collage",
     "candy_featured",
     "candy_wholesale_form",
-    "candy_faq",
-    "candy_cta"
+    "candy_faq"
   ]
 }

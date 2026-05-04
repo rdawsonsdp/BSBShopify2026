@@ -1,0 +1,81 @@
+{
+  "wrapper": "div.collection-wrapper",
+  "sections": {
+    "collection_header": {
+      "type": "template--collection-header",
+      "blocks": {
+        "collection_title": { "type": "collection-title", "settings": {} },
+        "collection_description": { "type": "collection-description", "disabled": true, "settings": {} }
+      },
+      "block_order": ["collection_title", "collection_description"],
+      "settings": {
+        "collection_image_enable": false
+      }
+    },
+    "birthday_process": {
+      "type": "events-process",
+      "blocks": {
+        "step_1": {
+          "type": "step",
+          "settings": {
+            "icon": "🎂",
+            "title": "Pick your cake",
+            "body": "<p>Caramel, German chocolate, pineapple, strawberry, and more. Choose your flavor and size.</p>"
+          }
+        },
+        "step_2": {
+          "type": "step",
+          "settings": {
+            "icon": "✍️",
+            "title": "Pick your writing",
+            "body": "<p>Free message writing in any color. Add it at checkout — birthday wishes, names, anything.</p>"
+          }
+        },
+        "step_3": {
+          "type": "step",
+          "settings": {
+            "icon": "🛍️",
+            "title": "Ready for pickup in 48 hours",
+            "body": "<p>Order at least 48 hours ahead. Pick up fresh at 75th Street, Chicago.</p>"
+          }
+        }
+      },
+      "block_order": ["step_1", "step_2", "step_3"],
+      "settings": {
+        "eyebrow": "HOW IT WORKS",
+        "heading": "Three simple steps to your cake.",
+        "subheading": "",
+        "background_color": "#fffaf2",
+        "text_color": "#570522"
+      }
+    },
+    "product_filtering": {
+      "type": "main-collection-filtering",
+      "settings": {
+        "desktop_position": "topbar",
+        "enable_filtering": false,
+        "enable_sorting": false
+      }
+    },
+    "main": {
+      "type": "template--collection",
+      "blocks": {
+        "product_title": { "type": "product-card-title", "settings": {} },
+        "product_price": { "type": "product-card-price", "settings": {} }
+      },
+      "block_order": ["product_title", "product_price"],
+      "settings": {
+        "grid": 3,
+        "grid_mobile": "per_row_one",
+        "rows": 6,
+        "pagination_type": "load_more"
+      }
+    }
+  },
+  "order": [
+    "collection_header",
+    "birthday_process",
+    "product_filtering",
+    "main"
+  ]
+}

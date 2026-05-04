@@ -221,6 +221,66 @@
       font-size: 15px;
     }
   }
+
+  /* Delivery buttons (Uber Eats + DoorDash) */
+  .delivery-buttons {
+    max-width: 1200px;
+    margin: 0 auto 24px;
+    padding: 0 20px;
+    text-align: center;
+  }
+  .delivery-buttons__label {
+    font-size: 12px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: #570522;
+    opacity: 0.7;
+    margin: 0 0 10px;
+    font-weight: 700;
+  }
+  .delivery-buttons__row {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    align-items: stretch;
+    flex-wrap: wrap;
+  }
+  .delivery-button {
+    flex: 1 1 160px;
+    max-width: 220px;
+    height: 56px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    transition: transform 200ms ease, box-shadow 200ms ease, filter 200ms ease;
+    box-shadow:
+      0 2px 4px rgba(0, 0, 0, 0.14),
+      0 6px 14px rgba(0, 0, 0, 0.16);
+  }
+  .delivery-button svg {
+    width: auto;
+    height: 26px;
+    max-width: 80%;
+  }
+  .delivery-button:hover,
+  .delivery-button:focus-visible {
+    transform: translateY(-2px);
+    box-shadow:
+      0 6px 12px rgba(0, 0, 0, 0.22),
+      0 12px 24px rgba(0, 0, 0, 0.22);
+    filter: brightness(1.05);
+    outline: none;
+  }
+  .delivery-button--uber {
+    background: #000000;
+    color: #ffffff;
+  }
+  .delivery-button--doordash {
+    background: #FF3008;
+    color: #ffffff;
+  }
 </style>
 
 <div class="custom-buttons-container">
@@ -314,6 +374,31 @@
     {% if section.settings.instore_sub != blank %}<span class="custom-button__sub">{{ section.settings.instore_sub | escape }}</span>{% endif %}
   </div>
 </div>
+
+{% if section.settings.uber_url != blank or section.settings.doordash_url != blank %}
+<div class="delivery-buttons">
+  {% if section.settings.delivery_label != blank %}
+    <p class="delivery-buttons__label">{{ section.settings.delivery_label | escape }}</p>
+  {% endif %}
+  <div class="delivery-buttons__row">
+    {% if section.settings.uber_url != blank %}
+      <a href="{{ section.settings.uber_url }}" class="delivery-button delivery-button--uber" target="_blank" rel="noopener" aria-label="Order on Uber Eats">
+        <svg viewBox="0 0 80 28" aria-hidden="true" focusable="false">
+          <text x="40" y="20" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-weight="900" font-size="20" fill="currentColor" letter-spacing="-0.5">Uber</text>
+          <text x="40" y="27" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-weight="700" font-size="6" fill="currentColor" letter-spacing="2">EATS</text>
+        </svg>
+      </a>
+    {% endif %}
+    {% if section.settings.doordash_url != blank %}
+      <a href="{{ section.settings.doordash_url }}" class="delivery-button delivery-button--doordash" target="_blank" rel="noopener" aria-label="Order on DoorDash">
+        <svg viewBox="0 0 110 28" aria-hidden="true" focusable="false">
+          <text x="55" y="20" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-weight="900" font-size="18" fill="currentColor" letter-spacing="-0.4">DoorDash</text>
+        </svg>
+      </a>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
 
 {% schema %}
 {
@@ -452,6 +537,26 @@
       "id": "instore_sub",
       "label": "Sub-text (optional)",
       "info": "Small line under the button. e.g., \"From in-store inventory\""
+    },
+    {
+      "type": "header",
+      "content": "Delivery (Uber Eats + DoorDash)"
+    },
+    {
+      "type": "text",
+      "id": "delivery_label",
+      "label": "Delivery row label (optional)",
+      "default": "Delivery"
+    },
+    {
+      "type": "url",
+      "id": "uber_url",
+      "label": "Uber Eats store URL"
+    },
+    {
+      "type": "url",
+      "id": "doordash_url",
+      "label": "DoorDash store URL"
     }
   ],
   "presets": [

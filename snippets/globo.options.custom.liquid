@@ -1,6 +1,41 @@
- <script>
-      document.addEventListener("gpoRenderCompleted", () => {
-        GPOConfigs.theme.product.variantSelector = '[data-gpo-product-variant-selector]';
-        queueMicrotask(() => GPOConfigs.initialize());
-      }, { once: true });
-    </script>
+<script>
+  document.addEventListener("gpoRenderCompleted", () => {
+    GPOConfigs.theme.product.variantSelector = '[data-gpo-product-variant-selector]';
+    queueMicrotask(() => GPOConfigs.initialize());
+
+    // Move the Globo widget below the variant selectors (Layers, Flavor, etc.)
+    var GPO_SELECTORS = [
+      '.product-options-app',
+      '.product-customizer',
+      '.gpo-container',
+      '.gpo-product-options',
+      '.gpo-fields',
+      '[data-gpo-options]',
+      '#gpo-app',
+      '#gpo_options',
+      '.gpo-options-wrapper'
+    ].join(',');
+
+    function relocateGpo() {
+      var target = document.querySelector('[data-gpo-mount]');
+      if (!target) return false;
+      var widget = document.querySelector(GPO_SELECTORS);
+      if (!widget) return false;
+      if (widget.parentElement === target) return true;
+      target.appendChild(widget);
+      return true;
+    }
+
+    // Try right away
+    relocateGpo();
+
+    // Watch for late or re-renders by GPO and keep the widget in our target
+    var observer = new MutationObserver(function () {
+      relocateGpo();
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    // Stop watching after 8 seconds (GPO should be done rendering by then)
+    setTimeout(function () { observer.disconnect(); }, 8000);
+  }, { once: true });
+</script>

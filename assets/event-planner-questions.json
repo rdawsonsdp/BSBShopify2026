@@ -1,0 +1,569 @@
+{
+  "version": 1,
+  "updated": "2026-05-04",
+  "notes": "Draft v1 — review with Stephanie. Marked questions as required (must-answer to advance) vs optional. Insurance + 501(c)(3) only surface on event types that actually trigger them.",
+
+  "storage": {
+    "plan": "Existing BSB Supabase project (the one already running the Birthday Club). New Storage bucket 'event-inspiration' (public-read, anon-key write via signed upload). New table 'event_inquiries' for form submissions, with foreign-key reference to uploaded image URLs.",
+    "decision_date": "2026-05-04",
+    "decided_by": "Robert (project owner) — using existing Supabase to leverage shared auth, single dashboard, and existing infra rather than spinning up a second project.",
+    "implementation_notes": "Bucket policy: anon role uploads to per-submission folder, public read. Cap: 6 images x 5MB each per submission. Strip EXIF on upload (privacy). Lifecycle rule: auto-delete uploads older than 90 days unless retained flag is set on the submission row.",
+    "next_steps": [
+      "Create the 'event-inspiration' Storage bucket in the existing BSB Supabase project",
+      "Create 'event_inquiries' table with columns: id, created_at, event_type, payload (jsonb of all answers), inspiration_urls (text[]), retained (bool default false)",
+      "Add an Edge Function 'submit-event-inquiry' that validates + writes to the table and triggers email/Slack notification",
+      "Wire the wizard JS to: (1) upload images to bucket on file-select, (2) collect URLs, (3) POST submission with URLs to the Edge Function"
+    ],
+    "open_decisions": [
+      "Confirm 90-day auto-delete with Stephanie (or longer? legal/keepsake reasons?)",
+      "Confirm upload size cap (6 x 5MB or different?)",
+      "Where do internal notifications go? Email to events@brownsugarbakery.com? Slack channel?"
+    ]
+  },
+
+  "common_questions": [
+    {
+      "id": "event_date",
+      "type": "date",
+      "label": "Event date",
+      "required": true
+    },
+    {
+      "id": "date_flexible",
+      "type": "boolean",
+      "label": "Is the date flexible?",
+      "required": false
+    },
+    {
+      "id": "dessert_time",
+      "type": "select",
+      "label": "When does dessert need to be ready?",
+      "options": [
+        "During cocktails / passed",
+        "After dinner / plated",
+        "Late-night dessert table",
+        "Cake-cutting moment, then service",
+        "Other (tell us in vision)"
+      ],
+      "required": false
+    },
+    {
+      "id": "guest_count",
+      "type": "number",
+      "label": "Approximate guest count",
+      "required": true
+    },
+    {
+      "id": "guest_count_final",
+      "type": "boolean",
+      "label": "Is that count final, or expected to grow?",
+      "required": false
+    },
+    {
+      "id": "budget_range",
+      "type": "select",
+      "label": "Budget range",
+      "options": ["Under $500", "$500–$1,500", "$1,500–$3,000", "$3,000–$5,000", "$5,000+", "Not sure yet"],
+      "required": true
+    },
+    {
+      "id": "venue_name",
+      "type": "text",
+      "label": "Venue name",
+      "required": false
+    },
+    {
+      "id": "venue_address",
+      "type": "text",
+      "label": "Venue address (city + zip is fine for now)",
+      "required": false
+    },
+    {
+      "id": "venue_type",
+      "type": "select",
+      "label": "Indoor, outdoor, or mixed?",
+      "options": ["Indoor", "Outdoor", "Mixed indoor/outdoor"],
+      "required": false
+    },
+    {
+      "id": "venue_refrigeration",
+      "type": "select",
+      "label": "Refrigeration available at the venue?",
+      "options": ["Yes", "No", "Not sure"],
+      "required": false
+    },
+    {
+      "id": "delivery_or_pickup",
+      "type": "select",
+      "label": "Delivery to venue or pickup at 75th Street?",
+      "options": ["Deliver to venue", "We'll pick up", "Not sure yet"],
+      "required": true
+    },
+    {
+      "id": "allergies",
+      "type": "text",
+      "label": "Any allergies we should plan around? (nut, gluten, dairy, etc.)",
+      "required": false
+    },
+    {
+      "id": "dietary_culture",
+      "type": "text",
+      "label": "Any cultural or religious considerations? (kosher, halal, etc.)",
+      "required": false
+    },
+    {
+      "id": "vision",
+      "type": "textarea",
+      "label": "Tell us your vision",
+      "info": "Colors, theme, must-haves, references — anything you've got. Rough is fine.",
+      "required": false
+    }
+  ],
+
+  "event_types": [
+    {
+      "id": "gala",
+      "label": "Gala",
+      "description": "Black-tie, large formal",
+      "image": "events-collage-1-cake-cutting.jpg",
+      "lead_time_min_days": 56,
+      "lead_time_recommended_days": 90,
+      "lead_time_message": "Galas: order at least 8 weeks ahead. 12+ weeks gives us room to design and source.",
+      "welcome_message": "Let's make it memorable.",
+      "questions": [
+        {
+          "id": "honoree",
+          "type": "text",
+          "label": "Organization or honoree being recognized",
+          "required": true
+        },
+        {
+          "id": "is_nonprofit",
+          "type": "boolean",
+          "label": "Is the host organization a 501(c)(3) nonprofit?",
+          "required": true
+        },
+        {
+          "id": "tax_exempt_ein",
+          "type": "text",
+          "label": "Tax-exempt EIN (if applicable)",
+          "show_if": "is_nonprofit == true",
+          "required": false
+        },
+        {
+          "id": "venue_insurance_required",
+          "type": "boolean",
+          "label": "Does the venue require us to provide a Certificate of Insurance?",
+          "info": "Many hotels and event spaces ask vendors for proof of liability insurance.",
+          "required": true
+        },
+        {
+          "id": "branded_packaging",
+          "type": "boolean",
+          "label": "Custom-branded boxes, toppers, or sponsor logos needed?",
+          "required": false
+        },
+        {
+          "id": "auction_item",
+          "type": "boolean",
+          "label": "Will any cake or dessert be used as an auction or raffle item?",
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "wedding",
+      "label": "Wedding",
+      "description": "Tiered cakes, traditions",
+      "image": "events-collage-4-roses.jpg",
+      "lead_time_min_days": 84,
+      "lead_time_recommended_days": 180,
+      "lead_time_message": "Weddings: order at least 12 weeks ahead. 6 months ahead is ideal — that gives us time for tastings and design.",
+      "welcome_message": "Congratulations are in order! 🎉 Let's plan the cake.",
+      "questions": [
+        {
+          "id": "couple_names",
+          "type": "text",
+          "label": "Names of the couple",
+          "info": "Whoever's getting married — first names are fine.",
+          "required": true
+        },
+        {
+          "id": "wedding_planner_contact",
+          "type": "text",
+          "label": "Wedding planner or coordinator (name + email/phone)",
+          "info": "If someone is coordinating for you, we'll loop them in directly.",
+          "required": false
+        },
+        {
+          "id": "ceremony_time",
+          "type": "text",
+          "label": "Ceremony start time (and reception start, if different)",
+          "required": false
+        },
+        {
+          "id": "reception_venue",
+          "type": "text",
+          "label": "Reception venue (name + city)",
+          "required": true
+        },
+        {
+          "id": "venue_indoor_outdoor",
+          "type": "select",
+          "label": "Indoor, outdoor, or mixed?",
+          "options": ["Indoor", "Outdoor", "Mixed (ceremony outdoors, reception indoors)"],
+          "info": "Matters for cake stability — outdoor + summer = different plan.",
+          "required": false
+        },
+        {
+          "id": "cake_display_time",
+          "type": "text",
+          "label": "What time should the cake be on display?",
+          "required": false
+        },
+        {
+          "id": "cake_cutting_time",
+          "type": "text",
+          "label": "Cake-cutting time (or part of program)",
+          "required": false
+        },
+        {
+          "id": "tiers",
+          "type": "select",
+          "label": "Number of cake tiers",
+          "options": ["2", "3", "4", "5", "6+", "Not sure yet"],
+          "required": false
+        },
+        {
+          "id": "cake_style",
+          "type": "select",
+          "label": "Cake style direction",
+          "options": ["Traditional buttercream", "Smooth fondant", "Naked / semi-naked", "Painted / textured", "Floral-heavy", "Modern minimal", "Open to suggestions"],
+          "required": false
+        },
+        {
+          "id": "flavor_directions",
+          "type": "text",
+          "label": "Flavor preferences per tier (or favorites in general)",
+          "info": "e.g. 'caramel for top tier, lemon for middle, German chocolate for base'",
+          "required": false
+        },
+        {
+          "id": "grooms_cake",
+          "type": "boolean",
+          "label": "Second / groom's cake or alternative dessert?",
+          "required": false
+        },
+        {
+          "id": "faux_tiers_ok",
+          "type": "boolean",
+          "label": "Faux display tiers OK if it helps the budget? (real cake on the cut tier, styrofoam underneath)",
+          "required": false
+        },
+        {
+          "id": "save_top_tier",
+          "type": "boolean",
+          "label": "Save the top tier for your first anniversary?",
+          "required": false
+        },
+        {
+          "id": "cake_topper_source",
+          "type": "select",
+          "label": "Cake topper",
+          "options": ["We're providing one", "We'd like you to source one", "No topper", "Not sure yet"],
+          "required": false
+        },
+        {
+          "id": "cake_stand",
+          "type": "select",
+          "label": "Cake stand",
+          "options": ["Venue is providing", "We're providing", "We'd like to rent one from BSB", "Not sure yet"],
+          "required": false
+        },
+        {
+          "id": "florist_coordination",
+          "type": "text",
+          "label": "Florist name + contact (we coordinate fresh flowers on the cake)",
+          "info": "If you want fresh flowers on the cake, we work directly with your florist.",
+          "required": false
+        },
+        {
+          "id": "cultural_traditions",
+          "type": "text",
+          "label": "Any cultural or family traditions? (jumping the broom, cake pulls, knife/cake ceremony, money dance, etc.)",
+          "required": false
+        },
+        {
+          "id": "leftover_destination",
+          "type": "text",
+          "label": "Where should leftover cake go at end of night?",
+          "info": "Hotel suite, family member's car, donated to staff — your call.",
+          "required": false
+        },
+        {
+          "id": "tasting_requested",
+          "type": "boolean",
+          "label": "Would you like a tasting before you commit?",
+          "required": false
+        },
+        {
+          "id": "inspiration_images",
+          "type": "image_upload",
+          "label": "Upload cake inspiration photos",
+          "info": "Pinterest pins, screenshots, or saved photos — drop in anything you love. Up to 6 images, 5MB each.",
+          "max_files": 6,
+          "max_size_mb": 5,
+          "required": false
+        }
+      ],
+      "bsb_inspiration_examples": [
+        { "image": "events-collage-4-roses.jpg", "caption": "Tiered, classic, made on 75th" },
+        { "image": "events-collage-2-pink-tier.jpg", "caption": "Soft pink, three tiers" },
+        { "image": "events-collage-3-anniversary.jpg", "caption": "Modern minimal" },
+        { "image": "events-collage-1-cake-cutting.jpg", "caption": "The cake-cutting moment" }
+      ]
+    },
+    {
+      "id": "corporate",
+      "label": "Corporate",
+      "description": "Holiday party, client gifting, internal celebration",
+      "image": "events-collage-2-pink-tier.jpg",
+      "lead_time_min_days": 14,
+      "lead_time_recommended_days": 28,
+      "lead_time_message": "Corporate: order at least 2 weeks ahead. 4+ weeks gives us flex for branded packaging or large quantities.",
+      "questions": [
+        {
+          "id": "company_name",
+          "type": "text",
+          "label": "Company name",
+          "required": true
+        },
+        {
+          "id": "ap_contact",
+          "type": "text",
+          "label": "AP / billing contact name + email",
+          "info": "We'll loop them in for invoicing.",
+          "required": false
+        },
+        {
+          "id": "logo_branding",
+          "type": "boolean",
+          "label": "Branded packaging or logo on dessert?",
+          "required": false
+        },
+        {
+          "id": "audience",
+          "type": "select",
+          "label": "Internal team or client-facing?",
+          "options": ["Internal team only", "Client-facing", "Mixed"],
+          "required": false
+        },
+        {
+          "id": "venue_insurance_required",
+          "type": "boolean",
+          "label": "Does the venue require a Certificate of Insurance from us?",
+          "required": false
+        },
+        {
+          "id": "invoicing_terms",
+          "type": "select",
+          "label": "Preferred invoicing terms",
+          "options": ["Pay in full before delivery", "NET 15", "NET 30", "Other"],
+          "required": false
+        },
+        {
+          "id": "recurring",
+          "type": "boolean",
+          "label": "Is this a one-off, or could it become a recurring program?",
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "fundraiser",
+      "label": "Fundraiser",
+      "description": "Nonprofit benefit, charity event",
+      "image": "events-collage-1-cake-cutting.jpg",
+      "lead_time_min_days": 42,
+      "lead_time_recommended_days": 60,
+      "lead_time_message": "Fundraisers: order at least 6 weeks ahead. Helps us coordinate with your event team and program.",
+      "welcome_message": "Honored to be part of it.",
+      "questions": [
+        {
+          "id": "cause_org",
+          "type": "text",
+          "label": "Organization name and cause",
+          "required": true
+        },
+        {
+          "id": "is_nonprofit",
+          "type": "boolean",
+          "label": "Is the host organization a 501(c)(3) nonprofit?",
+          "required": true
+        },
+        {
+          "id": "tax_exempt_ein",
+          "type": "text",
+          "label": "Tax-exempt EIN (if applicable)",
+          "show_if": "is_nonprofit == true",
+          "required": false
+        },
+        {
+          "id": "venue_insurance_required",
+          "type": "boolean",
+          "label": "Does the venue require a Certificate of Insurance from us?",
+          "required": true
+        },
+        {
+          "id": "donation_request",
+          "type": "select",
+          "label": "Are you asking for an in-kind donation, paid order, or mix?",
+          "options": ["Paid order", "Asking about in-kind donation", "Mix (some donated, some paid)"],
+          "required": false
+        },
+        {
+          "id": "program_acknowledgment",
+          "type": "boolean",
+          "label": "Will BSB be acknowledged in your event program / signage?",
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "anniversary",
+      "label": "Anniversary",
+      "description": "Milestone moments",
+      "image": "events-collage-3-anniversary.jpg",
+      "lead_time_min_days": 21,
+      "lead_time_recommended_days": 42,
+      "lead_time_message": "Anniversaries: order at least 3 weeks ahead. Recreating an original cake from a photo? 6+ weeks.",
+      "welcome_message": "Cheers to the milestone.",
+      "questions": [
+        {
+          "id": "honoree_couple",
+          "type": "text",
+          "label": "Whose anniversary?",
+          "required": false
+        },
+        {
+          "id": "years_celebrating",
+          "type": "number",
+          "label": "Number of years",
+          "required": false
+        },
+        {
+          "id": "recreate_original",
+          "type": "boolean",
+          "label": "Want to recreate the original wedding cake from a photo?",
+          "info": "If yes, you'll be able to share the photo when we follow up.",
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "birthday",
+      "label": "Birthday",
+      "description": "Milestone birthday party",
+      "image": "events-collage-2-pink-tier.jpg",
+      "lead_time_min_days": 2,
+      "lead_time_recommended_days": 14,
+      "lead_time_message": "Birthdays: order at least 48 hours ahead for pickup. 2+ weeks for fully custom designs.",
+      "welcome_message": "Birthdays are a yes for me.",
+      "questions": [
+        {
+          "id": "honoree_name",
+          "type": "text",
+          "label": "Whose birthday?",
+          "required": false
+        },
+        {
+          "id": "honoree_age",
+          "type": "number",
+          "label": "What age are they turning?",
+          "required": false
+        },
+        {
+          "id": "is_surprise",
+          "type": "boolean",
+          "label": "Is this a surprise party?",
+          "required": false
+        },
+        {
+          "id": "venue_setting",
+          "type": "select",
+          "label": "Where's the party?",
+          "options": ["Hotel / banquet hall", "Restaurant", "Private home", "Outdoor / park", "Other"],
+          "required": false
+        },
+        {
+          "id": "favorite_flavor",
+          "type": "text",
+          "label": "Honoree's actual favorite cake flavor (if known)",
+          "required": false
+        },
+        {
+          "id": "candles_singing",
+          "type": "boolean",
+          "label": "Cake-cutting + candles + singing moment planned?",
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "other",
+      "label": "Other",
+      "description": "Tell us what you're planning",
+      "image": "events-collage-4-roses.jpg",
+      "lead_time_min_days": 7,
+      "lead_time_recommended_days": 21,
+      "lead_time_message": "Whatever you're planning, more lead time is better. Tell us your date and we'll let you know what's possible.",
+      "questions": []
+    }
+  ],
+
+  "contact_questions": [
+    { "id": "first_name",   "type": "text",  "label": "First name",         "required": true },
+    { "id": "last_name",    "type": "text",  "label": "Last name",          "required": true },
+    { "id": "email",        "type": "email", "label": "Email",              "required": true },
+    { "id": "phone",        "type": "tel",   "label": "Phone",              "required": true, "info": "We always confirm by phone." },
+    { "id": "organization", "type": "text",  "label": "Organization (optional)", "required": false },
+    { "id": "decision_role", "type": "select",
+      "label": "Are you the decision-maker, or coordinating for someone else?",
+      "options": ["I'm the decision-maker", "I'm coordinating — someone else approves", "I'm both"],
+      "required": false }
+  ],
+
+  "summary_step": {
+    "title": "Here's what you told us.",
+    "intro": "Quick recap before you send it. You can edit any step by tapping it in the progress bar.",
+    "extra_field": {
+      "id": "anything_else",
+      "type": "textarea",
+      "label": "Anything else you want us to know?",
+      "placeholder": "Last-minute thoughts, references, links to inspiration, key contacts — drop them here.",
+      "required": false
+    },
+    "confirmation": {
+      "title": "Got it. Talk soon.",
+      "body": "I'll come back to you within 48 hours — me, or someone from my team. — Stephanie",
+      "always_show_phone": "(773) 570-7676"
+    }
+  },
+
+  "review_questions_for_stephanie": [
+    "Are these the right 7 event types, or should we add/merge any? (e.g., 'Sweet 16', 'Quinceañera', 'Bar/Bat Mitzvah', 'Graduation')",
+    "What's the actual answer to 'do we provide a Certificate of Insurance'? Yes always / Yes for some venues / Need to check / Not currently?",
+    "Do we offer 501(c)(3) tax-exempt invoicing today? If yes, what's the workflow?",
+    "Are NET 15 / NET 30 / NET 60 real options for corporate clients today? Which?",
+    "Do we offer event tastings? If yes, should that be a question on every event type?",
+    "Is the photo-recreation question realistic for anniversaries (image upload may need a separate flow)?",
+    "For galas/fundraisers, do we accept in-kind donation requests? If yes, what's the threshold/criteria?",
+    "After submission: confirmation email to user (yes/no), internal email/Slack notification (where to)?",
+    "Required vs optional flags — anything I marked required that should be optional, or vice versa?",
+    "Lead times per event type — confirm or correct: Gala 8w min / 12w ideal · Wedding 12w min / 26w ideal · Corporate 2w min / 4w ideal · Fundraiser 6w min / 8w ideal · Anniversary 3w min / 6w ideal · Birthday 48h min / 2w ideal · Other 1w min / 3w ideal.",
+    "Image upload storage: Supabase Storage bucket — confirm we'll use the existing Supabase project or spin up a new one. 90-day auto-delete OK or want longer retention?",
+    "Wedding question set (15 questions) — too many? Strip back to 8-10 essentials? Which ones are must-have vs nice-to-have?",
+    "Welcome messages per type ('Congratulations are in order!', 'Honored to be part of it.', 'Birthdays are a yes for me.', etc.) — verify each lands in Stephanie's voice.",
+    "Pricing band on the events page (the From-$250/$400/$750 thing) was pulled — get Stephanie's real pricing tiers so we can put it back accurately."
+  ]
+}

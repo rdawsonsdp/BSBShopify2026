@@ -1,0 +1,974 @@
+{%- comment -%}
+  Our Event Planner — multi-step wizard. Each step is a panel; progress bar at top.
+  Step 1: Event type (visual chooser with imagery)
+  Step 2: Date + guest count + budget
+  Step 3: Vision + dietary
+  Step 4: Contact + submit
+
+  Submission: posts JSON to the same endpoint pattern as the legacy events-inquiry-form
+  (Supabase Edge Function). Falls back to a simulated success when no endpoint is set.
+  Logic hooks (data-events-planner-logic) are placeholder attributes so future
+  conditional-step logic can be added without restructuring HTML.
+{%- endcomment -%}
+
+{%- liquid
+  assign form_id = 'events-planner-' | append: section.id
+-%}
+
+<section id="event-inquiry" class="events-planner events-planner--{{ section.id }}" aria-label="{{ section.settings.heading | default: 'Our event planner' | escape }}" data-events-planner>
+  <div class="events-planner__inner">
+    <div class="events-planner__trigger">
+      {% if section.settings.eyebrow != blank %}
+        <p class="events-planner__eyebrow">{{ section.settings.eyebrow | escape }}</p>
+      {% endif %}
+      {% if section.settings.heading != blank %}
+        <h2 class="events-planner__heading">{{ section.settings.heading | escape }}</h2>
+      {% endif %}
+      {% if section.settings.subheading != blank %}
+        <p class="events-planner__subheading">{{ section.settings.subheading | escape }}</p>
+      {% endif %}
+      <button type="button" class="events-planner__trigger-btn" data-events-planner-open>
+        <span class="events-planner__trigger-btn-label">{{ section.settings.button_label | default: 'Open our event planner' | escape }}</span>
+        <span class="events-planner__trigger-btn-arrow" aria-hidden="true">→</span>
+      </button>
+      {% if section.settings.trigger_microcopy != blank %}
+        <p class="events-planner__trigger-microcopy">{{ section.settings.trigger_microcopy | escape }}</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="events-planner__modal" data-events-planner-modal hidden aria-hidden="true">
+    <div class="events-planner__modal-backdrop" data-events-planner-close></div>
+    <div class="events-planner__modal-card" role="dialog" aria-modal="true" aria-label="Event planner">
+      <button type="button" class="events-planner__modal-close" data-events-planner-close aria-label="Close planner">&times;</button>
+      <div class="events-planner__modal-body">
+        <ol class="events-planner__progress" aria-label="Form progress">
+      <li class="events-planner__progress-step is-active" data-events-planner-progress="1"><span>1</span> Event</li>
+      <li class="events-planner__progress-step" data-events-planner-progress="2"><span>2</span> Details</li>
+      <li class="events-planner__progress-step" data-events-planner-progress="3"><span>3</span> Vision</li>
+      <li class="events-planner__progress-step" data-events-planner-progress="4"><span>4</span> Contact</li>
+    </ol>
+
+    <noscript>
+      <div class="events-planner__noscript">
+        <p>Your browser has JavaScript disabled. Please email us at <a href="mailto:events@brownsugarbakery.com">events@brownsugarbakery.com</a> or call <a href="tel:7735707676">(773) 570-7676</a>.</p>
+      </div>
+    </noscript>
+
+    <form id="{{ form_id }}" class="events-planner__form" novalidate
+          data-endpoint="{{ section.settings.endpoint_url }}"
+          data-anon-key="{{ section.settings.supabase_anon_key }}">
+
+      <div class="events-planner__brand">
+        <img src="{{ 'bsb-logo.jpg' | asset_url }}" alt="Brown Sugar Bakery" class="events-planner__brand-logo" loading="eager">
+      </div>
+
+      <div class="events-planner__honeypot" aria-hidden="true">
+        <label>Website <input type="text" name="website" tabindex="-1" autocomplete="off"></label>
+      </div>
+
+      {%- comment -%} STEP 1 — Event type {%- endcomment -%}
+      <fieldset class="events-planner__step is-active" data-events-planner-step="1">
+        <legend class="events-planner__legend">What are you planning?</legend>
+        <p class="events-planner__sub">Tap one to start.</p>
+        <div class="events-planner__choices">
+          {%- assign choice_kickers = 'GALA|WEDDING|CORPORATE|ANNIVERSARY|FUNDRAISER|BIRTHDAY|OTHER' | split: '|' -%}
+          {%- assign choice_descs = 'Black-tie, large formal|Tiered cakes, traditions|Holiday party, client gifting|Milestone moments|Nonprofit benefit|Milestone birthday|Tell us in the next step' | split: '|' -%}
+          {%- assign choice_images = 'events-collage-1-cake-cutting.jpg|events-collage-4-roses.jpg|events-collage-2-pink-tier.jpg|events-collage-3-anniversary.jpg|events-collage-1-cake-cutting.jpg|events-collage-2-pink-tier.jpg|events-collage-4-roses.jpg' | split: '|' -%}
+          {%- for kicker in choice_kickers -%}
+            {%- assign idx = forloop.index0 -%}
+            <label class="events-planner__choice">
+              <input type="radio" name="event_type" value="{{ kicker | downcase }}" data-events-planner-logic="event_type"{% if idx == 0 %} required{% endif %}>
+              <span class="events-planner__choice-card">
+                <span class="events-planner__choice-media" style="background-image: url('{{ choice_images[idx] | asset_url }}');"></span>
+                <span class="events-planner__choice-body">
+                  <span class="events-planner__choice-kicker">{{ kicker }}</span>
+                  <span class="events-planner__choice-desc">{{ choice_descs[idx] }}</span>
+                </span>
+              </span>
+            </label>
+          {%- endfor -%}
+        </div>
+        <div class="events-planner__nav">
+          <span></span>
+          <button type="button" class="events-planner__btn events-planner__btn--primary" data-events-planner-next disabled>Continue →</button>
+        </div>
+      </fieldset>
+
+      {%- comment -%} STEP 2 — Date + guest count + budget {%- endcomment -%}
+      <fieldset class="events-planner__step" data-events-planner-step="2" hidden>
+        <legend class="events-planner__legend">When and how big?</legend>
+        <p class="events-planner__sub">Helps us check our calendar and quote you.</p>
+        <div class="events-planner__split">
+          <div class="events-planner__fields">
+            <label class="events-planner__field">
+              <span class="events-planner__label">Event date *</span>
+              <input type="date" name="event_date" required>
+            </label>
+            <label class="events-planner__field">
+              <span class="events-planner__label">Approximate guest count *</span>
+              <input type="number" name="guest_count" min="1" placeholder="e.g. 250" required>
+            </label>
+            <label class="events-planner__field">
+              <span class="events-planner__label">Budget range *</span>
+              <select name="budget_range" required>
+                <option value="">Choose one…</option>
+                <option value="under_500">Under $500</option>
+                <option value="500_1500">$500 – $1,500</option>
+                <option value="1500_3000">$1,500 – $3,000</option>
+                <option value="3000_5000">$3,000 – $5,000</option>
+                <option value="5000_plus">$5,000+</option>
+                <option value="not_sure">Not sure yet</option>
+              </select>
+            </label>
+          </div>
+          <aside class="events-planner__aside">
+            <p class="events-planner__aside-eyebrow">Roughly</p>
+            <ul class="events-planner__price-tiers">
+              <li><strong>From $250</strong> — desserts for ~100 guests</li>
+              <li><strong>From $400</strong> — custom tiered cakes (4-tier+)</li>
+              <li><strong>From $750</strong> — dessert tables, cupcakes, minis</li>
+            </ul>
+            <p class="events-planner__aside-note">Final quote depends on design and dietary needs. We'll walk you through it.</p>
+          </aside>
+        </div>
+        <div class="events-planner__nav">
+          <button type="button" class="events-planner__btn events-planner__btn--ghost" data-events-planner-prev>← Back</button>
+          <button type="button" class="events-planner__btn events-planner__btn--primary" data-events-planner-next>Continue →</button>
+        </div>
+      </fieldset>
+
+      {%- comment -%} STEP 3 — Vision {%- endcomment -%}
+      <fieldset class="events-planner__step" data-events-planner-step="3" hidden>
+        <legend class="events-planner__legend">What are you picturing?</legend>
+        <p class="events-planner__sub">Colors, theme, dietary, vibe — anything you've got. We're good with rough.</p>
+        <div class="events-planner__split">
+          <div class="events-planner__fields">
+            <label class="events-planner__field">
+              <span class="events-planner__label">Tell us your vision</span>
+              <textarea name="vision" rows="6" placeholder="Colors, theme, vibe, must-haves, or just 'caramel cake for 100 people' — whatever you've got."></textarea>
+            </label>
+            <label class="events-planner__field">
+              <span class="events-planner__label">Dietary needs (optional)</span>
+              <input type="text" name="dietary" placeholder="e.g. gluten-free table, nut-free, vegan options">
+            </label>
+          </div>
+          <aside class="events-planner__aside events-planner__aside--gallery">
+            <p class="events-planner__aside-eyebrow">Inspiration</p>
+            <div class="events-planner__gallery">
+              <span class="events-planner__gallery-tile" style="background-image: url('{{ 'events-collage-1-cake-cutting.jpg' | asset_url }}');" aria-hidden="true"></span>
+              <span class="events-planner__gallery-tile" style="background-image: url('{{ 'events-collage-2-pink-tier.jpg' | asset_url }}');" aria-hidden="true"></span>
+              <span class="events-planner__gallery-tile" style="background-image: url('{{ 'events-collage-3-anniversary.jpg' | asset_url }}');" aria-hidden="true"></span>
+              <span class="events-planner__gallery-tile" style="background-image: url('{{ 'events-collage-4-roses.jpg' | asset_url }}');" aria-hidden="true"></span>
+            </div>
+          </aside>
+        </div>
+        <div class="events-planner__nav">
+          <button type="button" class="events-planner__btn events-planner__btn--ghost" data-events-planner-prev>← Back</button>
+          <button type="button" class="events-planner__btn events-planner__btn--primary" data-events-planner-next>Continue →</button>
+        </div>
+      </fieldset>
+
+      {%- comment -%} STEP 4 — Contact + submit {%- endcomment -%}
+      <fieldset class="events-planner__step" data-events-planner-step="4" hidden>
+        <legend class="events-planner__legend">How do we reach you?</legend>
+        <p class="events-planner__sub">I'll come back to you within 48 hours. — Stephanie</p>
+        <div class="events-planner__fields">
+          <div class="events-planner__row events-planner__row--2">
+            <label class="events-planner__field">
+              <span class="events-planner__label">First name *</span>
+              <input type="text" name="first_name" required autocomplete="given-name">
+            </label>
+            <label class="events-planner__field">
+              <span class="events-planner__label">Last name *</span>
+              <input type="text" name="last_name" required autocomplete="family-name">
+            </label>
+          </div>
+          <div class="events-planner__row events-planner__row--2">
+            <label class="events-planner__field">
+              <span class="events-planner__label">Email *</span>
+              <input type="email" name="email" required autocomplete="email">
+            </label>
+            <label class="events-planner__field">
+              <span class="events-planner__label">Phone *</span>
+              <input type="tel" name="phone" required autocomplete="tel">
+            </label>
+          </div>
+          <label class="events-planner__field">
+            <span class="events-planner__label">Organization (optional)</span>
+            <input type="text" name="organization" autocomplete="organization">
+          </label>
+        </div>
+        <div class="events-planner__nav">
+          <button type="button" class="events-planner__btn events-planner__btn--ghost" data-events-planner-prev>← Back</button>
+          <button type="submit" class="events-planner__btn events-planner__btn--submit">Send my event details</button>
+        </div>
+        <p class="events-planner__microcopy">Real bakery. Real person. Back to you within 48 hours. — Stephanie</p>
+      </fieldset>
+
+      {%- comment -%} Success state {%- endcomment -%}
+      <fieldset class="events-planner__step events-planner__step--success" data-events-planner-step="success" hidden>
+        <p class="events-planner__success-emoji" aria-hidden="true">🎂</p>
+        <legend class="events-planner__legend events-planner__legend--success">Got it. Talk soon.</legend>
+        <p class="events-planner__sub">We've got your event details. I'll come back to you within 48 hours — me, or someone from my team. — Stephanie</p>
+      </fieldset>
+
+      {%- comment -%} Error state {%- endcomment -%}
+      <fieldset class="events-planner__step events-planner__step--error" data-events-planner-step="error" hidden>
+        <legend class="events-planner__legend">Something went sideways.</legend>
+        <p class="events-planner__sub">Our form didn't go through. Email us at <a href="mailto:events@brownsugarbakery.com">events@brownsugarbakery.com</a> or call <a href="tel:7735707676">(773) 570-7676</a> — we'll catch it from there.</p>
+        <div class="events-planner__nav">
+          <button type="button" class="events-planner__btn events-planner__btn--ghost" data-events-planner-retry>← Try again</button>
+        </div>
+      </fieldset>
+    </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .events-planner--{{ section.id }} {
+    background: {{ section.settings.background_color | default: '#fffaf2' }};
+    color: {{ section.settings.text_color | default: '#570522' }};
+    padding: 40px 16px;
+  }
+  .events-planner--{{ section.id }} .events-planner__inner {
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  .events-planner--{{ section.id }} .events-planner__eyebrow {
+    font-size: 12px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    font-weight: 700;
+    margin: 0 0 8px;
+    opacity: 0.75;
+    text-align: center;
+  }
+  .events-planner--{{ section.id }} .events-planner__heading {
+    font-size: clamp(24px, 4vw, 34px);
+    font-weight: 800;
+    margin: 0 0 8px;
+    text-align: center;
+    color: inherit;
+  }
+  .events-planner--{{ section.id }} .events-planner__subheading {
+    font-size: 15px;
+    line-height: 1.5;
+    margin: 0 auto 28px;
+    max-width: 640px;
+    text-align: center;
+    opacity: 0.85;
+  }
+  /* Progress bar */
+  .events-planner--{{ section.id }} .events-planner__progress {
+    list-style: none;
+    margin: 0 auto 28px;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    gap: 0;
+    max-width: 720px;
+    counter-reset: progress;
+  }
+  .events-planner--{{ section.id }} .events-planner__progress-step {
+    flex: 1;
+    text-align: center;
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: rgba(91, 37, 18, 0.45);
+    position: relative;
+    padding-top: 32px;
+  }
+  .events-planner--{{ section.id }} .events-planner__progress-step span {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #fff;
+    border: 2px solid rgba(91, 37, 18, 0.3);
+    color: rgba(91, 37, 18, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 800;
+    transition: background 200ms, color 200ms, border-color 200ms;
+  }
+  .events-planner--{{ section.id }} .events-planner__progress-step:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    top: 12px;
+    left: calc(50% + 14px);
+    width: calc(100% - 28px);
+    height: 2px;
+    background: rgba(91, 37, 18, 0.18);
+  }
+  .events-planner--{{ section.id }} .events-planner__progress-step.is-active span,
+  .events-planner--{{ section.id }} .events-planner__progress-step.is-done span {
+    background: #570522;
+    border-color: #570522;
+    color: #fff;
+  }
+  .events-planner--{{ section.id }} .events-planner__progress-step.is-active,
+  .events-planner--{{ section.id }} .events-planner__progress-step.is-done {
+    color: #570522;
+  }
+  /* Form steps */
+  /* Trigger card visible on the page */
+  .events-planner--{{ section.id }} .events-planner__trigger {
+    text-align: center;
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 28px 24px 32px;
+    {% if section.settings.transparent_card %}
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    {% else %}
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(91, 37, 18, 0.10);
+    border: 1px solid rgba(91, 37, 18, 0.10);
+    {% endif %}
+  }
+  .events-planner--{{ section.id }} .events-planner__trigger .events-planner__heading {
+    margin-bottom: 6px;
+  }
+  .events-planner--{{ section.id }} .events-planner__trigger .events-planner__subheading {
+    margin-bottom: 22px;
+  }
+  .events-planner--{{ section.id }} .events-planner__trigger-btn {
+    appearance: none;
+    border: 0;
+    cursor: pointer;
+    font: inherit;
+    font-weight: 800;
+    font-size: clamp(15px, 2vw, 18px);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 18px 36px;
+    border-radius: 8px;
+    background: linear-gradient(180deg, #f0953f 0%, #d6712a 55%, #b25812 100%);
+    color: #ffffff;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.35),
+      inset 0 -2px 0 rgba(0, 0, 0, 0.25),
+      0 4px 0 rgba(122, 58, 12, 0.7),
+      0 8px 16px rgba(122, 58, 12, 0.35);
+    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.3);
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    transition: transform 80ms ease, background 200ms ease, box-shadow 200ms ease;
+  }
+  .events-planner--{{ section.id }} .events-planner__trigger-btn:hover {
+    background: linear-gradient(180deg, #f7a857 0%, #e5832f 55%, #c46715 100%);
+    transform: translateY(-2px);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.4),
+      inset 0 -2px 0 rgba(0, 0, 0, 0.25),
+      0 6px 0 rgba(122, 58, 12, 0.7),
+      0 12px 24px rgba(122, 58, 12, 0.4);
+  }
+  .events-planner--{{ section.id }} .events-planner__trigger-btn:active {
+    transform: translateY(2px);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.35),
+      inset 0 -2px 0 rgba(0, 0, 0, 0.25),
+      0 1px 0 rgba(122, 58, 12, 0.7),
+      0 2px 4px rgba(122, 58, 12, 0.35);
+  }
+  .events-planner--{{ section.id }} .events-planner__trigger-btn-arrow {
+    font-size: 1.2em;
+    transition: transform 200ms ease;
+  }
+  .events-planner--{{ section.id }} .events-planner__trigger-btn:hover .events-planner__trigger-btn-arrow {
+    transform: translateX(4px);
+  }
+  .events-planner--{{ section.id }} .events-planner__trigger-microcopy {
+    margin: 14px 0 0;
+    font-size: 13px;
+    color: #570522;
+    opacity: 0.7;
+    font-style: italic;
+  }
+  /* Modal */
+  .events-planner--{{ section.id }} .events-planner__modal {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  .events-planner--{{ section.id }} .events-planner__modal[hidden] {
+    display: none;
+  }
+  .events-planner--{{ section.id }} .events-planner__modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(58, 22, 18, 0.7);
+  }
+  .events-planner--{{ section.id }} .events-planner__modal-card {
+    position: relative;
+    z-index: 1;
+    background: #ffffff;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 880px;
+    max-height: 92vh;
+    overflow-y: auto;
+    box-shadow: 0 18px 48px rgba(0, 0, 0, 0.35);
+  }
+  .events-planner--{{ section.id }} .events-planner__modal-body {
+    padding: 28px 24px 24px;
+  }
+  .events-planner--{{ section.id }} .events-planner__modal-close {
+    position: absolute;
+    top: 8px;
+    right: 12px;
+    background: none;
+    border: 0;
+    font-size: 32px;
+    line-height: 1;
+    color: #570522;
+    cursor: pointer;
+    padding: 6px 12px;
+    border-radius: 4px;
+    z-index: 2;
+  }
+  .events-planner--{{ section.id }} .events-planner__modal-close:hover {
+    background: rgba(87, 5, 34, 0.08);
+  }
+  @media (min-width: 768px) {
+    .events-planner--{{ section.id }} .events-planner__modal-body {
+      padding: 36px 40px 32px;
+    }
+  }
+  /* Form (now inside modal) */
+  .events-planner--{{ section.id }} .events-planner__form {
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    padding: 0;
+    border-radius: 0;
+  }
+  .events-planner--{{ section.id }} .events-planner__brand {
+    text-align: center;
+    margin: 0 0 22px;
+  }
+  .events-planner--{{ section.id }} .events-planner__brand-logo {
+    max-width: 140px;
+    height: auto;
+    display: inline-block;
+  }
+  @media (min-width: 768px) {
+    .events-planner--{{ section.id }} .events-planner__brand-logo {
+      max-width: 170px;
+    }
+  }
+  .events-planner--{{ section.id }} .events-planner__honeypot {
+    position: absolute;
+    width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0);
+  }
+  .events-planner--{{ section.id }} .events-planner__step {
+    border: 0;
+    padding: 0;
+    margin: 0;
+    animation: planner-fade-in 280ms ease;
+  }
+  .events-planner--{{ section.id }} .events-planner__step[hidden] { display: none; }
+  @keyframes planner-fade-in {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .events-planner--{{ section.id }} .events-planner__legend {
+    font-size: clamp(20px, 2.6vw, 26px);
+    font-weight: 800;
+    margin: 0 0 6px;
+    color: #570522;
+    text-align: center;
+    width: 100%;
+  }
+  .events-planner--{{ section.id }} .events-planner__sub {
+    text-align: center;
+    margin: 0 0 22px;
+    font-size: 14px;
+    opacity: 0.8;
+    color: #570522;
+  }
+  /* Step 1 — visual choices */
+  .events-planner--{{ section.id }} .events-planner__choices {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  .events-planner--{{ section.id }} .events-planner__choice {
+    cursor: pointer;
+  }
+  .events-planner--{{ section.id }} .events-planner__choice input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .events-planner--{{ section.id }} .events-planner__choice-card {
+    display: flex;
+    flex-direction: column;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 2px solid rgba(91, 37, 18, 0.16);
+    background: #fffaf2;
+    transition: transform 180ms, box-shadow 180ms, border-color 180ms;
+    height: 100%;
+  }
+  .events-planner--{{ section.id }} .events-planner__choice-media {
+    display: block;
+    aspect-ratio: 16 / 10;
+    background-size: cover;
+    background-position: center;
+    background-color: rgba(91, 37, 18, 0.08);
+  }
+  .events-planner--{{ section.id }} .events-planner__choice-body {
+    padding: 12px 14px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .events-planner--{{ section.id }} .events-planner__choice-kicker {
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    color: #570522;
+  }
+  .events-planner--{{ section.id }} .events-planner__choice-desc {
+    font-size: 13px;
+    color: #2e1208;
+    opacity: 0.78;
+    line-height: 1.4;
+  }
+  .events-planner--{{ section.id }} .events-planner__choice:hover .events-planner__choice-card {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(91, 37, 18, 0.18);
+    border-color: rgba(91, 37, 18, 0.4);
+  }
+  .events-planner--{{ section.id }} .events-planner__choice input:checked + .events-planner__choice-card {
+    border-color: #ba5b28;
+    box-shadow: 0 0 0 3px rgba(186, 91, 40, 0.18);
+    background: #ffffff;
+  }
+  /* Step layouts: split with aside */
+  .events-planner--{{ section.id }} .events-planner__split {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  .events-planner--{{ section.id }} .events-planner__fields {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .events-planner--{{ section.id }} .events-planner__row--2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  .events-planner--{{ section.id }} .events-planner__field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .events-planner--{{ section.id }} .events-planner__label {
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #570522;
+    opacity: 0.75;
+    font-weight: 700;
+  }
+  .events-planner--{{ section.id }} .events-planner__field input,
+  .events-planner--{{ section.id }} .events-planner__field select,
+  .events-planner--{{ section.id }} .events-planner__field textarea {
+    font: inherit;
+    color: inherit;
+    padding: 11px 12px;
+    border: 1px solid rgba(91, 37, 18, 0.25);
+    border-radius: 6px;
+    background: #fff;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .events-planner--{{ section.id }} .events-planner__field textarea {
+    resize: vertical;
+    min-height: 110px;
+    font-family: inherit;
+  }
+  .events-planner--{{ section.id }} .events-planner__field input:focus,
+  .events-planner--{{ section.id }} .events-planner__field select:focus,
+  .events-planner--{{ section.id }} .events-planner__field textarea:focus {
+    outline: none;
+    border-color: #ba5b28;
+    box-shadow: 0 0 0 3px rgba(186, 91, 40, 0.15);
+  }
+  /* Aside (price tiers + gallery) */
+  .events-planner--{{ section.id }} .events-planner__aside {
+    background: #fffaf2;
+    border-radius: 8px;
+    padding: 18px;
+    border: 1px solid rgba(91, 37, 18, 0.12);
+  }
+  .events-planner--{{ section.id }} .events-planner__aside-eyebrow {
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    font-weight: 800;
+    color: #570522;
+    opacity: 0.7;
+    margin: 0 0 10px;
+  }
+  .events-planner--{{ section.id }} .events-planner__price-tiers {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .events-planner--{{ section.id }} .events-planner__price-tiers li {
+    font-size: 14px;
+    color: #2e1208;
+  }
+  .events-planner--{{ section.id }} .events-planner__price-tiers strong {
+    color: #ba5b28;
+    font-weight: 800;
+  }
+  .events-planner--{{ section.id }} .events-planner__aside-note {
+    font-size: 12px;
+    margin: 14px 0 0;
+    opacity: 0.7;
+    color: #570522;
+  }
+  .events-planner--{{ section.id }} .events-planner__gallery {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+  .events-planner--{{ section.id }} .events-planner__gallery-tile {
+    aspect-ratio: 1 / 1;
+    background-size: cover;
+    background-position: center;
+    border-radius: 6px;
+  }
+  /* Nav buttons */
+  .events-planner--{{ section.id }} .events-planner__nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 22px;
+    gap: 12px;
+  }
+  .events-planner--{{ section.id }} .events-planner__btn {
+    appearance: none;
+    border: 0;
+    cursor: pointer;
+    font: inherit;
+    font-weight: 700;
+    padding: 12px 22px;
+    border-radius: 6px;
+    transition: transform 80ms, opacity 200ms, background 200ms;
+    letter-spacing: 0.04em;
+  }
+  .events-planner--{{ section.id }} .events-planner__btn--primary,
+  .events-planner--{{ section.id }} .events-planner__btn--submit {
+    background: #570522;
+    color: #ffffff;
+  }
+  .events-planner--{{ section.id }} .events-planner__btn--primary:hover,
+  .events-planner--{{ section.id }} .events-planner__btn--submit:hover {
+    background: #6c0a2e;
+  }
+  .events-planner--{{ section.id }} .events-planner__btn--primary[disabled] {
+    opacity: 0.45;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+  .events-planner--{{ section.id }} .events-planner__btn--ghost {
+    background: transparent;
+    color: #570522;
+    border: 1px solid rgba(91, 37, 18, 0.3);
+  }
+  .events-planner--{{ section.id }} .events-planner__btn--ghost:hover {
+    background: rgba(91, 37, 18, 0.06);
+  }
+  .events-planner--{{ section.id }} .events-planner__microcopy {
+    text-align: center;
+    margin: 16px 0 0;
+    font-size: 13px;
+    color: #570522;
+    opacity: 0.75;
+    font-style: italic;
+  }
+  .events-planner--{{ section.id }} .events-planner__success-emoji {
+    text-align: center;
+    font-size: 56px;
+    margin: 0 0 8px;
+  }
+  .events-planner--{{ section.id }} .events-planner__legend--success {
+    color: #1a7f37;
+  }
+  /* Desktop split layout */
+  @media (min-width: 768px) {
+    .events-planner--{{ section.id }} {
+      padding: 56px 24px;
+    }
+    .events-planner--{{ section.id }} .events-planner__form {
+      padding: 44px 40px 36px;
+    }
+    .events-planner--{{ section.id }} .events-planner__choices {
+      grid-template-columns: repeat(3, 1fr);
+    }
+    .events-planner--{{ section.id }} .events-planner__split {
+      grid-template-columns: 2fr 1fr;
+      gap: 28px;
+    }
+  }
+</style>
+
+<script>
+  (function () {
+    var sectionEl = document.querySelector('.events-planner--{{ section.id }}');
+    if (!sectionEl) return;
+    var form = sectionEl.querySelector('.events-planner__form');
+    var steps = sectionEl.querySelectorAll('[data-events-planner-step]');
+    var progressItems = sectionEl.querySelectorAll('[data-events-planner-progress]');
+    var nextBtns = sectionEl.querySelectorAll('[data-events-planner-next]');
+    var prevBtns = sectionEl.querySelectorAll('[data-events-planner-prev]');
+    var retryBtn = sectionEl.querySelector('[data-events-planner-retry]');
+    var openBtn = sectionEl.querySelector('[data-events-planner-open]');
+    var modal = sectionEl.querySelector('[data-events-planner-modal]');
+    var closeBtns = sectionEl.querySelectorAll('[data-events-planner-close]');
+    var current = 1;
+
+    function openModal() {
+      if (!modal) return;
+      modal.hidden = false;
+      modal.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeModal() {
+      if (!modal) return;
+      modal.hidden = true;
+      modal.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+    }
+    if (openBtn) openBtn.addEventListener('click', openModal);
+    closeBtns.forEach(function (b) { b.addEventListener('click', closeModal); });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && modal && !modal.hidden) closeModal();
+    });
+
+    function showStep(stepKey) {
+      steps.forEach(function (s) {
+        var key = s.getAttribute('data-events-planner-step');
+        if (String(key) === String(stepKey)) {
+          s.hidden = false;
+          s.classList.add('is-active');
+        } else {
+          s.hidden = true;
+          s.classList.remove('is-active');
+        }
+      });
+      progressItems.forEach(function (p) {
+        var n = parseInt(p.getAttribute('data-events-planner-progress'), 10);
+        p.classList.remove('is-active', 'is-done');
+        if (typeof stepKey === 'number') {
+          if (n < stepKey) p.classList.add('is-done');
+          if (n === stepKey) p.classList.add('is-active');
+        }
+      });
+      // Scroll the section into view smoothly when stepping
+      sectionEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function validateStep(n) {
+      var step = sectionEl.querySelector('[data-events-planner-step="' + n + '"]');
+      if (!step) return true;
+      var fields = step.querySelectorAll('input[required], select[required], textarea[required]');
+      for (var i = 0; i < fields.length; i++) {
+        if (!fields[i].value || (fields[i].type === 'radio' && !sectionEl.querySelector('input[name="' + fields[i].name + '"]:checked'))) {
+          fields[i].reportValidity ? fields[i].reportValidity() : fields[i].focus();
+          return false;
+        }
+        if (fields[i].type === 'email' && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(fields[i].value)) {
+          fields[i].reportValidity ? fields[i].reportValidity() : fields[i].focus();
+          return false;
+        }
+      }
+      return true;
+    }
+
+    // Enable Continue on step 1 when an event_type is chosen
+    var step1Radios = sectionEl.querySelectorAll('input[name="event_type"]');
+    var step1Continue = sectionEl.querySelector('[data-events-planner-step="1"] [data-events-planner-next]');
+    step1Radios.forEach(function (r) {
+      r.addEventListener('change', function () {
+        if (step1Continue) step1Continue.disabled = false;
+      });
+    });
+
+    nextBtns.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        if (!validateStep(current)) return;
+        current = Math.min(current + 1, 4);
+        showStep(current);
+      });
+    });
+    prevBtns.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        current = Math.max(current - 1, 1);
+        showStep(current);
+      });
+    });
+    if (retryBtn) {
+      retryBtn.addEventListener('click', function () {
+        current = 1;
+        showStep(1);
+      });
+    }
+
+    // Submit handler
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      if (!validateStep(4)) return;
+      // Honeypot
+      if (form.querySelector('input[name="website"]').value) {
+        showStep('success');
+        return;
+      }
+      var data = {};
+      Array.prototype.forEach.call(form.elements, function (el) {
+        if (!el.name || el.type === 'submit' || el.name === 'website') return;
+        if (el.type === 'radio' && !el.checked) return;
+        data[el.name] = el.value;
+      });
+
+      var endpoint = form.getAttribute('data-endpoint');
+      var anonKey = form.getAttribute('data-anon-key');
+
+      // No endpoint configured → simulate success (UI review mode)
+      if (!endpoint || endpoint.indexOf('placeholder') !== -1) {
+        console.log('[events-planner] simulated submission:', data);
+        showStep('success');
+        return;
+      }
+
+      var headers = { 'Content-Type': 'application/json' };
+      if (anonKey) {
+        headers['Authorization'] = 'Bearer ' + anonKey;
+        headers['apikey'] = anonKey;
+      }
+      var submitBtn = form.querySelector('button[type="submit"]');
+      if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Sending…'; }
+
+      fetch(endpoint, { method: 'POST', headers: headers, body: JSON.stringify(data) })
+        .then(function (r) {
+          if (!r.ok) throw new Error('Request failed');
+          return r.json().catch(function () { return {}; });
+        })
+        .then(function () { showStep('success'); })
+        .catch(function (err) {
+          console.error('[events-planner] submission error:', err);
+          showStep('error');
+        })
+        .finally(function () {
+          if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Send my event details'; }
+        });
+    });
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "Event Planner Wizard",
+  "settings": [
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow",
+      "default": "OUR EVENT PLANNER"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Plan your event in four steps."
+    },
+    {
+      "type": "text",
+      "id": "subheading",
+      "label": "Subheading",
+      "default": "Tell us what you're picturing — I'll come back to you within 48 hours. — Stephanie"
+    },
+    {
+      "type": "text",
+      "id": "button_label",
+      "label": "Button label",
+      "default": "Open our event planner"
+    },
+    {
+      "type": "checkbox",
+      "id": "transparent_card",
+      "label": "Transparent trigger card (use on dark backgrounds)",
+      "default": false
+    },
+    {
+      "type": "text",
+      "id": "trigger_microcopy",
+      "label": "Microcopy under the button",
+      "default": "Takes about two minutes. — Stephanie"
+    },
+    {
+      "type": "header",
+      "content": "Backend"
+    },
+    {
+      "type": "url",
+      "id": "endpoint_url",
+      "label": "Submission endpoint URL",
+      "info": "Supabase Edge Function URL. Leave blank for simulated success (UI review mode)."
+    },
+    {
+      "type": "text",
+      "id": "supabase_anon_key",
+      "label": "Supabase anon key",
+      "info": "Public anon key used as Authorization Bearer + apikey header."
+    },
+    {
+      "type": "header",
+      "content": "Colors"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background",
+      "default": "#fffaf2"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text",
+      "default": "#570522"
+    }
+  ],
+  "presets": [
+    { "name": "Event Planner Wizard", "category": "Forms" }
+  ]
+}
+{% endschema %}

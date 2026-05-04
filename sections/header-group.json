@@ -73,7 +73,7 @@
     "topical_announcement": {
       "type": "topical-announcement",
       "settings": {
-        "enable": true,
+        "enable": false,
         "eyebrow": "MOTHER'S DAY \u2014 MAY 10",
         "heading": "Make Mom's Day Sweeter",
         "body": "<p>Hand-crafted cakes shipped fresh from Chicago. Order ahead so it arrives in time.</p>",

@@ -26,9 +26,19 @@
 
 <style>
   .bsb-banner--{{ section.id }} {
-    background: {{ section.settings.background_color }};
+    background-color: {{ section.settings.background_color }};
+    {% if section.settings.background_pattern == 'confetti' %}
+    background-image: url("{{ 'confetti-pattern.svg' | asset_url }}");
+    background-repeat: repeat;
+    background-size: 120px 120px;
+    {% elsif section.settings.background_pattern == 'confetti-light' %}
+    background-image: url("{{ 'confetti-pattern-light.svg' | asset_url }}");
+    background-repeat: repeat;
+    background-size: 120px 120px;
+    {% endif %}
     color: {{ section.settings.text_color }};
     padding: {{ section.settings.padding_y | default: 32 }}px 16px;
+    position: relative;
   }
   .bsb-banner--{{ section.id }} .bsb-banner__inner {
     max-width: 800px;
@@ -44,44 +54,110 @@
     opacity: 0.75;
   }
   .bsb-banner--{{ section.id }} .bsb-banner__heading {
-    font-size: clamp(26px, 5vw, 42px);
+    {% if section.settings.compact_heading %}
+    font-size: clamp(16px, 2.8vw, 26px);
+    white-space: nowrap;
+    {% else %}
+    font-size: clamp(22px, 4vw, 34px);
+    {% endif %}
     font-weight: 800;
     line-height: 1.1;
     margin: 0 0 10px;
     color: inherit;
+    {% if section.settings.heading_animation == 'pop' %}
+    animation: bsb-banner-pop-{{ section.id }} 900ms cubic-bezier(0.34, 1.56, 0.64, 1) 100ms 1 both;
+    transform-origin: center bottom;
+    {% endif %}
   }
+  {% if section.settings.heading_animation == 'pop' %}
+  @keyframes bsb-banner-pop-{{ section.id }} {
+    0%   { transform: scale(0.6) rotate(-4deg); opacity: 0; }
+    45%  { transform: scale(1.12) rotate(2deg); opacity: 1; }
+    65%  { transform: scale(0.96) rotate(-1.5deg); }
+    80%  { transform: scale(1.03) rotate(0.8deg); }
+    100% { transform: scale(1) rotate(0); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .bsb-banner--{{ section.id }} .bsb-banner__heading {
+      animation: none;
+    }
+  }
+  {% endif %}
   .bsb-banner--{{ section.id }} .bsb-banner__subheading {
     font-size: clamp(15px, 2.2vw, 18px);
     line-height: 1.5;
     margin: 0 0 16px;
     opacity: 0.9;
+    {% if section.settings.emphasize_subheading %}
+    font-weight: 700;
+    font-size: clamp(17px, 2.4vw, 20px);
+    opacity: 1;
+    {% if section.settings.subheading_color != blank %}
+    color: {{ section.settings.subheading_color }};
+    {% endif %}
+    {% endif %}
   }
   .bsb-banner--{{ section.id }} .bsb-banner__cta {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     margin-top: 6px;
+    {% if section.settings.large_cta %}
+    padding: 12px 44px;
+    font-size: 16px;
+    letter-spacing: 0.08em;
+    border-radius: 6px;
+    {% else %}
     padding: 14px 26px;
-    background: linear-gradient(180deg, #6c0a2e 0%, #570522 60%, #45041b 100%);
-    color: #ffffff;
-    border: 1px solid #2e0212;
-    border-radius: 5px;
-    font-weight: 700;
     font-size: 14px;
     letter-spacing: 0.06em;
+    border-radius: 5px;
+    {% endif %}
+    {% if section.settings.cta_color == 'orange' %}
+    background: linear-gradient(180deg, #f0953f 0%, #d6712a 55%, #b25812 100%);
+    border: 1px solid #7a3a0c;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.35),
+      inset 0 -2px 0 rgba(0, 0, 0, 0.25),
+      0 3px 0 rgba(122, 58, 12, 0.7),
+      0 5px 10px rgba(122, 58, 12, 0.35);
+    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.3);
+    {% else %}
+    background: linear-gradient(180deg, #6c0a2e 0%, #570522 60%, #45041b 100%);
+    border: 1px solid #2e0212;
+    {% endif %}
+    color: #ffffff;
+    font-weight: 700;
     text-transform: uppercase;
     text-decoration: none;
+    {% unless section.settings.cta_color == 'orange' %}
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.22),
       inset 0 -1px 0 rgba(0, 0, 0, 0.28),
       0 2px 0 rgba(46, 2, 18, 0.5),
       0 3px 6px rgba(46, 2, 18, 0.22);
     text-shadow: 0 1px 0 rgba(0, 0, 0, 0.35);
+    {% endunless %}
     transition: background 180ms ease, transform 80ms ease;
   }
   .bsb-banner--{{ section.id }} .bsb-banner__cta:hover {
+    {% if section.settings.cta_color == 'orange' %}
+    background: linear-gradient(180deg, #f7a857 0%, #e5832f 55%, #c46715 100%);
+    border-color: #8a4a1a;
+    {% else %}
     background: linear-gradient(180deg, #d2682d 0%, #ba5b28 60%, #9a4a20 100%);
     border-color: #6e3514;
+    {% endif %}
+  }
+  .bsb-banner--{{ section.id }} .bsb-banner__cta:active {
+    transform: translateY(2px);
+    {% if section.settings.cta_color == 'orange' %}
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.35),
+      inset 0 -2px 0 rgba(0, 0, 0, 0.25),
+      0 1px 0 rgba(122, 58, 12, 0.7),
+      0 2px 4px rgba(122, 58, 12, 0.35);
+    {% endif %}
   }
   .bsb-banner--{{ section.id }} .bsb-banner__cta:active {
     transform: translateY(2px);
@@ -124,6 +200,17 @@
       "label": "Subheading"
     },
     {
+      "type": "checkbox",
+      "id": "emphasize_subheading",
+      "label": "Emphasize subheading (bold + larger)",
+      "default": false
+    },
+    {
+      "type": "color",
+      "id": "subheading_color",
+      "label": "Subheading color (overrides text color when emphasized)"
+    },
+    {
       "type": "text",
       "id": "button_label",
       "label": "Button label"
@@ -152,6 +239,49 @@
       "id": "background_color",
       "label": "Background",
       "default": "#f7ead6"
+    },
+    {
+      "type": "select",
+      "id": "background_pattern",
+      "label": "Background pattern",
+      "options": [
+        { "value": "none", "label": "None" },
+        { "value": "confetti", "label": "Confetti (for light backgrounds)" },
+        { "value": "confetti-light", "label": "Confetti (for dark backgrounds)" }
+      ],
+      "default": "none"
+    },
+    {
+      "type": "select",
+      "id": "heading_animation",
+      "label": "Heading entrance animation",
+      "options": [
+        { "value": "none", "label": "None" },
+        { "value": "pop", "label": "Pop (scale + wiggle)" }
+      ],
+      "default": "none"
+    },
+    {
+      "type": "checkbox",
+      "id": "compact_heading",
+      "label": "Compact heading (smaller, single line)",
+      "default": false
+    },
+    {
+      "type": "checkbox",
+      "id": "large_cta",
+      "label": "Large CTA button",
+      "default": false
+    },
+    {
+      "type": "select",
+      "id": "cta_color",
+      "label": "CTA button color",
+      "options": [
+        { "value": "burgundy", "label": "Burgundy (default)" },
+        { "value": "orange", "label": "Orange" }
+      ],
+      "default": "burgundy"
     },
     {
       "type": "color",

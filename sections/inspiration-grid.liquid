@@ -6,6 +6,23 @@
 {%- liquid
   assign image_blocks = section.blocks | where: 'type', 'image'
   assign default_image_paths = 'birthday-dad-caramel.jpg|birthday-mom-flowers.jpg|birthday-caramel-drip.jpg|birthday-caramel-loaded.jpg' | split: '|'
+
+  assign aspect_mobile = '16 / 9'
+  assign aspect_desktop = '4 / 3'
+  case section.settings.media_aspect_ratio
+    when 'square'
+      assign aspect_mobile = '1 / 1'
+      assign aspect_desktop = '1 / 1'
+    when 'landscape'
+      assign aspect_mobile = '4 / 3'
+      assign aspect_desktop = '4 / 3'
+    when 'portrait'
+      assign aspect_mobile = '4 / 5'
+      assign aspect_desktop = '3 / 4'
+    when 'wide'
+      assign aspect_mobile = '16 / 9'
+      assign aspect_desktop = '21 / 9'
+  endcase
 -%}
 
 <section class="bsb-grid bsb-grid--{{ section.id }}" aria-label="{{ section.settings.heading | default: 'Inspiration' | escape }}">
@@ -20,10 +37,19 @@
       <p class="bsb-grid__subheading">{{ section.settings.subheading | escape }}</p>
     {% endif %}
 
-    <div class="bsb-grid__items" data-cols="{{ image_blocks.size | default: 3 }}">
+    {% if section.settings.display_mode == 'carousel' %}
+    <div class="bsb-grid__carousel">
+    <button type="button" class="bsb-grid__arrow bsb-grid__arrow--prev" aria-label="Previous" data-bsb-grid-prev>
+      <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" d="M15 6l-6 6 6 6"/></svg>
+    </button>
+    <button type="button" class="bsb-grid__arrow bsb-grid__arrow--next" aria-label="Next" data-bsb-grid-next>
+      <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" d="M9 6l6 6-6 6"/></svg>
+    </button>
+    {% endif %}
+    <div class="bsb-grid__items" data-cols="{{ image_blocks.size | default: 3 }}" data-bsb-grid-track>
       {%- if image_blocks.size > 0 -%}
         {%- for block in image_blocks -%}
-          {%- assign fallback_path = default_image_paths[forloop.index0] -%}
+          {%- assign fallback_path = block.settings.fallback_filename | default: default_image_paths[forloop.index0] -%}
           {%- assign tile_link = block.settings.link -%}
           {% if tile_link != blank %}
             <a class="bsb-grid__item bsb-grid__item--link" href="{{ tile_link }}" {{ block.shopify_attributes }} aria-label="{{ block.settings.caption | default: 'Shop this cake' | escape }}">
@@ -70,15 +96,62 @@
         {%- endfor -%}
       {%- endif -%}
     </div>
+    {% if section.settings.display_mode == 'carousel' %}
+    </div>
+    {% endif %}
   </div>
 </section>
+
+{% if section.settings.display_mode == 'carousel' %}
+<script>
+  (function() {
+    var sectionEl = document.querySelector('.bsb-grid--{{ section.id }}');
+    if (!sectionEl) return;
+    var track = sectionEl.querySelector('[data-bsb-grid-track]');
+    var prev = sectionEl.querySelector('[data-bsb-grid-prev]');
+    var next = sectionEl.querySelector('[data-bsb-grid-next]');
+    if (!track || !prev || !next) return;
+    function step() {
+      var first = track.firstElementChild;
+      return first ? first.getBoundingClientRect().width : track.clientWidth;
+    }
+    function advance(direction) {
+      var atEnd = track.scrollLeft + track.clientWidth >= track.scrollWidth - 5;
+      var atStart = track.scrollLeft <= 5;
+      if (direction > 0 && atEnd) {
+        track.scrollTo({ left: 0, behavior: 'smooth' });
+      } else if (direction < 0 && atStart) {
+        track.scrollTo({ left: track.scrollWidth, behavior: 'smooth' });
+      } else {
+        track.scrollBy({ left: direction * step(), behavior: 'smooth' });
+      }
+    }
+    prev.addEventListener('click', function() { advance(-1); });
+    next.addEventListener('click', function() { advance(1); });
+
+    var autoSeconds = {{ section.settings.auto_advance_seconds | default: 0 }};
+    if (autoSeconds > 0) {
+      var timer = setInterval(function() { advance(1); }, autoSeconds * 1000);
+      sectionEl.addEventListener('mouseenter', function() { clearInterval(timer); timer = null; });
+      sectionEl.addEventListener('mouseleave', function() {
+        if (!timer) timer = setInterval(function() { advance(1); }, autoSeconds * 1000);
+      });
+    }
+  })();
+</script>
+{% endif %}
 
 <style>
   .bsb-grid--{{ section.id }} {
     background: {{ section.settings.background_color }};
     color: {{ section.settings.text_color }};
-    padding: 36px 16px;
+    padding: 24px 16px;
   }
+  {% if section.settings.hide_on_desktop %}
+  @media (min-width: 768px) {
+    .bsb-grid--{{ section.id }} { display: none; }
+  }
+  {% endif %}
   .bsb-grid--{{ section.id }} .bsb-grid__inner {
     max-width: 1200px;
     margin: 0 auto;
@@ -94,24 +167,85 @@
   }
   .bsb-grid--{{ section.id }} .bsb-grid__heading {
     font-size: clamp(22px, 4vw, 32px);
-    font-weight: 800;
+    font-weight: 900;
+    letter-spacing: 0.06em;
     margin: 0 0 8px;
     text-align: center;
     color: inherit;
   }
   .bsb-grid--{{ section.id }} .bsb-grid__subheading {
     margin: 0 auto 24px;
-    max-width: 560px;
+    max-width: 640px;
     text-align: center;
-    font-size: 15px;
-    line-height: 1.5;
-    opacity: 0.85;
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1.4;
   }
+  {% if section.settings.display_mode == 'carousel' %}
+  .bsb-grid--{{ section.id }} .bsb-grid__carousel {
+    position: relative;
+    margin-left: calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
+    width: 100vw;
+  }
+  .bsb-grid--{{ section.id }} .bsb-grid__items {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    gap: 0;
+    padding: 0 0 12px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .bsb-grid--{{ section.id }} .bsb-grid__items::-webkit-scrollbar {
+    display: none;
+  }
+  .bsb-grid--{{ section.id }} .bsb-grid__arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 0;
+    background: transparent;
+    color: #ffffff;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.55));
+    transition: transform 80ms ease, opacity 150ms ease;
+    opacity: 0.9;
+  }
+  .bsb-grid--{{ section.id }} .bsb-grid__arrow:hover {
+    opacity: 1;
+  }
+  .bsb-grid--{{ section.id }} .bsb-grid__arrow:active {
+    transform: translateY(calc(-50% + 1px));
+  }
+  .bsb-grid--{{ section.id }} .bsb-grid__arrow--prev { left: 12px; }
+  .bsb-grid--{{ section.id }} .bsb-grid__arrow--next { right: 12px; }
+  .bsb-grid--{{ section.id }} .bsb-grid__items > * {
+    flex: 0 0 auto;
+    width: 100vw;
+    scroll-snap-align: center;
+    border-radius: 0;
+    border: 0;
+    box-shadow: none;
+  }
+  .bsb-grid--{{ section.id }} .bsb-grid__items > *:hover {
+    transform: none;
+    box-shadow: none;
+  }
+  {% else %}
   .bsb-grid--{{ section.id }} .bsb-grid__items {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 8px;
   }
+  {% endif %}
   .bsb-grid--{{ section.id }} .bsb-grid__item {
     margin: 0;
     border-radius: 4px;
@@ -135,7 +269,12 @@
       0 6px 14px rgba(91, 37, 18, 0.22);
   }
   .bsb-grid--{{ section.id }} .bsb-grid__media {
+    {% if section.settings.display_mode == 'carousel' %}
+    aspect-ratio: {{ aspect_mobile }};
+    max-height: 480px;
+    {% else %}
     aspect-ratio: 1 / 1;
+    {% endif %}
     overflow: hidden;
     background: rgba(91, 37, 18, 0.06);
   }
@@ -151,8 +290,44 @@
 
   @media screen and (min-width: 768px) {
     .bsb-grid--{{ section.id }} {
-      padding: 56px 24px;
+      padding: 36px 24px;
     }
+    {% if section.settings.display_mode == 'carousel' %}
+    {% if section.settings.desktop_layout == 'carousel' %}
+    .bsb-grid--{{ section.id }} .bsb-grid__items > * {
+      width: 100vw;
+    }
+    .bsb-grid--{{ section.id }} .bsb-grid__media {
+      aspect-ratio: {{ aspect_desktop }};
+      max-height: none;
+    }
+    {% else %}
+    .bsb-grid--{{ section.id }} .bsb-grid__carousel {
+      margin-left: calc(50% - 50vw);
+      margin-right: calc(50% - 50vw);
+      width: 100vw;
+    }
+    .bsb-grid--{{ section.id }} .bsb-grid__items {
+      display: grid;
+      grid-template-columns: repeat({{ image_blocks.size | default: 4 }}, 1fr);
+      gap: 0;
+      overflow: visible;
+      margin: 0;
+      width: 100%;
+      padding: 0;
+    }
+    .bsb-grid--{{ section.id }} .bsb-grid__items > * {
+      width: 100%;
+    }
+    .bsb-grid--{{ section.id }} .bsb-grid__arrow {
+      display: none;
+    }
+    .bsb-grid--{{ section.id }} .bsb-grid__media {
+      aspect-ratio: {{ aspect_desktop }};
+      max-height: none;
+    }
+    {% endif %}
+    {% else %}
     .bsb-grid--{{ section.id }} .bsb-grid__items[data-cols="3"] {
       grid-template-columns: repeat(3, 1fr);
       gap: 14px;
@@ -168,6 +343,7 @@
       max-width: 800px;
       margin: 0 auto;
     }
+    {% endif %}
     .bsb-grid--{{ section.id }} .bsb-grid__caption {
       display: block;
       padding: 8px 12px 10px;
@@ -183,8 +359,57 @@
 {% schema %}
 {
   "name": "Inspiration grid",
-  "max_blocks": 8,
+  "max_blocks": 12,
   "settings": [
+    {
+      "type": "select",
+      "id": "display_mode",
+      "label": "Display mode",
+      "options": [
+        { "value": "grid", "label": "Grid" },
+        { "value": "carousel", "label": "Carousel (swipe)" }
+      ],
+      "default": "grid"
+    },
+    {
+      "type": "select",
+      "id": "media_aspect_ratio",
+      "label": "Image aspect ratio (carousel only)",
+      "options": [
+        { "value": "default", "label": "Default (16:9 mobile, 4:3 desktop)" },
+        { "value": "square", "label": "Square (1:1)" },
+        { "value": "landscape", "label": "Landscape (4:3)" },
+        { "value": "portrait", "label": "Portrait (4:5 mobile, 3:4 desktop)" },
+        { "value": "wide", "label": "Wide (16:9 mobile, 21:9 desktop)" }
+      ],
+      "default": "default"
+    },
+    {
+      "type": "select",
+      "id": "desktop_layout",
+      "label": "Desktop carousel layout",
+      "options": [
+        { "value": "grid", "label": "Show all images in a row" },
+        { "value": "carousel", "label": "One image at a time (single tile)" }
+      ],
+      "default": "grid"
+    },
+    {
+      "type": "range",
+      "id": "auto_advance_seconds",
+      "label": "Auto-advance interval (0 = off)",
+      "min": 0,
+      "max": 15,
+      "step": 1,
+      "unit": "s",
+      "default": 0
+    },
+    {
+      "type": "checkbox",
+      "id": "hide_on_desktop",
+      "label": "Hide on desktop (mobile-only)",
+      "default": false
+    },
     {
       "type": "text",
       "id": "eyebrow",
@@ -224,6 +449,7 @@
       "name": "Image",
       "settings": [
         { "type": "image_picker", "id": "image", "label": "Image" },
+        { "type": "text", "id": "fallback_filename", "label": "Fallback asset filename (e.g. birthday-celebration.jpg)" },
         { "type": "text", "id": "caption", "label": "Caption (desktop only)" },
         { "type": "url", "id": "link", "label": "Link to (optional — makes the tile clickable, e.g. a product)" }
       ]

@@ -1,0 +1,230 @@
+{%- comment -%}
+  Stephanie quotes — 3-up grid (desktop) of pull quotes from Stephanie Hart.
+  Each quote is a block: quote text, attribution, optional context line.
+  Editable via theme editor.
+
+  All defaults sourced from voice session + YouTube transcript (see
+  .claude/skills/stephanie-voice/references/source-quotes.md).
+{%- endcomment -%}
+
+{%- liquid
+  assign quote_blocks = section.blocks | where: 'type', 'quote'
+-%}
+
+<section class="stephanie-quotes stephanie-quotes--{{ section.id }}" aria-label="{{ section.settings.heading | default: 'Quotes from Stephanie' | escape }}">
+  <div class="stephanie-quotes__inner">
+    {% if section.settings.eyebrow != blank %}
+      <p class="stephanie-quotes__eyebrow">{{ section.settings.eyebrow | escape }}</p>
+    {% endif %}
+    {% if section.settings.heading != blank %}
+      <h2 class="stephanie-quotes__heading">{{ section.settings.heading | escape }}</h2>
+    {% endif %}
+    {% if section.settings.subheading != blank %}
+      <p class="stephanie-quotes__subheading">{{ section.settings.subheading | escape }}</p>
+    {% endif %}
+
+    <div class="stephanie-quotes__grid" data-count="{{ quote_blocks.size }}">
+      {%- for block in quote_blocks -%}
+        <figure class="stephanie-quote" {{ block.shopify_attributes }}>
+          <span class="stephanie-quote__mark" aria-hidden="true">&ldquo;</span>
+          <blockquote class="stephanie-quote__body">{{ block.settings.quote | escape }}</blockquote>
+          <figcaption class="stephanie-quote__attribution">
+            {{ block.settings.attribution | default: '— Stephanie Hart' | escape }}
+            {% if block.settings.context != blank %}
+              <span class="stephanie-quote__context">{{ block.settings.context | escape }}</span>
+            {% endif %}
+          </figcaption>
+        </figure>
+      {%- endfor -%}
+    </div>
+  </div>
+</section>
+
+<style>
+  .stephanie-quotes--{{ section.id }} {
+    background: {{ section.settings.background_color | default: '#570522' }};
+    color: {{ section.settings.text_color | default: '#f7ead6' }};
+    padding: 56px 16px;
+  }
+  .stephanie-quotes--{{ section.id }} .stephanie-quotes__inner {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  .stephanie-quotes--{{ section.id }} .stephanie-quotes__eyebrow {
+    font-size: 12px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    font-weight: 700;
+    margin: 0 0 8px;
+    opacity: 0.75;
+    text-align: center;
+  }
+  .stephanie-quotes--{{ section.id }} .stephanie-quotes__heading {
+    font-size: clamp(24px, 4vw, 34px);
+    font-weight: 800;
+    margin: 0 0 8px;
+    text-align: center;
+    color: inherit;
+  }
+  .stephanie-quotes--{{ section.id }} .stephanie-quotes__subheading {
+    font-size: 15px;
+    line-height: 1.5;
+    margin: 0 auto 36px;
+    max-width: 640px;
+    text-align: center;
+    opacity: 0.85;
+  }
+  .stephanie-quotes--{{ section.id }} .stephanie-quotes__grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 28px;
+    margin-top: 16px;
+  }
+  .stephanie-quotes--{{ section.id }} .stephanie-quote {
+    position: relative;
+    margin: 0;
+    padding: 36px 28px 24px;
+    background: rgba(247, 234, 214, 0.08);
+    border-left: 4px solid {{ section.settings.accent_color | default: '#ba5b28' }};
+    border-radius: 4px;
+  }
+  .stephanie-quotes--{{ section.id }} .stephanie-quote__mark {
+    position: absolute;
+    top: -10px;
+    left: 16px;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 96px;
+    line-height: 1;
+    color: {{ section.settings.accent_color | default: '#ba5b28' }};
+    opacity: 0.55;
+    pointer-events: none;
+  }
+  .stephanie-quotes--{{ section.id }} .stephanie-quote__body {
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: clamp(17px, 2vw, 20px);
+    font-style: italic;
+    line-height: 1.5;
+    margin: 0 0 18px;
+    color: inherit;
+    quotes: none;
+  }
+  .stephanie-quotes--{{ section.id }} .stephanie-quote__body::before,
+  .stephanie-quotes--{{ section.id }} .stephanie-quote__body::after {
+    content: none;
+  }
+  .stephanie-quotes--{{ section.id }} .stephanie-quote__attribution {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: inherit;
+    opacity: 0.85;
+  }
+  .stephanie-quotes--{{ section.id }} .stephanie-quote__context {
+    display: block;
+    margin-top: 4px;
+    font-weight: 400;
+    opacity: 0.65;
+    font-style: normal;
+    font-size: 12px;
+  }
+  @media screen and (min-width: 768px) {
+    .stephanie-quotes--{{ section.id }} {
+      padding: 72px 24px;
+    }
+    .stephanie-quotes--{{ section.id }} .stephanie-quotes__grid {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+  }
+</style>
+
+{% schema %}
+{
+  "name": "Stephanie quotes",
+  "max_blocks": 6,
+  "settings": [
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow",
+      "default": "IN HER OWN WORDS"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Stephanie."
+    },
+    {
+      "type": "textarea",
+      "id": "subheading",
+      "label": "Subheading"
+    },
+    {
+      "type": "header",
+      "content": "Colors"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background",
+      "default": "#570522"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text",
+      "default": "#f7ead6"
+    },
+    {
+      "type": "color",
+      "id": "accent_color",
+      "label": "Accent (border + quote mark)",
+      "default": "#ba5b28"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "quote",
+      "name": "Quote",
+      "settings": [
+        { "type": "textarea", "id": "quote", "label": "Quote text" },
+        { "type": "text", "id": "attribution", "label": "Attribution", "default": "— Stephanie Hart" },
+        { "type": "text", "id": "context", "label": "Context (optional)", "info": "e.g. 'On the south side' or 'On baking through hard times'" }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Stephanie quotes",
+      "category": "Storytelling",
+      "blocks": [
+        {
+          "type": "quote",
+          "settings": {
+            "quote": "I make memories with cake. This isn't just a cake. This is love.",
+            "attribution": "— Stephanie Hart",
+            "context": "On what every cake is for"
+          }
+        },
+        {
+          "type": "quote",
+          "settings": {
+            "quote": "My sole and only goal was to provide cakes to this neighborhood. Now we ship nationwide — and we're becoming America's cake. I love this.",
+            "attribution": "— Stephanie Hart",
+            "context": "On 22 years of growing"
+          }
+        },
+        {
+          "type": "quote",
+          "settings": {
+            "quote": "Do not sleep on urban communities. We are retail.",
+            "attribution": "— Stephanie Hart",
+            "context": "On the South Side"
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

@@ -39,7 +39,7 @@
           "type": "card",
           "settings": {
             "title": "James Beard Foundation",
-            "subtitle": "Outstanding Pastry Chef · 2019 Semifinalist",
+            "subtitle": "Outstanding Pastry Chef \u00b7 2019 Semifinalist",
             "image_alt": "James Beard Foundation award"
           }
         },
@@ -47,19 +47,24 @@
           "type": "card",
           "settings": {
             "title": "VP Kamala Harris",
-            "subtitle": "Visited Brown Sugar Bakery · 2021",
+            "subtitle": "Visited Brown Sugar Bakery \u00b7 2021",
             "image_alt": "Vice President Kamala Harris at Brown Sugar Bakery"
           }
         }
       },
-      "block_order": ["press_1", "press_2", "press_3"],
+      "block_order": [
+        "press_1",
+        "press_2",
+        "press_3"
+      ],
       "settings": {
         "eyebrow": "AS SEEN BY",
         "heading": "America saw fit to take notice.",
         "background_color": "#fffaf2",
         "text_color": "#570522",
         "accent_color": "#ba5b28"
-      }
+      },
+      "disabled": true
     },
     "shipping_reviews": {
       "type": "judgeme-carousel",
@@ -79,7 +84,7 @@
       "settings": {
         "video_url": "",
         "placeholder_label": "Watch a cake travel",
-        "placeholder_caption": "Real unboxing video coming soon. Frozen solid, insulated liner, ice packs, 2-Day Air — and a card from Stephanie in every box.",
+        "placeholder_caption": "Real unboxing video coming soon. Frozen solid, insulated liner, ice packs, 2-Day Air \u2014 and a card from Stephanie in every box.",
         "hide_on_mobile": false,
         "max_height": 60,
         "background_color": "#3a1612"
@@ -104,9 +109,9 @@
     "shipping_calendar": {
       "type": "shipping-rhythm",
       "settings": {
-        "eyebrow": "BAKE DAY · SHIP DAY",
+        "eyebrow": "BAKE DAY \u00b7 SHIP DAY",
         "heading": "We ship Monday, Tuesday, and Wednesday.",
-        "subheading": "Why those three days? UPS doesn't deliver Sundays — your cake never sits in a warehouse.",
+        "subheading": "Why those three days? UPS doesn't deliver Sundays \u2014 your cake never sits in a warehouse.",
         "note": "Order by Sunday 6 PM CT for Wednesday arrival. By Tuesday 6 PM for end-of-week.",
         "background_color": "#f7ead6",
         "text_color": "#570522",
@@ -121,7 +126,7 @@
         "tile_1": {
           "type": "tile",
           "settings": {
-            "icon": "📦",
+            "icon": "\ud83d\udce6",
             "title": "How your cake travels",
             "teaser": "Frozen solid, insulated, 2-Day Air.",
             "panel_body": "<p>Every cake gets packed by hand the morning it ships. Here's the whole job:</p><ul><li><strong>Baked fresh. Frozen solid.</strong> We freeze it the night before so it travels cold and arrives at peak.</li><li><strong>Wrapped, sealed, set in an insulated liner</strong> with gel ice packs. The box is built for the journey.</li><li><strong>A card from me</strong> goes in every box. Serving and storage on the back. A freshness seal you'll know hasn't been touched.</li><li><strong>2-Day Air, climate-controlled.</strong> Cake doesn't sit in a truck wondering where it's going.</li></ul><p>Made on 75th Street with love, packed cold, shipped to your door.</p>"
@@ -130,23 +135,27 @@
         "tile_2": {
           "type": "tile",
           "settings": {
-            "icon": "❄️",
+            "icon": "\u2744\ufe0f",
             "title": "When your cake arrives",
             "teaser": "Open, refrigerate, serve.",
-            "panel_body": "<p>When the box hits your porch, give the cake a few minutes of care and it'll be perfect.</p><p><strong>Open right away</strong> — even if you're not eating cake today. Seal should be intact. Cake will be cold, maybe a little frozen. That's how I want it. Take it out of the liner, slip it in the fridge.</p><p><strong>Pull it out of the fridge 30 to 45 minutes before you serve it.</strong> Room temperature is when it sings — that's when the caramel really comes through. Don't leave it on the counter overnight.</p><p><strong>Cutting and storing.</strong> Clean knife, wipe it between slices. Leftovers go back in the fridge in an airtight container — they'll hold seven days, and you can freeze slices for a month.</p><p><em>Questions when your cake gets there? Call us at (773) 570-7676. We answer.</em></p>"
+            "panel_body": "<p>When the box hits your porch, give the cake a few minutes of care and it'll be perfect.</p><p><strong>Open right away</strong> \u2014 even if you're not eating cake today. Seal should be intact. Cake will be cold, maybe a little frozen. That's how I want it. Take it out of the liner, slip it in the fridge.</p><p><strong>Pull it out of the fridge 30 to 45 minutes before you serve it.</strong> Room temperature is when it sings \u2014 that's when the caramel really comes through. Don't leave it on the counter overnight.</p><p><strong>Cutting and storing.</strong> Clean knife, wipe it between slices. Leftovers go back in the fridge in an airtight container \u2014 they'll hold seven days, and you can freeze slices for a month.</p><p><em>Questions when your cake gets there? Call us at (773) 570-7676. We answer.</em></p>"
           }
         },
         "tile_3": {
           "type": "tile",
           "settings": {
-            "icon": "🚫",
+            "icon": "\ud83d\udeab",
             "title": "Before you order",
             "teaser": "A few honest things to know.",
-            "panel_body": "<p>I want you to know what shipping can and can't do before you click order. Three honest things:</p><p><strong>No cake writing on shipped cakes.</strong> Lettering doesn't survive a 2-day journey. If you want \"Happy Birthday\" piped on the cake, that's a local pickup conversation.</p><p><strong>No exact delivery hour.</strong> UPS gives us the day, not the minute. Plan to be home or have a neighbor watching the porch.</p><p><strong>Not every flavor ships.</strong> I've kept the shipping menu to what I know travels beautifully. If you want something that isn't on the list, call me first — we'll figure out what's possible.</p><p><em>Questions? Call (773) 570-7676 or email shipping@brownsugarbakery.com. We answer.</em></p>"
+            "panel_body": "<p>I want you to know what shipping can and can't do before you click order. Three honest things:</p><p><strong>No cake writing on shipped cakes.</strong> Lettering doesn't survive a 2-day journey. If you want \"Happy Birthday\" piped on the cake, that's a local pickup conversation.</p><p><strong>No exact delivery hour.</strong> UPS gives us the day, not the minute. Plan to be home or have a neighbor watching the porch.</p><p><strong>Not every flavor ships.</strong> I've kept the shipping menu to what I know travels beautifully. If you want something that isn't on the list, call me first \u2014 we'll figure out what's possible.</p><p><em>Questions? Call (773) 570-7676 or email shipping@brownsugarbakery.com. We answer.</em></p>"
           }
         }
       },
-      "block_order": ["tile_1", "tile_2", "tile_3"],
+      "block_order": [
+        "tile_1",
+        "tile_2",
+        "tile_3"
+      ],
       "settings": {
         "eyebrow": "BEFORE YOU ORDER",
         "heading": "A few honest things to know.",
@@ -160,13 +169,22 @@
     "shipping_featured": {
       "type": "collection--featured-collection",
       "blocks": {
-        "product_card_title": { "type": "product-card-title", "settings": {} },
-        "product_card_price": { "type": "product-card-price", "settings": {} }
+        "product_card_title": {
+          "type": "product-card-title",
+          "settings": {}
+        },
+        "product_card_price": {
+          "type": "product-card-price",
+          "settings": {}
+        }
       },
-      "block_order": ["product_card_title", "product_card_price"],
+      "block_order": [
+        "product_card_title",
+        "product_card_price"
+      ],
       "settings": {
         "title": "Our most shipped cakes.",
-        "subheading": "First time? Start with the caramel — our number one cake. Order by Tuesday 6 PM CT and we'll ship it that week.",
+        "subheading": "First time? Start with the caramel \u2014 our number one cake. Order by Tuesday 6 PM CT and we'll ship it that week.",
         "collection": "featured-shipping-cakes",
         "grid": 4,
         "rows": 1,

@@ -1,386 +1,415 @@
 {% comment %}
-  LIFT: Anxiety + Clarity + Relevance — single conversational event planner.
-  One form, one path. Event-type dropdown drives conditional follow-up fields
-  so people only see questions relevant to their event. Image upload + Supabase
-  storage + email-to-events team. Persona ("Marcia") gives the form a face.
-
-  Submits multipart/form-data to the Supabase Edge Function `submit-event-inquiry`
-  on the Birthday Club project. Function uploads images to `events-inspiration`
-  bucket, inserts a row into `events_inquiries`, and emails the events team.
+  Events Planner — invitation-card modal.
+  Trigger button on the page; clicking opens an envelope-style modal with the
+  full conversational form inside. Event-type dropdown drives conditional
+  follow-up fields. Submits to Supabase Edge Function `submit-event-inquiry`.
 {% endcomment %}
 
 <section class="events-planner events-planner--{{ section.id }}" data-events-planner aria-label="{{ section.settings.heading | default: 'Plan your event' | escape }}">
-  <div class="events-planner__inner">
 
-    {% if section.settings.persona_name != blank or section.settings.persona_image != blank %}
-      <div class="events-planner__intro">
-        {% if section.settings.persona_image != blank %}
-          <div class="events-planner__intro-photo">
-            <img src="{{ section.settings.persona_image | image_url: width: 240 }}" alt="{{ section.settings.persona_name | escape }}" loading="lazy" width="120" height="120">
-          </div>
-        {% endif %}
-        <div class="events-planner__intro-copy">
-          {% if section.settings.eyebrow != blank %}
-            <p class="events-planner__eyebrow">{{ section.settings.eyebrow | escape }}</p>
-          {% endif %}
-          {% if section.settings.heading != blank %}
-            <h2 class="events-planner__heading">{{ section.settings.heading | escape }}</h2>
-          {% endif %}
-          {% if section.settings.intro_quote != blank %}
-            <p class="events-planner__intro-quote">{{ section.settings.intro_quote }}</p>
-          {% endif %}
-          {% if section.settings.persona_name != blank %}
-            <p class="events-planner__intro-attribution">
-              — {{ section.settings.persona_name | escape }}{% if section.settings.persona_title != blank %}, <span>{{ section.settings.persona_title | escape }}</span>{% endif %}
-            </p>
-          {% endif %}
-        </div>
-      </div>
-    {% endif %}
+  {% comment %} ─── Trigger envelope — sealed shut, click to open ─── {% endcomment %}
+  <button type="button" class="events-planner__trigger-card" data-events-planner-open aria-label="{{ section.settings.trigger_aria | default: 'Open invitation to plan your event' | escape }}">
+    {% comment %} Triangular flap pointing DOWN from top — sealed {% endcomment %}
+    <span class="events-planner__envelope-flap" aria-hidden="true"></span>
+    <span class="events-planner__envelope-flap-shadow" aria-hidden="true"></span>
 
-    <form
-      class="events-planner__form"
-      data-events-planner-form
-      enctype="multipart/form-data"
-      novalidate
-      data-endpoint="{{ section.settings.endpoint_url | default: 'https://rdmosawrnjqbhhihnagj.supabase.co/functions/v1/submit-event-inquiry' }}"
-      data-source-url="{{ canonical_url | default: shop.url }}"
-    >
-      {% comment %} Honeypot — bots fill this, humans don't see it {% endcomment %}
-      <div class="events-planner__honeypot" aria-hidden="true">
-        <label>Website <input type="text" name="website" tabindex="-1" autocomplete="off"></label>
-      </div>
+    {% comment %} Postage stamp + postmark on the front {% endcomment %}
+    <span class="events-planner__trigger-stamp" aria-hidden="true">
+      <span class="events-planner__trigger-stamp-inner">
+        <span class="events-planner__trigger-stamp-mono">B</span>
+        <span class="events-planner__trigger-stamp-text">BROWN SUGAR<br>BAKERY · CHGO</span>
+      </span>
+    </span>
+    <span class="events-planner__trigger-postmark" aria-hidden="true">
+      <span class="events-planner__trigger-postmark-arc">CHICAGO · IL · 75TH ST</span>
+      <span class="events-planner__trigger-postmark-date">SINCE 2004</span>
+    </span>
 
-      {% comment %} ─── Step 1: What are we celebrating? ─── {% endcomment %}
-      <fieldset class="events-planner__panel events-planner__panel--event" data-events-planner-panel="event">
-        <legend class="events-planner__panel-label">What are we celebrating?</legend>
-        <div class="events-planner__field">
-          <label for="event_type-{{ section.id }}" class="sr-only">Event type</label>
-          <select name="event_type" id="event_type-{{ section.id }}" required data-events-planner-event-type>
-            <option value="" disabled selected>Pick one to get started…</option>
-            <option value="Wedding">Wedding</option>
-            <option value="Corporate event">Corporate event</option>
-            <option value="Birthday milestone">Birthday milestone</option>
-            <option value="Anniversary">Anniversary</option>
-            <option value="Holiday party">Holiday party</option>
-            <option value="Memorial / celebration of life">Memorial / celebration of life</option>
-            <option value="Other">Something else</option>
-          </select>
-        </div>
-        <p class="events-planner__hint">No commitment — this is just a conversation start.</p>
-      </fieldset>
+    {% comment %} BSB stamp seal at the flap apex (sealing it shut) {% endcomment %}
+    <span class="events-planner__envelope-seal" aria-hidden="true">
+      <span class="events-planner__envelope-seal-mono">B</span>
+    </span>
 
-      {% comment %} ─── Step 2: When / where / how big / how much ─── {% endcomment %}
-      <fieldset class="events-planner__panel" data-events-planner-panel="details" hidden>
-        <legend class="events-planner__panel-label">Tell me about it.</legend>
+    {% comment %} Address-style label centered below the seal {% endcomment %}
+    <span class="events-planner__envelope-address">
+      <span class="events-planner__envelope-address-line1">{{ section.settings.trigger_eyebrow | default: 'YOU ARE INVITED' | escape }}</span>
+      <span class="events-planner__envelope-address-line2">{{ section.settings.trigger_btn_label | default: 'Tap to open' | escape }}</span>
+    </span>
+  </button>
 
-        <div class="events-planner__row">
-          <div class="events-planner__field">
-            <label for="event_date-{{ section.id }}">When?</label>
-            <input type="date" name="event_date" id="event_date-{{ section.id }}">
-            <label class="events-planner__inline-check">
-              <input type="checkbox" name="date_flexible" value="true">
-              <span>Flexible</span>
-            </label>
-          </div>
+  {% comment %} ─── Modal (initially hidden) ─── {% endcomment %}
+  <div class="events-planner__modal" data-events-planner-modal aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="events-planner-title-{{ section.id }}">
+    <div class="events-planner__modal-overlay" data-events-planner-close></div>
 
-          <div class="events-planner__field">
-            <label for="location-{{ section.id }}">Where?</label>
-            <input type="text" name="location" id="location-{{ section.id }}" placeholder="Chicago / suburb / out of town">
-          </div>
-        </div>
+    <div class="events-planner__envelope" data-events-planner-envelope>
+      <div class="events-planner__envelope-flap" aria-hidden="true"></div>
+      <div class="events-planner__envelope-seal" aria-hidden="true">B</div>
 
-        <div class="events-planner__row">
-          <div class="events-planner__field">
-            <label for="guest_count-{{ section.id }}">How many guests?</label>
-            <input type="number" name="guest_count" id="guest_count-{{ section.id }}" min="1" placeholder="e.g. 80">
-            <label class="events-planner__inline-check">
-              <input type="checkbox" name="guest_unknown" value="true">
-              <span>Not sure yet</span>
-            </label>
-          </div>
-
-          <div class="events-planner__field">
-            <label for="budget_range-{{ section.id }}">Budget range?</label>
-            <select name="budget_range" id="budget_range-{{ section.id }}">
-              <option value="">Pick one…</option>
-              <option value="$300–$750">$300 – $750</option>
-              <option value="$750–$1,500">$750 – $1,500</option>
-              <option value="$1,500–$3,000">$1,500 – $3,000</option>
-              <option value="$3,000+">$3,000+</option>
-              <option value="Help me figure this out">Help me figure this out</option>
-            </select>
-          </div>
-        </div>
-
-        {% comment %} Conditional follow-ups based on event type — JS toggles which group is visible {% endcomment %}
-        <div class="events-planner__conditional" data-events-planner-conditional-for="Wedding" hidden>
-          <h4 class="events-planner__conditional-label">A couple wedding specifics:</h4>
-          <div class="events-planner__row">
-            <div class="events-planner__field">
-              <label>Cutting cake or dessert table?</label>
-              <select name="cond_format" data-conditional-key="cake_or_table">
-                <option value="">Pick one…</option>
-                <option value="Cutting cake">Cutting cake</option>
-                <option value="Dessert table">Dessert table</option>
-                <option value="Both">Both</option>
-                <option value="Not sure yet">Not sure yet</option>
-              </select>
-            </div>
-            <div class="events-planner__field">
-              <label>Will the venue provide plates / forks?</label>
-              <select name="cond_plates" data-conditional-key="venue_plates">
-                <option value="">Pick one…</option>
-                <option value="Yes">Yes</option>
-                <option value="No, I need them">No, I need them</option>
-                <option value="Not sure">Not sure</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <div class="events-planner__conditional" data-events-planner-conditional-for="Corporate event" hidden>
-          <h4 class="events-planner__conditional-label">A couple corporate specifics:</h4>
-          <div class="events-planner__row">
-            <div class="events-planner__field">
-              <label>One-time or recurring?</label>
-              <select name="cond_cadence" data-conditional-key="cadence">
-                <option value="">Pick one…</option>
-                <option value="One-time event">One-time event</option>
-                <option value="Recurring (monthly)">Recurring (monthly)</option>
-                <option value="Recurring (quarterly)">Recurring (quarterly)</option>
-                <option value="Recurring (annual)">Recurring (annual)</option>
-              </select>
-            </div>
-            <div class="events-planner__field">
-              <label>Branded or themed?</label>
-              <select name="cond_branded" data-conditional-key="branded">
-                <option value="">Pick one…</option>
-                <option value="Logo / company colors">Logo / company colors</option>
-                <option value="Themed (not branded)">Themed (not branded)</option>
-                <option value="Plain — just delicious">Plain — just delicious</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <div class="events-planner__conditional" data-events-planner-conditional-for="Birthday milestone" hidden>
-          <h4 class="events-planner__conditional-label">A couple birthday specifics:</h4>
-          <div class="events-planner__row">
-            <div class="events-planner__field">
-              <label>Whose birthday?</label>
-              <input type="text" name="cond_honoree" data-conditional-key="honoree" placeholder="Name + age">
-            </div>
-            <div class="events-planner__field">
-              <label>Is it a surprise?</label>
-              <select name="cond_surprise" data-conditional-key="surprise">
-                <option value="">Pick one…</option>
-                <option value="Yes — surprise!">Yes — surprise!</option>
-                <option value="No, they know">No, they know</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <div class="events-planner__conditional" data-events-planner-conditional-for="Anniversary" hidden>
-          <h4 class="events-planner__conditional-label">A couple anniversary specifics:</h4>
-          <div class="events-planner__row">
-            <div class="events-planner__field">
-              <label>Years celebrating?</label>
-              <input type="number" name="cond_years" data-conditional-key="years" min="1" placeholder="e.g. 25">
-            </div>
-            <div class="events-planner__field">
-              <label>Recreating a wedding cake?</label>
-              <select name="cond_recreate" data-conditional-key="recreate_wedding_cake">
-                <option value="">Pick one…</option>
-                <option value="Yes — I have a photo">Yes — I have a photo</option>
-                <option value="Inspired by it">Inspired by it</option>
-                <option value="No, something new">No, something new</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <div class="events-planner__conditional" data-events-planner-conditional-for="Holiday party" hidden>
-          <h4 class="events-planner__conditional-label">A couple holiday specifics:</h4>
-          <div class="events-planner__row">
-            <div class="events-planner__field">
-              <label>Which holiday?</label>
-              <select name="cond_holiday" data-conditional-key="holiday">
-                <option value="">Pick one…</option>
-                <option value="Christmas">Christmas</option>
-                <option value="Juneteenth">Juneteenth</option>
-                <option value="Easter">Easter</option>
-                <option value="Thanksgiving">Thanksgiving</option>
-                <option value="New Year">New Year</option>
-                <option value="Mother's Day">Mother's Day</option>
-                <option value="Father's Day">Father's Day</option>
-                <option value="Other">Other</option>
-              </select>
-            </div>
-            <div class="events-planner__field">
-              <label>Mostly cake or assorted desserts?</label>
-              <select name="cond_assortment" data-conditional-key="assortment">
-                <option value="">Pick one…</option>
-                <option value="Mostly cake">Mostly cake</option>
-                <option value="Assorted desserts (mini, candy, etc.)">Assorted desserts</option>
-                <option value="Both">Both</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <div class="events-planner__conditional" data-events-planner-conditional-for="Memorial / celebration of life" hidden>
-          <h4 class="events-planner__conditional-label">A few gentle questions:</h4>
-          <div class="events-planner__row">
-            <div class="events-planner__field">
-              <label>Single sitting or ongoing reception?</label>
-              <select name="cond_format" data-conditional-key="format">
-                <option value="">Pick one…</option>
-                <option value="Single sitting (post-service)">Single sitting (post-service)</option>
-                <option value="Ongoing reception">Ongoing reception</option>
-              </select>
-            </div>
-            <div class="events-planner__field">
-              <label>A specific recipe to honor?</label>
-              <input type="text" name="cond_honor_recipe" data-conditional-key="honor_recipe" placeholder="e.g. their grandmother's pound cake">
-            </div>
-          </div>
-        </div>
-
-        <div class="events-planner__conditional" data-events-planner-conditional-for="Other" hidden>
-          <h4 class="events-planner__conditional-label">Tell me a bit more:</h4>
-          <div class="events-planner__field">
-            <label>What kind of event is it?</label>
-            <input type="text" name="cond_other_type" data-conditional-key="other_type" placeholder="Graduation, baby shower, retirement, fundraiser…">
-          </div>
-        </div>
-      </fieldset>
-
-      {% comment %} ─── Step 3: Vision ─── {% endcomment %}
-      <fieldset class="events-planner__panel" data-events-planner-panel="vision" hidden>
-        <legend class="events-planner__panel-label">Tell me what you're picturing.</legend>
-
-        <div class="events-planner__field">
-          <label for="vision_text-{{ section.id }}">In your own words…</label>
-          <textarea
-            name="vision_text"
-            id="vision_text-{{ section.id }}"
-            rows="5"
-            placeholder="Colors, theme, vibe, must-haves — or just &quot;caramel cake for 80, plus mini cupcakes&quot;. Whatever you've got."
-          ></textarea>
-        </div>
-
-        <div class="events-planner__field">
-          <label>Any of these jump out?</label>
-          <div class="events-planner__chips" data-events-planner-chips="preferences">
-            {%- assign pref_options = 'Tiered cake|Single layer|Caramel|German chocolate|Strawberry|Pineapple|Lemon|Custom flavor|Mini desserts|Plated dessert|Cupcakes|Candy table' | split: '|' -%}
-            {% for opt in pref_options %}
-              <button type="button" class="events-planner__chip" data-chip-value="{{ opt | escape }}">{{ opt | escape }}</button>
-            {% endfor %}
-          </div>
-          <input type="hidden" name="preferences" data-events-planner-chips-input value="">
-        </div>
-
-        <div class="events-planner__field">
-          <label>Dietary restrictions?</label>
-          <div class="events-planner__chips" data-events-planner-chips="dietary">
-            {%- assign diet_options = 'Gluten-free|Nut-free|Dairy-free|Vegan|Egg-free|Other' | split: '|' -%}
-            {% for opt in diet_options %}
-              <button type="button" class="events-planner__chip" data-chip-value="{{ opt | escape }}">{{ opt | escape }}</button>
-            {% endfor %}
-          </div>
-          <input type="hidden" name="dietary" data-events-planner-chips-input value="">
-        </div>
-
-        <div class="events-planner__field">
-          <label>Inspiration photos? (optional, up to 5 — each ≤5MB)</label>
-          <div class="events-planner__upload" data-events-planner-upload>
-            <input type="file" name="inspiration_image" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" multiple data-events-planner-upload-input>
-            <div class="events-planner__upload-cta">
-              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                <polyline points="17 8 12 3 7 8"></polyline>
-                <line x1="12" y1="3" x2="12" y2="15"></line>
-              </svg>
-              <span>Click or drag photos here</span>
-              <small>JPG, PNG, WebP — up to 5</small>
-            </div>
-            <ul class="events-planner__upload-list" data-events-planner-upload-list></ul>
-          </div>
-        </div>
-      </fieldset>
-
-      {% comment %} ─── Step 4: Contact ─── {% endcomment %}
-      <fieldset class="events-planner__panel" data-events-planner-panel="contact" hidden>
-        <legend class="events-planner__panel-label">How can I reach you?</legend>
-        <div class="events-planner__row">
-          <div class="events-planner__field">
-            <label for="contact_name-{{ section.id }}">Your name <span aria-hidden="true">*</span></label>
-            <input type="text" name="contact_name" id="contact_name-{{ section.id }}" required>
-          </div>
-          <div class="events-planner__field">
-            <label for="contact_phone-{{ section.id }}">Phone</label>
-            <input type="tel" name="contact_phone" id="contact_phone-{{ section.id }}" placeholder="(773) 555-0123">
-          </div>
-        </div>
-        <div class="events-planner__row">
-          <div class="events-planner__field">
-            <label for="contact_email-{{ section.id }}">Email <span aria-hidden="true">*</span></label>
-            <input type="email" name="contact_email" id="contact_email-{{ section.id }}" required autocomplete="email">
-            <p class="events-planner__hint">I'll email you within 24 hours. No spam, no auto-replies.</p>
-          </div>
-          <div class="events-planner__field">
-            <label for="preferred_contact-{{ section.id }}">Best way to reach you</label>
-            <select name="preferred_contact" id="preferred_contact-{{ section.id }}">
-              <option value="">Pick one…</option>
-              <option value="email">Email</option>
-              <option value="phone">Phone call</option>
-              <option value="text">Text</option>
-            </select>
-          </div>
-        </div>
-
-        <button type="submit" class="events-planner__submit" data-events-planner-submit>
-          <span class="events-planner__submit-label">Send to {{ section.settings.persona_name | default: 'the events team' | escape }}</span>
-          <span class="events-planner__submit-spinner" hidden>Sending…</span>
+      <div class="events-planner__card">
+        <button type="button" class="events-planner__close" data-events-planner-close aria-label="Close planner">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
         </button>
-        <p class="events-planner__error" data-events-planner-error hidden role="alert"></p>
-      </fieldset>
-    </form>
 
-    {% comment %} ─── Confirmation panel (revealed on success) ─── {% endcomment %}
-    <div class="events-planner__success" data-events-planner-success hidden>
-      <div class="events-planner__success-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="20 6 9 17 4 12"></polyline>
-        </svg>
+        <div class="events-planner__card-inner">
+
+          {% comment %} Invitation header inside the card {% endcomment %}
+          <header class="events-planner__card-header">
+            <p class="events-planner__card-eyebrow">{{ section.settings.eyebrow | default: 'PLAN YOUR EVENT' | escape }}</p>
+            <h2 class="events-planner__card-title" id="events-planner-title-{{ section.id }}">{{ section.settings.heading | default: 'Tell me about your day.' | escape }}</h2>
+            {% if section.settings.intro_quote != blank %}
+              <p class="events-planner__card-quote">{{ section.settings.intro_quote }}</p>
+            {% endif %}
+            {% if section.settings.persona_name != blank %}
+              <p class="events-planner__card-attribution">— {{ section.settings.persona_name | escape }}{% if section.settings.persona_title != blank %}, <em>{{ section.settings.persona_title | escape }}</em>{% endif %}</p>
+            {% endif %}
+            <span class="events-planner__divider" aria-hidden="true"></span>
+          </header>
+
+          <form
+            class="events-planner__form"
+            data-events-planner-form
+            enctype="multipart/form-data"
+            novalidate
+            data-endpoint="{{ section.settings.endpoint_url | default: 'https://rdmosawrnjqbhhihnagj.supabase.co/functions/v1/submit-event-inquiry' }}"
+            data-source-url="{{ canonical_url | default: shop.url }}"
+          >
+            {% comment %} Honeypot {% endcomment %}
+            <div class="events-planner__honeypot" aria-hidden="true">
+              <label>Website <input type="text" name="website" tabindex="-1" autocomplete="off"></label>
+            </div>
+
+            {% comment %} ─── Step 1: Event type ─── {% endcomment %}
+            <fieldset class="events-planner__panel" data-events-planner-panel="event">
+              <legend class="events-planner__panel-label">What are we celebrating?</legend>
+              <div class="events-planner__field">
+                <label for="event_type-{{ section.id }}" class="sr-only">Event type</label>
+                <select name="event_type" id="event_type-{{ section.id }}" required data-events-planner-event-type>
+                  <option value="" disabled selected>Pick one to get started…</option>
+                  <option value="Wedding">Wedding</option>
+                  <option value="Corporate event">Corporate event</option>
+                  <option value="Birthday milestone">Birthday milestone</option>
+                  <option value="Anniversary">Anniversary</option>
+                  <option value="Holiday party">Holiday party</option>
+                  <option value="Memorial / celebration of life">Memorial / celebration of life</option>
+                  <option value="Other">Something else</option>
+                </select>
+              </div>
+              <p class="events-planner__hint">No commitment — this is just a conversation start.</p>
+            </fieldset>
+
+            {% comment %} ─── Step 2: Details + conditional ─── {% endcomment %}
+            <fieldset class="events-planner__panel" data-events-planner-panel="details" hidden>
+              <legend class="events-planner__panel-label">Tell me about it.</legend>
+
+              <div class="events-planner__row">
+                <div class="events-planner__field">
+                  <label for="event_date-{{ section.id }}">When?</label>
+                  <input type="date" name="event_date" id="event_date-{{ section.id }}">
+                  <label class="events-planner__inline-check">
+                    <input type="checkbox" name="date_flexible" value="true">
+                    <span>Flexible</span>
+                  </label>
+                </div>
+                <div class="events-planner__field">
+                  <label for="location-{{ section.id }}">Where?</label>
+                  <input type="text" name="location" id="location-{{ section.id }}" placeholder="Chicago / suburb / out of town">
+                </div>
+              </div>
+
+              <div class="events-planner__row">
+                <div class="events-planner__field">
+                  <label for="guest_count-{{ section.id }}">How many guests?</label>
+                  <input type="number" name="guest_count" id="guest_count-{{ section.id }}" min="1" placeholder="e.g. 80">
+                  <label class="events-planner__inline-check">
+                    <input type="checkbox" name="guest_unknown" value="true">
+                    <span>Not sure yet</span>
+                  </label>
+                </div>
+                <div class="events-planner__field">
+                  <label for="budget_range-{{ section.id }}">Budget range?</label>
+                  <select name="budget_range" id="budget_range-{{ section.id }}">
+                    <option value="">Pick one…</option>
+                    <option value="$300–$750">$300 – $750</option>
+                    <option value="$750–$1,500">$750 – $1,500</option>
+                    <option value="$1,500–$3,000">$1,500 – $3,000</option>
+                    <option value="$3,000+">$3,000+</option>
+                    <option value="Help me figure this out">Help me figure this out</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="events-planner__conditional" data-events-planner-conditional-for="Wedding" hidden>
+                <h4 class="events-planner__conditional-label">A couple wedding specifics</h4>
+                <div class="events-planner__row">
+                  <div class="events-planner__field">
+                    <label>Cutting cake or dessert table?</label>
+                    <select name="cond_format" data-conditional-key="cake_or_table">
+                      <option value="">Pick one…</option>
+                      <option value="Cutting cake">Cutting cake</option>
+                      <option value="Dessert table">Dessert table</option>
+                      <option value="Both">Both</option>
+                      <option value="Not sure yet">Not sure yet</option>
+                    </select>
+                  </div>
+                  <div class="events-planner__field">
+                    <label>Will the venue provide plates?</label>
+                    <select name="cond_plates" data-conditional-key="venue_plates">
+                      <option value="">Pick one…</option>
+                      <option value="Yes">Yes</option>
+                      <option value="No, I need them">No, I need them</option>
+                      <option value="Not sure">Not sure</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div class="events-planner__conditional" data-events-planner-conditional-for="Corporate event" hidden>
+                <h4 class="events-planner__conditional-label">A couple corporate specifics</h4>
+                <div class="events-planner__row">
+                  <div class="events-planner__field">
+                    <label>One-time or recurring?</label>
+                    <select name="cond_cadence" data-conditional-key="cadence">
+                      <option value="">Pick one…</option>
+                      <option value="One-time event">One-time event</option>
+                      <option value="Recurring (monthly)">Recurring (monthly)</option>
+                      <option value="Recurring (quarterly)">Recurring (quarterly)</option>
+                      <option value="Recurring (annual)">Recurring (annual)</option>
+                    </select>
+                  </div>
+                  <div class="events-planner__field">
+                    <label>Branded or themed?</label>
+                    <select name="cond_branded" data-conditional-key="branded">
+                      <option value="">Pick one…</option>
+                      <option value="Logo / company colors">Logo / company colors</option>
+                      <option value="Themed (not branded)">Themed (not branded)</option>
+                      <option value="Plain — just delicious">Plain — just delicious</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div class="events-planner__conditional" data-events-planner-conditional-for="Birthday milestone" hidden>
+                <h4 class="events-planner__conditional-label">A couple birthday specifics</h4>
+                <div class="events-planner__row">
+                  <div class="events-planner__field">
+                    <label>Whose birthday?</label>
+                    <input type="text" name="cond_honoree" data-conditional-key="honoree" placeholder="Name + age">
+                  </div>
+                  <div class="events-planner__field">
+                    <label>Is it a surprise?</label>
+                    <select name="cond_surprise" data-conditional-key="surprise">
+                      <option value="">Pick one…</option>
+                      <option value="Yes — surprise!">Yes — surprise!</option>
+                      <option value="No, they know">No, they know</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div class="events-planner__conditional" data-events-planner-conditional-for="Anniversary" hidden>
+                <h4 class="events-planner__conditional-label">A couple anniversary specifics</h4>
+                <div class="events-planner__row">
+                  <div class="events-planner__field">
+                    <label>Years celebrating?</label>
+                    <input type="number" name="cond_years" data-conditional-key="years" min="1" placeholder="e.g. 25">
+                  </div>
+                  <div class="events-planner__field">
+                    <label>Recreating a wedding cake?</label>
+                    <select name="cond_recreate" data-conditional-key="recreate_wedding_cake">
+                      <option value="">Pick one…</option>
+                      <option value="Yes — I have a photo">Yes — I have a photo</option>
+                      <option value="Inspired by it">Inspired by it</option>
+                      <option value="No, something new">No, something new</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div class="events-planner__conditional" data-events-planner-conditional-for="Holiday party" hidden>
+                <h4 class="events-planner__conditional-label">A couple holiday specifics</h4>
+                <div class="events-planner__row">
+                  <div class="events-planner__field">
+                    <label>Which holiday?</label>
+                    <select name="cond_holiday" data-conditional-key="holiday">
+                      <option value="">Pick one…</option>
+                      <option value="Christmas">Christmas</option>
+                      <option value="Juneteenth">Juneteenth</option>
+                      <option value="Easter">Easter</option>
+                      <option value="Thanksgiving">Thanksgiving</option>
+                      <option value="New Year">New Year</option>
+                      <option value="Mother's Day">Mother's Day</option>
+                      <option value="Father's Day">Father's Day</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                  <div class="events-planner__field">
+                    <label>Mostly cake or assorted?</label>
+                    <select name="cond_assortment" data-conditional-key="assortment">
+                      <option value="">Pick one…</option>
+                      <option value="Mostly cake">Mostly cake</option>
+                      <option value="Assorted desserts">Assorted desserts</option>
+                      <option value="Both">Both</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div class="events-planner__conditional" data-events-planner-conditional-for="Memorial / celebration of life" hidden>
+                <h4 class="events-planner__conditional-label">A few gentle questions</h4>
+                <div class="events-planner__row">
+                  <div class="events-planner__field">
+                    <label>Single sitting or ongoing reception?</label>
+                    <select name="cond_format" data-conditional-key="format">
+                      <option value="">Pick one…</option>
+                      <option value="Single sitting (post-service)">Single sitting (post-service)</option>
+                      <option value="Ongoing reception">Ongoing reception</option>
+                    </select>
+                  </div>
+                  <div class="events-planner__field">
+                    <label>A specific recipe to honor?</label>
+                    <input type="text" name="cond_honor_recipe" data-conditional-key="honor_recipe" placeholder="e.g. her grandmother's pound cake">
+                  </div>
+                </div>
+              </div>
+
+              <div class="events-planner__conditional" data-events-planner-conditional-for="Other" hidden>
+                <h4 class="events-planner__conditional-label">Tell me a bit more</h4>
+                <div class="events-planner__field">
+                  <label>What kind of event is it?</label>
+                  <input type="text" name="cond_other_type" data-conditional-key="other_type" placeholder="Graduation, baby shower, retirement, fundraiser…">
+                </div>
+              </div>
+            </fieldset>
+
+            {% comment %} ─── Step 3: Vision ─── {% endcomment %}
+            <fieldset class="events-planner__panel" data-events-planner-panel="vision" hidden>
+              <legend class="events-planner__panel-label">What are you picturing?</legend>
+
+              <div class="events-planner__field">
+                <label for="vision_text-{{ section.id }}">In your own words…</label>
+                <textarea
+                  name="vision_text"
+                  id="vision_text-{{ section.id }}"
+                  rows="4"
+                  placeholder="Colors, theme, vibe, must-haves — or just &quot;caramel cake for 80, plus mini cupcakes&quot;. Whatever you've got."
+                ></textarea>
+              </div>
+
+              <div class="events-planner__field">
+                <label>Any of these jump out?</label>
+                <div class="events-planner__chips" data-events-planner-chips="preferences">
+                  {%- assign pref_options = 'Tiered cake|Single layer|Caramel|German chocolate|Strawberry|Pineapple|Lemon|Custom flavor|Mini desserts|Plated dessert|Cupcakes|Candy table' | split: '|' -%}
+                  {% for opt in pref_options %}
+                    <button type="button" class="events-planner__chip" data-chip-value="{{ opt | escape }}">{{ opt | escape }}</button>
+                  {% endfor %}
+                </div>
+                <input type="hidden" name="preferences" data-events-planner-chips-input value="">
+              </div>
+
+              <div class="events-planner__field">
+                <label>Dietary restrictions?</label>
+                <div class="events-planner__chips" data-events-planner-chips="dietary">
+                  {%- assign diet_options = 'Gluten-free|Nut-free|Dairy-free|Vegan|Egg-free|Other' | split: '|' -%}
+                  {% for opt in diet_options %}
+                    <button type="button" class="events-planner__chip" data-chip-value="{{ opt | escape }}">{{ opt | escape }}</button>
+                  {% endfor %}
+                </div>
+                <input type="hidden" name="dietary" data-events-planner-chips-input value="">
+              </div>
+
+              <div class="events-planner__field">
+                <label>Inspiration photos? <small>(optional, up to 5 — each ≤5MB)</small></label>
+                <div class="events-planner__upload" data-events-planner-upload>
+                  <input type="file" name="inspiration_image" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" multiple data-events-planner-upload-input>
+                  <div class="events-planner__upload-cta">
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                      <polyline points="17 8 12 3 7 8"></polyline>
+                      <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                    <span>Click or drag photos here</span>
+                  </div>
+                  <ul class="events-planner__upload-list" data-events-planner-upload-list></ul>
+                </div>
+              </div>
+            </fieldset>
+
+            {% comment %} ─── Step 4: Contact ─── {% endcomment %}
+            <fieldset class="events-planner__panel" data-events-planner-panel="contact" hidden>
+              <legend class="events-planner__panel-label">How can I reach you?</legend>
+              <div class="events-planner__row">
+                <div class="events-planner__field">
+                  <label for="contact_name-{{ section.id }}">Your name <span aria-hidden="true">*</span></label>
+                  <input type="text" name="contact_name" id="contact_name-{{ section.id }}" required>
+                </div>
+                <div class="events-planner__field">
+                  <label for="contact_phone-{{ section.id }}">Phone</label>
+                  <input type="tel" name="contact_phone" id="contact_phone-{{ section.id }}" placeholder="(773) 555-0123">
+                </div>
+              </div>
+              <div class="events-planner__row">
+                <div class="events-planner__field">
+                  <label for="contact_email-{{ section.id }}">Email <span aria-hidden="true">*</span></label>
+                  <input type="email" name="contact_email" id="contact_email-{{ section.id }}" required autocomplete="email">
+                  <p class="events-planner__hint">I will email you within 24 hours. No spam.</p>
+                </div>
+                <div class="events-planner__field">
+                  <label for="preferred_contact-{{ section.id }}">Best way to reach you</label>
+                  <select name="preferred_contact" id="preferred_contact-{{ section.id }}">
+                    <option value="">Pick one…</option>
+                    <option value="email">Email</option>
+                    <option value="phone">Phone call</option>
+                    <option value="text">Text</option>
+                  </select>
+                </div>
+              </div>
+
+              <button type="submit" class="events-planner__submit" data-events-planner-submit>
+                <span class="events-planner__submit-label">Send to {{ section.settings.persona_name | default: 'the events team' | escape }}</span>
+                <span class="events-planner__submit-spinner" hidden>Sending…</span>
+              </button>
+              <p class="events-planner__error" data-events-planner-error hidden role="alert"></p>
+            </fieldset>
+          </form>
+
+          {% comment %} ─── Confirmation panel ─── {% endcomment %}
+          <div class="events-planner__success" data-events-planner-success hidden>
+            <div class="events-planner__success-seal" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+            </div>
+            <h3 class="events-planner__success-heading">Got it. Thanks <span data-events-planner-success-name>friend</span>.</h3>
+            <p class="events-planner__success-lede">{{ section.settings.success_lede | default: "Your inquiry is in. Here is what happens next." | escape }}</p>
+            <ol class="events-planner__success-steps">
+              <li>
+                <span class="events-planner__success-step-when">Within 24 hours</span>
+                <span class="events-planner__success-step-what">{{ section.settings.next_step_1 | default: "I will review your inquiry personally and email you back." | escape }}</span>
+              </li>
+              <li>
+                <span class="events-planner__success-step-when">Within 48 hours</span>
+                <span class="events-planner__success-step-what">{{ section.settings.next_step_2 | default: "You will get a custom quote with cake options for your budget, photos of comparable cakes, and a hold on your date if you want it." | escape }}</span>
+              </li>
+              <li>
+                <span class="events-planner__success-step-when">When you are ready</span>
+                <span class="events-planner__success-step-what">{{ section.settings.next_step_3 | default: "We confirm with a 50% deposit. The other 50% is due a week before pickup or delivery." | escape }}</span>
+              </li>
+            </ol>
+            {% if section.settings.persona_name != blank %}
+              <p class="events-planner__success-signoff">
+                — {{ section.settings.persona_name | escape }}{% if section.settings.persona_title != blank %}, {{ section.settings.persona_title | escape }}{% endif %}<br>
+                {% if section.settings.persona_email != blank %}<a href="mailto:{{ section.settings.persona_email }}">{{ section.settings.persona_email | escape }}</a>{% endif %}
+                {% if section.settings.persona_phone != blank %} · {{ section.settings.persona_phone | escape }}{% endif %}
+              </p>
+            {% endif %}
+            <button type="button" class="events-planner__success-close" data-events-planner-close>Close</button>
+          </div>
+
+        </div>
       </div>
-      <h3 class="events-planner__success-heading">Got it. Thanks <span data-events-planner-success-name>friend</span>.</h3>
-      <p class="events-planner__success-lede">
-        {{ section.settings.success_lede | default: "Your inquiry is in. Here is what happens next." | escape }}
-      </p>
-      <ol class="events-planner__success-steps">
-        <li>
-          <span class="events-planner__success-step-when">Within 24 hours</span>
-          <span class="events-planner__success-step-what">{{ section.settings.next_step_1 | default: "I will review your inquiry personally and email you back." | escape }}</span>
-        </li>
-        <li>
-          <span class="events-planner__success-step-when">Within 48 hours</span>
-          <span class="events-planner__success-step-what">{{ section.settings.next_step_2 | default: "You will get a custom quote with cake options for your budget, photos of comparable cakes, and a hold on your date if you want it." | escape }}</span>
-        </li>
-        <li>
-          <span class="events-planner__success-step-when">When you are ready</span>
-          <span class="events-planner__success-step-what">{{ section.settings.next_step_3 | default: "We confirm with a 50% deposit. The other 50% is due a week before pickup or delivery." | escape }}</span>
-        </li>
-      </ol>
-      {% if section.settings.persona_name != blank %}
-        <p class="events-planner__success-signoff">
-          — {{ section.settings.persona_name | escape }}{% if section.settings.persona_title != blank %}, {{ section.settings.persona_title | escape }}{% endif %}<br>
-          {% if section.settings.persona_email != blank %}<a href="mailto:{{ section.settings.persona_email }}">{{ section.settings.persona_email | escape }}</a>{% endif %}
-          {% if section.settings.persona_phone != blank %} · {{ section.settings.persona_phone | escape }}{% endif %}
-        </p>
-      {% endif %}
     </div>
   </div>
 </section>
@@ -392,126 +421,588 @@
     padding: 36px 16px;
     font-family: 'Arsenal', sans-serif;
   }
-  .events-planner--{{ section.id }} .events-planner__inner {
-    max-width: 760px;
-    margin: 0 auto;
-  }
   .events-planner--{{ section.id }} .sr-only {
-    position: absolute;
-    width: 1px; height: 1px;
-    padding: 0; margin: -1px;
-    overflow: hidden;
-    clip: rect(0 0 0 0);
-    white-space: nowrap;
-    border: 0;
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
   }
 
-  /* Persona intro */
-  .events-planner--{{ section.id }} .events-planner__intro {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: 18px;
-    align-items: center;
-    margin: 0 0 28px;
-    background: #fffaf2;
-    border: 1px solid rgba(91, 37, 18, 0.14);
-    border-left: 4px solid #570522;
+  /* ─── Trigger card — back of a sealed envelope ─── */
+  .events-planner--{{ section.id }} .events-planner__trigger-card {
+    position: relative;
+    max-width: 560px;
+    margin: 0 auto;
+    background:
+      radial-gradient(120% 80% at 50% 100%, rgba(91, 37, 18, 0.04), transparent 60%),
+      linear-gradient(180deg, #fffaf2 0%, #f7ead6 100%);
+    border: 1px solid rgba(91, 37, 18, 0.30);
     border-radius: 6px;
-    padding: 18px 22px;
+    padding: 0;
+    box-shadow:
+      0 8px 24px rgba(91, 37, 18, 0.18),
+      0 1px 0 rgba(255, 255, 255, 0.7) inset;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 200ms ease, box-shadow 200ms ease;
   }
-  .events-planner--{{ section.id }} .events-planner__intro-photo img {
-    width: 80px;
-    height: 80px;
+  .events-planner--{{ section.id }} .events-planner__trigger-card:hover,
+  .events-planner--{{ section.id }} .events-planner__trigger-card:focus-within {
+    transform: translateY(-2px);
+    box-shadow:
+      0 12px 32px rgba(91, 37, 18, 0.26),
+      0 1px 0 rgba(255, 255, 255, 0.7) inset;
+  }
+
+  /* Triangular flap pointing DOWN from top — caramel, like back of envelope.
+     Uses padding-bottom for height (resolves against parent's WIDTH, so the
+     flap stays proportional regardless of the card's content height). */
+  .events-planner--{{ section.id }} .events-planner__envelope-flap {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 0;
+    padding-bottom: 32%;
+    background: linear-gradient(180deg, #ba5b28 0%, #8d4422 100%);
+    clip-path: polygon(0 0, 100% 0, 50% 100%);
+    pointer-events: none;
+    z-index: 1;
+    box-shadow: inset 0 -1px 0 rgba(91, 37, 18, 0.20);
+  }
+  /* Subtle dark line down the seam of the flap (the fold line) */
+  .events-planner--{{ section.id }} .events-planner__envelope-flap::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 1px;
+    height: 100%;
+    background: linear-gradient(180deg, rgba(91, 37, 18, 0.18), transparent);
+    transform: translateX(-50%);
+  }
+  /* Soft shadow line UNDER the flap apex (where it meets the lower envelope) */
+  .events-planner--{{ section.id }} .events-planner__envelope-flap-shadow {
+    position: absolute;
+    top: 32%;
+    left: 0;
+    right: 0;
+    height: 14px;
+    background: radial-gradient(ellipse at 50% 0%, rgba(91, 37, 18, 0.22) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  /* BSB stamp seal — outlined rectangle sitting at the flap apex.
+     Position: just below the apex of the triangle (32% of width from top). */
+  .events-planner--{{ section.id }} .events-planner__envelope-seal {
+    position: absolute;
+    top: calc(32% - 28px);
+    left: 50%;
+    transform: translateX(-50%) rotate(-4deg);
+    width: 64px;
+    height: 64px;
+    background: #fffaf2;
+    border: 1.5px solid #570522;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow:
+      0 3px 8px rgba(91, 37, 18, 0.30),
+      0 0 0 4px rgba(255, 250, 242, 0.85);
+    z-index: 6;
+  }
+  /* Inner hairline frame — the "outlined" stamp design */
+  .events-planner--{{ section.id }} .events-planner__envelope-seal::before {
+    content: "";
+    position: absolute;
+    inset: 4px;
+    border: 1px solid #570522;
+    border-radius: 2px;
+    pointer-events: none;
+  }
+  /* Inner hairline frame — the "outlined" stamp design */
+  .events-planner--{{ section.id }} .events-planner__envelope-seal::before {
+    content: "";
+    position: absolute;
+    inset: 4px;
+    border: 1px solid #570522;
+    border-radius: 2px;
+    pointer-events: none;
+  }
+  .events-planner--{{ section.id }} .events-planner__envelope-seal-mono {
+    font-family: 'Allura', 'Brush Script MT', cursive;
+    font-size: 38px;
+    line-height: 1;
+    color: #570522;
+    font-weight: 400;
+    /* Outlined — no fill, just the script outline via webkit-text-stroke fallback */
+    text-shadow: 0 0 0 #570522;
+  }
+
+  /* Postage stamp — top-right, layered above the flap */
+  .events-planner--{{ section.id }} .events-planner__trigger-stamp {
+    position: absolute;
+    top: 14px;
+    right: 16px;
+    width: 56px;
+    height: 70px;
+    background: #fffaf2;
+    padding: 4px;
+    transform: rotate(7deg);
+    box-shadow: 0 3px 8px rgba(91, 37, 18, 0.32);
+    z-index: 5;
+    -webkit-mask:
+      radial-gradient(circle 3.5px at 0 50%, transparent 98%, #000 100%) -3.5px 0/7px 7px,
+      radial-gradient(circle 3.5px at 100% 50%, transparent 98%, #000 100%) 3.5px 0/7px 7px,
+      radial-gradient(circle 3.5px at 50% 0, transparent 98%, #000 100%) 0 -3.5px/7px 7px,
+      radial-gradient(circle 3.5px at 50% 100%, transparent 98%, #000 100%) 0 3.5px/7px 7px;
+    -webkit-mask-composite: source-in;
+            mask-composite: intersect;
+  }
+  .events-planner--{{ section.id }} .events-planner__trigger-stamp-inner {
+    background: #570522;
+    color: #fffaf2;
+    width: 100%; height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    border: 1px dashed rgba(255, 250, 242, 0.4);
+    box-sizing: border-box;
+    padding: 4px;
+  }
+  .events-planner--{{ section.id }} .events-planner__trigger-stamp-mono {
+    font-family: 'Allura', 'Brush Script MT', cursive;
+    font-size: 26px;
+    line-height: 1;
+    color: #e68c3b;
+    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.25);
+  }
+  .events-planner--{{ section.id }} .events-planner__trigger-stamp-text {
+    font-family: 'Arsenal', sans-serif;
+    font-weight: 700;
+    font-size: 5px;
+    letter-spacing: 0.06em;
+    line-height: 1.2;
+    margin-top: 4px;
+    color: #fffaf2;
+  }
+
+  /* Postmark — circular faded ink stamp next to the postage */
+  .events-planner--{{ section.id }} .events-planner__trigger-postmark {
+    position: absolute;
+    top: 22px;
+    right: 80px;
+    width: 72px;
+    height: 72px;
+    border: 1.5px solid rgba(255, 250, 242, 0.55);
     border-radius: 50%;
-    object-fit: cover;
-    display: block;
-    border: 3px solid #fffaf2;
-    box-shadow: 0 0 0 1px rgba(91, 37, 18, 0.18);
+    transform: rotate(-12deg);
+    color: rgba(255, 250, 242, 0.55);
+    z-index: 4;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-family: 'Arsenal', sans-serif;
+    font-weight: 700;
+    text-transform: uppercase;
   }
-  .events-planner--{{ section.id }} .events-planner__eyebrow {
+  .events-planner--{{ section.id }} .events-planner__trigger-postmark::before {
+    content: "";
+    position: absolute;
+    inset: 4px;
+    border: 1px solid rgba(255, 250, 242, 0.4);
+    border-radius: 50%;
+  }
+  .events-planner--{{ section.id }} .events-planner__trigger-postmark-arc {
+    font-size: 6px;
+    letter-spacing: 0.08em;
+    padding: 0 12px;
+    line-height: 1.3;
+  }
+  .events-planner--{{ section.id }} .events-planner__trigger-postmark-date {
+    font-size: 7px;
+    letter-spacing: 0.10em;
+    margin-top: 2px;
+    border-top: 1px solid currentColor;
+    padding-top: 2px;
+  }
+
+  /* Trigger card behaves like a button */
+  .events-planner--{{ section.id }} .events-planner__trigger-card {
+    width: 100%;
+    font-family: inherit;
+    color: inherit;
+    text-align: center;
+    aspect-ratio: 5 / 3;
+  }
+  .events-planner--{{ section.id }} .events-planner__trigger-card:focus-visible {
+    outline: 3px solid #e68c3b;
+    outline-offset: 4px;
+  }
+
+  /* Address-style label — sits in the lower portion of the envelope */
+  .events-planner--{{ section.id }} .events-planner__envelope-address {
+    position: absolute;
+    left: 50%;
+    bottom: 18%;
+    transform: translateX(-50%);
+    text-align: center;
+    z-index: 3;
+    pointer-events: none;
+  }
+  .events-planner--{{ section.id }} .events-planner__envelope-address-line1 {
+    display: block;
+    font-family: 'Arsenal', sans-serif;
     font-size: 11px;
-    letter-spacing: 0.22em;
+    letter-spacing: 0.32em;
     text-transform: uppercase;
     font-weight: 700;
     color: {{ section.settings.accent_color }};
-    margin: 0 0 4px;
+    margin-bottom: 6px;
   }
-  .events-planner--{{ section.id }} .events-planner__heading {
-    font-size: clamp(20px, 4vw, 26px);
-    font-weight: 800;
-    margin: 0 0 4px;
-    color: inherit;
-    line-height: 1.2;
-  }
-  .events-planner--{{ section.id }} .events-planner__intro-quote {
-    margin: 4px 0 0;
-    font-size: 14px;
-    line-height: 1.45;
-    opacity: 0.85;
-    font-style: italic;
-  }
-  .events-planner--{{ section.id }} .events-planner__intro-attribution {
-    margin: 6px 0 0;
+  .events-planner--{{ section.id }} .events-planner__envelope-address-line2 {
+    display: inline-block;
+    font-family: 'Arsenal', sans-serif;
     font-size: 12px;
-    letter-spacing: 0.06em;
-    color: inherit;
-    opacity: 0.7;
+    letter-spacing: 0.18em;
     text-transform: uppercase;
+    font-weight: 700;
+    color: #fffaf2;
+    background: linear-gradient(180deg, #6c0a2e 0%, #570522 60%, #45041b 100%);
+    padding: 10px 20px;
+    border: 1px solid #2e0212;
+    border-radius: 4px;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.20),
+      0 2px 0 rgba(46, 2, 18, 0.5);
   }
-  .events-planner--{{ section.id }} .events-planner__intro-attribution span {
+
+  @media (max-width: 480px) {
+    .events-planner--{{ section.id }} .events-planner__envelope-seal {
+      width: 50px;
+      height: 54px;
+      top: calc(32% - 24px);
+    }
+    .events-planner--{{ section.id }} .events-planner__envelope-seal-mono {
+      font-size: 30px;
+    }
+    .events-planner--{{ section.id }} .events-planner__envelope-address-line1 {
+      font-size: 10px;
+      letter-spacing: 0.22em;
+    }
+    .events-planner--{{ section.id }} .events-planner__envelope-address-line2 {
+      font-size: 11px;
+      padding: 9px 16px;
+    }
+  }
+
+  .events-planner--{{ section.id }} .events-planner__trigger-eyebrow {
+    font-family: 'Arsenal', sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    color: {{ section.settings.accent_color }};
+    margin: 0 0 14px;
+    font-weight: 700;
+  }
+  .events-planner--{{ section.id }} .events-planner__trigger-title {
+    font-family: 'Allura', 'Brush Script MT', cursive;
+    font-weight: 400;
+    font-size: clamp(34px, 6vw, 52px);
+    color: #570522;
+    line-height: 1.05;
+    margin: 0 0 12px;
+    letter-spacing: 0;
+  }
+  .events-planner--{{ section.id }} .events-planner__trigger-sub {
+    font-size: 15px;
+    line-height: 1.55;
+    color: rgba(91, 37, 18, 0.80);
+    max-width: 420px;
+    margin: 0 auto 14px;
+  }
+  .events-planner--{{ section.id }} .events-planner__trigger-attribution {
+    margin: 0 0 22px;
+    font-size: 12px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(91, 37, 18, 0.7);
+    font-weight: 600;
+  }
+  .events-planner--{{ section.id }} .events-planner__trigger-attribution em {
     text-transform: none;
     letter-spacing: 0;
     font-style: italic;
+    font-weight: 500;
+  }
+  .events-planner--{{ section.id }} .events-planner__trigger-btn {
+    display: inline-block;
+    padding: 14px 28px;
+    font-family: 'Arsenal', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: #fffaf2;
+    background: linear-gradient(180deg, #6c0a2e 0%, #570522 60%, #45041b 100%);
+    border: 1px solid #2e0212;
+    border-radius: 4px;
+    cursor: pointer;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.20),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.28),
+      0 2px 0 rgba(46, 2, 18, 0.5),
+      0 6px 14px rgba(46, 2, 18, 0.22);
+    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.35);
+    transition: transform 120ms ease, filter 160ms ease;
+  }
+  .events-planner--{{ section.id }} .events-planner__trigger-btn:hover {
+    filter: brightness(1.06);
+    transform: translateY(-1px);
   }
 
-  /* Form */
-  .events-planner--{{ section.id }} .events-planner__form {
-    background: #ffffff;
-    border: 1px solid rgba(91, 37, 18, 0.12);
-    border-radius: 8px;
+  /* ─── Modal overlay ─── */
+  .events-planner--{{ section.id }} .events-planner__modal {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    pointer-events: none;
+    visibility: hidden;
+  }
+  body.events-planner-open .events-planner--{{ section.id }} .events-planner__modal {
+    pointer-events: auto;
+    visibility: visible;
+  }
+  .events-planner--{{ section.id }} .events-planner__modal-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(29, 10, 4, 0.55);
+    opacity: 0;
+    transition: opacity 320ms ease;
+  }
+  body.events-planner-open .events-planner--{{ section.id }} .events-planner__modal-overlay {
+    opacity: 1;
+  }
+
+  /* ─── Envelope wrapping the card ─── */
+  .events-planner--{{ section.id }} .events-planner__envelope {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: min(640px, 92vw);
+    max-height: 92vh;
+    transform: translate(-50%, -50%) scale(0.86);
+    opacity: 0;
+    transition: transform 460ms cubic-bezier(0.2, 0.7, 0.2, 1), opacity 320ms ease;
+  }
+  body.events-planner-open .events-planner--{{ section.id }} .events-planner__envelope {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+
+  /* Envelope flap (decorative) — animates open above the card */
+  .events-planner--{{ section.id }} .events-planner__envelope-flap {
+    position: absolute;
+    top: -1px;
+    left: 50%;
+    transform: translateX(-50%) rotateX(-180deg);
+    transform-origin: top center;
+    width: 86%;
+    height: 70px;
+    background: linear-gradient(180deg, #ba5b28 0%, #8d4422 100%);
+    clip-path: polygon(0 0, 100% 0, 50% 100%);
+    box-shadow: 0 4px 10px rgba(46, 2, 18, 0.18);
+    transition: transform 520ms cubic-bezier(0.2, 0.7, 0.2, 1) 80ms;
+    z-index: 3;
+    pointer-events: none;
+  }
+  body.events-planner-open .events-planner--{{ section.id }} .events-planner__envelope-flap {
+    transform: translateX(-50%) rotateX(-10deg);
+  }
+
+  /* Wax seal that "stamps" once the card is open */
+  .events-planner--{{ section.id }} .events-planner__envelope-seal {
+    position: absolute;
+    top: 32px;
+    left: 50%;
+    transform: translateX(-50%) scale(0);
+    width: 44px;
+    height: 44px;
+    background: radial-gradient(circle at 30% 30%, #e68c3b 0%, #ba5b28 70%);
+    border-radius: 50%;
+    color: #fffaf2;
+    font-family: 'Allura', cursive;
+    font-size: 30px;
+    line-height: 44px;
+    text-align: center;
+    box-shadow:
+      0 2px 0 rgba(91, 37, 18, 0.30),
+      0 4px 10px rgba(91, 37, 18, 0.40),
+      inset -2px -2px 4px rgba(91, 37, 18, 0.30),
+      inset 2px 2px 4px rgba(255, 255, 255, 0.22);
+    z-index: 4;
+    transition: transform 280ms cubic-bezier(0.2, 0.7, 0.2, 1) 580ms;
+    pointer-events: none;
+  }
+  body.events-planner-open .events-planner--{{ section.id }} .events-planner__envelope-seal {
+    transform: translateX(-50%) scale(1);
+  }
+
+  /* ─── The invitation card ─── */
+  .events-planner--{{ section.id }} .events-planner__card {
+    background:
+      radial-gradient(120% 80% at 50% 0%, rgba(255, 255, 255, 0.6), transparent 60%),
+      #fffaf2;
+    border: 1px solid rgba(91, 37, 18, 0.22);
+    border-radius: 6px;
     padding: 0;
-    margin: 0;
+    max-height: 92vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow:
+      0 18px 50px rgba(46, 2, 18, 0.28),
+      0 0 0 1px rgba(91, 37, 18, 0.06) inset;
+    position: relative;
     overflow: hidden;
+  }
+  /* Inner decorative double-rule frame */
+  .events-planner--{{ section.id }} .events-planner__card::before {
+    content: "";
+    position: absolute;
+    inset: 8px;
+    border: 1px solid rgba(91, 37, 18, 0.14);
+    border-radius: 4px;
+    pointer-events: none;
+  }
+  .events-planner--{{ section.id }} .events-planner__close {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 36px;
+    height: 36px;
+    border: 1px solid rgba(91, 37, 18, 0.20);
+    background: rgba(255, 255, 255, 0.75);
+    border-radius: 4px;
+    color: #570522;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 5;
+    transition: background 160ms ease;
+  }
+  .events-planner--{{ section.id }} .events-planner__close:hover {
+    background: rgba(91, 37, 18, 0.06);
+  }
+
+  .events-planner--{{ section.id }} .events-planner__card-inner {
+    overflow-y: auto;
+    padding: 56px 36px 28px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Card header */
+  .events-planner--{{ section.id }} .events-planner__card-header {
+    text-align: center;
+    margin: 0 0 20px;
+  }
+  .events-planner--{{ section.id }} .events-planner__card-eyebrow {
+    font-family: 'Arsenal', sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    color: {{ section.settings.accent_color }};
+    margin: 0 0 8px;
+    font-weight: 700;
+  }
+  .events-planner--{{ section.id }} .events-planner__card-title {
+    font-family: 'Allura', 'Brush Script MT', cursive;
+    font-weight: 400;
+    font-size: clamp(34px, 6vw, 52px);
+    line-height: 1.05;
+    color: #570522;
+    margin: 0 0 12px;
+  }
+  .events-planner--{{ section.id }} .events-planner__card-quote {
+    font-size: 14px;
+    line-height: 1.5;
+    color: rgba(91, 37, 18, 0.78);
+    margin: 0 auto 8px;
+    max-width: 460px;
+  }
+  .events-planner--{{ section.id }} .events-planner__card-attribution {
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(91, 37, 18, 0.7);
+    font-weight: 600;
+    margin: 0 0 14px;
+  }
+  .events-planner--{{ section.id }} .events-planner__card-attribution em {
+    text-transform: none;
+    letter-spacing: 0;
+    font-style: italic;
+    font-weight: 500;
+  }
+  .events-planner--{{ section.id }} .events-planner__divider {
+    display: block;
+    width: 56px;
+    height: 1px;
+    margin: 0 auto;
+    background: linear-gradient(90deg, transparent, rgba(91, 37, 18, 0.45), transparent);
+  }
+  .events-planner--{{ section.id }} .events-planner__divider::after {
+    content: "";
+    display: block;
+    width: 6px;
+    height: 6px;
+    background: {{ section.settings.accent_color }};
+    border-radius: 50%;
+    margin: -3.5px auto 0;
+    box-shadow: 0 0 6px rgba(186, 91, 40, 0.5);
+  }
+
+  /* ─── Form ─── */
+  .events-planner--{{ section.id }} .events-planner__form {
+    margin: 0;
   }
   .events-planner--{{ section.id }} .events-planner__honeypot {
     position: absolute;
     left: -10000px;
-    width: 1px;
-    height: 1px;
+    width: 1px; height: 1px;
     overflow: hidden;
   }
   .events-planner--{{ section.id }} .events-planner__panel {
     border: none;
     margin: 0;
-    padding: 22px 24px;
-    border-bottom: 1px solid rgba(91, 37, 18, 0.10);
-  }
-  .events-planner--{{ section.id }} .events-planner__panel:last-of-type {
-    border-bottom: none;
+    padding: 18px 0;
   }
   .events-planner--{{ section.id }} .events-planner__panel-label {
     font-family: 'Arsenal', sans-serif;
-    font-size: 18px;
-    font-weight: 800;
-    letter-spacing: -0.005em;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
     color: #570522;
-    margin: 0 0 16px;
+    margin: 0 0 14px;
     padding: 0;
+    text-align: center;
   }
-  .events-planner--{{ section.id }} .events-planner__panel--event {
-    background: #f7ead6;
-  }
-
   .events-planner--{{ section.id }} .events-planner__row {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 14px;
-    margin: 0 0 14px;
+    gap: 12px;
+    margin: 0 0 12px;
   }
   @media (min-width: 600px) {
     .events-planner--{{ section.id }} .events-planner__row {
       grid-template-columns: 1fr 1fr;
-      gap: 18px;
+      gap: 16px;
     }
   }
   .events-planner--{{ section.id }} .events-planner__field {
@@ -520,9 +1011,17 @@
     gap: 4px;
   }
   .events-planner--{{ section.id }} .events-planner__field label {
-    font-size: 13px;
-    font-weight: 600;
-    color: rgba(91, 37, 18, 0.85);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: rgba(91, 37, 18, 0.78);
+  }
+  .events-planner--{{ section.id }} .events-planner__field label small {
+    font-weight: 500;
+    text-transform: none;
+    letter-spacing: 0;
+    opacity: 0.7;
   }
   .events-planner--{{ section.id }} .events-planner__field input[type="text"],
   .events-planner--{{ section.id }} .events-planner__field input[type="email"],
@@ -534,75 +1033,84 @@
     font-family: 'Arsenal', sans-serif;
     font-size: 15px;
     padding: 10px 12px;
-    border: 1px solid rgba(91, 37, 18, 0.22);
-    border-radius: 4px;
-    background: #ffffff;
+    border: none;
+    border-bottom: 1px solid rgba(91, 37, 18, 0.30);
+    background: transparent;
     color: #1d1d1d;
     width: 100%;
     box-sizing: border-box;
-    transition: border-color 160ms ease, box-shadow 160ms ease;
+    border-radius: 0;
+    transition: border-color 160ms ease;
+  }
+  .events-planner--{{ section.id }} .events-planner__field textarea {
+    border: 1px solid rgba(91, 37, 18, 0.20);
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.6);
+    padding: 12px 14px;
   }
   .events-planner--{{ section.id }} .events-planner__field input:focus,
   .events-planner--{{ section.id }} .events-planner__field select:focus,
   .events-planner--{{ section.id }} .events-planner__field textarea:focus {
     outline: none;
     border-color: #570522;
-    box-shadow: 0 0 0 3px rgba(87, 5, 34, 0.12);
   }
   .events-planner--{{ section.id }} .events-planner__inline-check {
     display: inline-flex;
     align-items: center;
     gap: 6px;
     margin-top: 4px;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 500;
     color: rgba(91, 37, 18, 0.78);
     cursor: pointer;
+    text-transform: none;
+    letter-spacing: 0;
   }
   .events-planner--{{ section.id }} .events-planner__hint {
-    margin: 4px 0 0;
+    margin: 6px 0 0;
     font-size: 12px;
     color: rgba(91, 37, 18, 0.65);
     font-style: italic;
+    text-align: center;
   }
 
-  /* Conditional groups */
   .events-planner--{{ section.id }} .events-planner__conditional {
-    background: #fffaf2;
+    background: rgba(247, 234, 214, 0.55);
     border: 1px solid rgba(91, 37, 18, 0.10);
-    border-radius: 6px;
-    padding: 14px 16px;
-    margin: 4px 0 0;
+    border-radius: 4px;
+    padding: 12px 14px;
+    margin: 6px 0 0;
   }
   .events-planner--{{ section.id }} .events-planner__conditional-label {
-    margin: 0 0 12px;
-    font-size: 13px;
+    margin: 0 0 10px;
+    font-size: 11px;
     font-weight: 700;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
     color: #570522;
+    text-align: center;
   }
 
-  /* Chips */
   .events-planner--{{ section.id }} .events-planner__chips {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 6px;
     margin-top: 4px;
   }
   .events-planner--{{ section.id }} .events-planner__chip {
-    border: 1.5px solid rgba(91, 37, 18, 0.25);
-    background: #ffffff;
+    border: 1px solid rgba(91, 37, 18, 0.30);
+    background: transparent;
     color: #570522;
     font-family: 'Arsenal', sans-serif;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 500;
-    padding: 7px 14px;
+    padding: 6px 12px;
     border-radius: 999px;
     cursor: pointer;
-    transition: background 140ms ease, border-color 140ms ease, color 140ms ease;
+    transition: background 140ms ease, color 140ms ease;
   }
   .events-planner--{{ section.id }} .events-planner__chip:hover {
-    border-color: #ba5b28;
+    border-color: {{ section.settings.accent_color }};
   }
   .events-planner--{{ section.id }} .events-planner__chip.is-selected {
     background: #570522;
@@ -610,24 +1118,17 @@
     border-color: #570522;
   }
 
-  /* Image upload */
   .events-planner--{{ section.id }} .events-planner__upload {
     position: relative;
-    border: 2px dashed rgba(91, 37, 18, 0.25);
-    border-radius: 6px;
-    padding: 16px;
-    background: #fffaf2;
-    transition: border-color 140ms ease, background 140ms ease;
+    border: 1px dashed rgba(91, 37, 18, 0.30);
+    border-radius: 4px;
+    padding: 14px;
+    background: rgba(255, 255, 255, 0.5);
+    transition: border-color 140ms ease;
   }
   .events-planner--{{ section.id }} .events-planner__upload.is-dragging {
     border-color: #ba5b28;
-    background: #f7ead6;
-  }
-  .events-planner--{{ section.id }} .events-planner__upload-input {
-    position: absolute;
-    inset: 0;
-    opacity: 0;
-    cursor: pointer;
+    background: rgba(247, 234, 214, 0.6);
   }
   .events-planner--{{ section.id }} input[type="file"][data-events-planner-upload-input] {
     position: absolute;
@@ -640,49 +1141,41 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 6px;
+    gap: 4px;
     color: rgba(91, 37, 18, 0.7);
-    font-size: 14px;
+    font-size: 13px;
     pointer-events: none;
-  }
-  .events-planner--{{ section.id }} .events-planner__upload-cta small {
-    font-size: 12px;
-    opacity: 0.75;
   }
   .events-planner--{{ section.id }} .events-planner__upload-list {
     list-style: none;
     margin: 12px 0 0;
     padding: 0;
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-    gap: 8px;
+    grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+    gap: 6px;
     position: relative;
     z-index: 2;
   }
   .events-planner--{{ section.id }} .events-planner__upload-thumb {
     position: relative;
     aspect-ratio: 1 / 1;
-    border-radius: 4px;
+    border-radius: 3px;
     overflow: hidden;
     background: #ddd;
   }
   .events-planner--{{ section.id }} .events-planner__upload-thumb img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
+    width: 100%; height: 100%;
+    object-fit: cover; display: block;
   }
   .events-planner--{{ section.id }} .events-planner__upload-remove {
     position: absolute;
-    top: 4px;
-    right: 4px;
-    width: 22px;
-    height: 22px;
+    top: 4px; right: 4px;
+    width: 20px; height: 20px;
     border-radius: 50%;
     background: rgba(29, 10, 4, 0.78);
     color: #fff;
     border: none;
-    font-size: 14px;
+    font-size: 12px;
     line-height: 1;
     cursor: pointer;
     display: flex;
@@ -690,29 +1183,27 @@
     justify-content: center;
   }
 
-  /* Submit */
   .events-planner--{{ section.id }} .events-planner__submit {
     display: block;
     width: 100%;
-    margin: 18px 0 0;
+    margin: 22px 0 0;
     padding: 14px 20px;
     font-family: 'Arsenal', sans-serif;
     font-weight: 700;
-    font-size: 15px;
-    letter-spacing: 0.06em;
+    font-size: 13px;
+    letter-spacing: 0.18em;
     text-transform: uppercase;
     color: #fffaf2;
     background: linear-gradient(180deg, #6c0a2e 0%, #570522 60%, #45041b 100%);
     border: 1px solid #2e0212;
-    border-radius: 6px;
+    border-radius: 4px;
+    cursor: pointer;
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.20),
       inset 0 -1px 0 rgba(0, 0, 0, 0.28),
-      0 2px 0 rgba(46, 2, 18, 0.5),
-      0 6px 14px rgba(46, 2, 18, 0.22);
+      0 2px 0 rgba(46, 2, 18, 0.5);
     text-shadow: 0 1px 0 rgba(0, 0, 0, 0.35);
-    cursor: pointer;
-    transition: filter 160ms ease, transform 80ms ease;
+    transition: filter 160ms ease;
   }
   .events-planner--{{ section.id }} .events-planner__submit:hover {
     filter: brightness(1.06);
@@ -731,43 +1222,44 @@
     border-radius: 4px;
   }
 
-  /* Success panel */
+  /* ─── Confirmation ─── */
   .events-planner--{{ section.id }} .events-planner__success {
-    background: #fffaf2;
-    border: 1px solid rgba(91, 37, 18, 0.14);
-    border-radius: 8px;
-    padding: 32px 28px;
-    text-align: left;
+    text-align: center;
+    padding: 16px 4px 4px;
   }
-  .events-planner--{{ section.id }} .events-planner__success-icon {
+  .events-planner--{{ section.id }} .events-planner__success-seal {
     width: 56px;
     height: 56px;
     border-radius: 50%;
     background: #570522;
     color: #fffaf2;
-    display: flex;
+    margin: 0 auto 14px;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    margin: 0 0 14px;
   }
   .events-planner--{{ section.id }} .events-planner__success-heading {
-    font-family: 'Arsenal', sans-serif;
-    font-weight: 800;
-    font-size: clamp(22px, 4vw, 28px);
+    font-family: 'Allura', 'Brush Script MT', cursive;
+    font-weight: 400;
+    font-size: clamp(36px, 6vw, 52px);
+    line-height: 1.05;
     color: #570522;
     margin: 0 0 8px;
   }
   .events-planner--{{ section.id }} .events-planner__success-lede {
-    margin: 0 0 22px;
+    margin: 0 auto 22px;
     font-size: 15px;
     color: rgba(91, 37, 18, 0.85);
+    max-width: 460px;
     line-height: 1.5;
   }
   .events-planner--{{ section.id }} .events-planner__success-steps {
     list-style: none;
     counter-reset: succ;
-    margin: 0 0 24px;
+    margin: 0 auto 18px;
     padding: 0;
+    text-align: left;
+    max-width: 480px;
   }
   .events-planner--{{ section.id }} .events-planner__success-steps li {
     counter-increment: succ;
@@ -775,21 +1267,21 @@
     grid-template-columns: auto 1fr;
     gap: 14px;
     align-items: baseline;
-    padding: 14px 0;
+    padding: 12px 0;
     border-top: 1px solid rgba(91, 37, 18, 0.10);
   }
   .events-planner--{{ section.id }} .events-planner__success-steps li::before {
     content: counter(succ, decimal-leading-zero);
     font-family: 'Arsenal', sans-serif;
     font-weight: 700;
-    color: #ba5b28;
+    color: {{ section.settings.accent_color }};
     font-size: 16px;
     min-width: 28px;
   }
   .events-planner--{{ section.id }} .events-planner__success-step-when {
     display: block;
     font-size: 11px;
-    letter-spacing: 0.14em;
+    letter-spacing: 0.18em;
     text-transform: uppercase;
     font-weight: 700;
     color: #570522;
@@ -802,20 +1294,55 @@
     line-height: 1.5;
   }
   .events-planner--{{ section.id }} .events-planner__success-signoff {
-    margin: 24px 0 0;
-    padding: 16px 0 0;
+    margin: 18px 0 14px;
+    padding: 14px 0 0;
     border-top: 1px solid rgba(91, 37, 18, 0.12);
     font-size: 13px;
     color: rgba(91, 37, 18, 0.85);
     line-height: 1.5;
   }
   .events-planner--{{ section.id }} .events-planner__success-signoff a {
-    color: #ba5b28;
+    color: {{ section.settings.accent_color }};
+  }
+  .events-planner--{{ section.id }} .events-planner__success-close {
+    margin-top: 6px;
+    padding: 10px 22px;
+    font-family: 'Arsenal', sans-serif;
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: #570522;
+    background: transparent;
+    border: 1px solid #570522;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 140ms ease;
+  }
+  .events-planner--{{ section.id }} .events-planner__success-close:hover {
+    background: rgba(91, 37, 18, 0.06);
   }
 
-  @media (min-width: 768px) {
-    .events-planner--{{ section.id }} {
-      padding: 56px 24px;
+  @media (max-width: 480px) {
+    .events-planner--{{ section.id }} .events-planner__card-inner {
+      padding: 48px 22px 22px;
+    }
+    .events-planner--{{ section.id }} .events-planner__envelope-flap {
+      height: 50px;
+    }
+    .events-planner--{{ section.id }} .events-planner__envelope-seal {
+      top: 22px;
+      width: 36px; height: 36px; line-height: 36px;
+      font-size: 24px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .events-planner--{{ section.id }} .events-planner__envelope,
+    .events-planner--{{ section.id }} .events-planner__envelope-flap,
+    .events-planner--{{ section.id }} .events-planner__envelope-seal,
+    .events-planner--{{ section.id }} .events-planner__modal-overlay {
+      transition: none;
     }
   }
 </style>
@@ -825,6 +1352,9 @@
   var root = document.querySelector('.events-planner--{{ section.id }}');
   if (!root) return;
 
+  var modal = root.querySelector('[data-events-planner-modal]');
+  var openBtn = root.querySelector('[data-events-planner-open]');
+  var closers = root.querySelectorAll('[data-events-planner-close]');
   var form = root.querySelector('[data-events-planner-form]');
   var eventTypeSelect = root.querySelector('[data-events-planner-event-type]');
   var panels = {
@@ -838,40 +1368,52 @@
   var submitBtn = root.querySelector('[data-events-planner-submit]');
   var errorBox = root.querySelector('[data-events-planner-error]');
 
-  // Reveal subsequent panels once event_type is chosen
+  function openModal() {
+    document.body.classList.add('events-planner-open');
+    document.documentElement.style.overflow = 'hidden';
+    modal.setAttribute('aria-hidden', 'false');
+  }
+  function closeModal() {
+    document.body.classList.remove('events-planner-open');
+    document.documentElement.style.overflow = '';
+    modal.setAttribute('aria-hidden', 'true');
+  }
+  openBtn.addEventListener('click', openModal);
+  closers.forEach(function (c) { c.addEventListener('click', closeModal); });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && document.body.classList.contains('events-planner-open')) {
+      closeModal();
+    }
+  });
+
   function onEventTypeChange() {
     var v = eventTypeSelect.value;
-    var hasValue = !!v;
-    panels.details.hidden = !hasValue;
-    panels.vision.hidden = !hasValue;
-    panels.contact.hidden = !hasValue;
+    var has = !!v;
+    panels.details.hidden = !has;
+    panels.vision.hidden = !has;
+    panels.contact.hidden = !has;
     conditionals.forEach(function (el) {
       el.hidden = el.getAttribute('data-events-planner-conditional-for') !== v;
     });
-    if (hasValue) {
-      panels.details.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
   }
   eventTypeSelect.addEventListener('change', onEventTypeChange);
 
-  // Chip multi-select groups
   root.querySelectorAll('[data-events-planner-chips]').forEach(function (group) {
     var hiddenInput = group.parentElement.querySelector('[data-events-planner-chips-input]');
     group.addEventListener('click', function (e) {
       var chip = e.target.closest('.events-planner__chip');
       if (!chip) return;
       chip.classList.toggle('is-selected');
-      var selected = Array.from(group.querySelectorAll('.is-selected'))
+      var sel = Array.from(group.querySelectorAll('.is-selected'))
         .map(function (c) { return c.getAttribute('data-chip-value'); });
-      hiddenInput.value = selected.join(',');
+      hiddenInput.value = sel.join(',');
     });
   });
 
-  // Image upload — previews + remove
   var uploadHost = root.querySelector('[data-events-planner-upload]');
   var uploadInput = root.querySelector('[data-events-planner-upload-input]');
   var uploadList = root.querySelector('[data-events-planner-upload-list]');
-  var uploadFiles = []; // { file, url } so we can rebuild input.files on remove
+  var uploadFiles = [];
 
   function rebuildInputFiles() {
     var dt = new DataTransfer();
@@ -883,9 +1425,7 @@
     uploadFiles.forEach(function (f, idx) {
       var li = document.createElement('li');
       li.className = 'events-planner__upload-thumb';
-      li.innerHTML =
-        '<img src="' + f.url + '" alt="">' +
-        '<button type="button" class="events-planner__upload-remove" aria-label="Remove" data-remove-idx="' + idx + '">×</button>';
+      li.innerHTML = '<img src="' + f.url + '" alt=""><button type="button" class="events-planner__upload-remove" aria-label="Remove" data-remove-idx="' + idx + '">×</button>';
       uploadList.appendChild(li);
     });
   }
@@ -898,14 +1438,9 @@
       uploadFiles.push({ file: file, url: URL.createObjectURL(file) });
       added++;
     });
-    if (added) {
-      rebuildInputFiles();
-      renderThumbs();
-    }
+    if (added) { rebuildInputFiles(); renderThumbs(); }
   }
-  uploadInput.addEventListener('change', function () {
-    addFiles(uploadInput.files);
-  });
+  uploadInput.addEventListener('change', function () { addFiles(uploadInput.files); });
   uploadList.addEventListener('click', function (e) {
     var btn = e.target.closest('[data-remove-idx]');
     if (!btn) return;
@@ -915,7 +1450,6 @@
     rebuildInputFiles();
     renderThumbs();
   });
-  // Drag-drop
   ['dragenter', 'dragover'].forEach(function (ev) {
     uploadHost.addEventListener(ev, function (e) {
       e.preventDefault();
@@ -929,20 +1463,14 @@
     });
   });
   uploadHost.addEventListener('drop', function (e) {
-    if (e.dataTransfer && e.dataTransfer.files) {
-      addFiles(e.dataTransfer.files);
-    }
+    if (e.dataTransfer && e.dataTransfer.files) addFiles(e.dataTransfer.files);
   });
 
-  // Form submit
   form.addEventListener('submit', function (e) {
     e.preventDefault();
     errorBox.hidden = true;
     errorBox.textContent = '';
-
     var fd = new FormData(form);
-
-    // Bundle conditional fields into one JSON payload, strip them from FormData
     var conditional = {};
     var toDelete = [];
     fd.forEach(function (val, key) {
@@ -965,15 +1493,12 @@
     fetch(endpoint, { method: 'POST', body: fd })
       .then(function (res) { return res.json().then(function (b) { return { ok: res.ok, body: b }; }); })
       .then(function (out) {
-        if (!out.ok || out.body.error) {
-          throw new Error(out.body.error || 'Submission failed');
-        }
+        if (!out.ok || out.body.error) throw new Error(out.body.error || 'Submission failed');
         var firstName = (form.querySelector('[name="contact_name"]').value || '').split(' ')[0] || 'friend';
         var nameEl = root.querySelector('[data-events-planner-success-name]');
         if (nameEl) nameEl.textContent = firstName;
         form.hidden = true;
         successPanel.hidden = false;
-        successPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
       })
       .catch(function (err) {
         errorBox.textContent = 'Something didn’t go through — please try again, or email events@brownsugarbakery.com directly. (' + (err.message || err) + ')';
@@ -992,19 +1517,41 @@
   "settings": [
     {
       "type": "header",
-      "content": "Persona (the events team voice)"
+      "content": "Trigger card (on the page)"
     },
     {
-      "type": "image_picker",
-      "id": "persona_image",
-      "label": "Photo of your events person",
-      "info": "Optional headshot. 240×240 or larger. Adds a face to the form."
+      "type": "text",
+      "id": "trigger_eyebrow",
+      "label": "Eyebrow",
+      "default": "YOU ARE INVITED"
+    },
+    {
+      "type": "text",
+      "id": "trigger_title",
+      "label": "Title (Allura script)",
+      "default": "Let us plan it together."
+    },
+    {
+      "type": "textarea",
+      "id": "trigger_sub",
+      "label": "Sub-text",
+      "default": "Tell me about your event and I will come back with options for your budget within 24 hours."
+    },
+    {
+      "type": "text",
+      "id": "trigger_btn_label",
+      "label": "Button label",
+      "default": "Open the planner"
+    },
+    {
+      "type": "header",
+      "content": "Persona (the events team voice)"
     },
     {
       "type": "text",
       "id": "persona_name",
       "label": "Name",
-      "default": "Marcia"
+      "default": "Shonda"
     },
     {
       "type": "text",
@@ -1026,7 +1573,7 @@
     },
     {
       "type": "header",
-      "content": "Intro copy"
+      "content": "Modal copy (inside the invitation)"
     },
     {
       "type": "text",
@@ -1037,14 +1584,14 @@
     {
       "type": "text",
       "id": "heading",
-      "label": "Heading",
-      "default": "Let me make this part easy."
+      "label": "Heading (Allura script)",
+      "default": "Tell me about your day."
     },
     {
       "type": "textarea",
       "id": "intro_quote",
       "label": "Intro quote",
-      "default": "I plan dessert for 200+ events a year — weddings, corporate, milestone birthdays. Tell me what you're picturing and I'll come back with options for your budget within 24 hours."
+      "default": "I plan dessert for 200+ events a year — weddings, corporate, milestone birthdays. Tell me what you are picturing and I will come back with options for your budget within 24 hours."
     },
     {
       "type": "header",
@@ -1054,24 +1601,24 @@
       "type": "text",
       "id": "success_lede",
       "label": "Lede line",
-      "default": "Your inquiry is in. Here's what happens next."
+      "default": "Your inquiry is in. Here is what happens next."
     },
     {
       "type": "textarea",
       "id": "next_step_1",
       "label": "Step 1 — within 24 hours",
-      "default": "I'll review your inquiry personally and email you back."
+      "default": "I will review your inquiry personally and email you back."
     },
     {
       "type": "textarea",
       "id": "next_step_2",
       "label": "Step 2 — within 48 hours",
-      "default": "You'll get a custom quote with cake options for your budget, photos of comparable cakes, and a hold on your date if you want it."
+      "default": "You will get a custom quote with cake options for your budget, photos of comparable cakes, and a hold on your date if you want it."
     },
     {
       "type": "textarea",
       "id": "next_step_3",
-      "label": "Step 3 — when you're ready",
+      "label": "Step 3 — when you are ready",
       "default": "We confirm with a 50% deposit. The other 50% is due a week before pickup or delivery."
     },
     {
@@ -1082,8 +1629,7 @@
       "type": "text",
       "id": "endpoint_url",
       "label": "Submission endpoint",
-      "default": "https://rdmosawrnjqbhhihnagj.supabase.co/functions/v1/submit-event-inquiry",
-      "info": "Supabase Edge Function URL. Don't change unless you know what you're doing."
+      "default": "https://rdmosawrnjqbhhihnagj.supabase.co/functions/v1/submit-event-inquiry"
     },
     {
       "type": "header",
@@ -1104,8 +1650,8 @@
     {
       "type": "color",
       "id": "accent_color",
-      "label": "Accent",
-      "default": "#ba5b28"
+      "label": "Accent (BSB Orange)",
+      "default": "#e68c3b"
     }
   ],
   "presets": [

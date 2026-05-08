@@ -779,9 +779,20 @@ body h6,
   font-family: 'Arsenal', sans-serif !important;
 }
 
-/* The Allura quote heading stays — explicitly preserve it */
-.custom-buttons-heading {
+/* Mobile: show only the first Stephanie quote — three is overkill on a phone */
+@media (max-width: 767px) {
+  .stephanie-quotes__grid > .stephanie-quote:nth-child(n+2) {
+    display: none !important;
+  }
+}
+
+/* Allura script — preserved for brand quote/script headings */
+.custom-buttons-heading,
+.events-planner__trigger-title,
+.events-planner__card-title,
+.events-planner__success-heading {
   font-family: 'Allura', 'Brush Script MT', cursive !important;
+  font-weight: 400 !important;
 }
 
 /* Bigger logo on mobile (global, not scoped to home) */

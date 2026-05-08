@@ -186,7 +186,7 @@ ul.row.product-grid > *,
   aspect-ratio: 1 / 1;
   background: #fffaf2 !important;
   box-shadow:
-    0 4px 14px rgba(91, 37, 18, 0.16),
+    0 4px 14px rgba(87, 5, 34, 0.16),
     0 1px 0 rgba(255, 255, 255, 0.55) inset !important;
   transition:
     transform 320ms cubic-bezier(0.2, 0.8, 0.2, 1),
@@ -200,7 +200,7 @@ ul.row.product-grid > *,
 .indiv-product:focus-within {
   transform: translateY(-6px);
   box-shadow:
-    0 18px 44px rgba(91, 37, 18, 0.34),
+    0 18px 44px rgba(87, 5, 34, 0.34),
     0 2px 0 rgba(255, 255, 255, 0.55) inset !important;
 }
 
@@ -351,7 +351,7 @@ ul.row.product-grid > *,
 .product-page--pricing .money,
 .product-page--pricing--variant-price,
 .product-page--pricing--variant-price .money {
-  color: #5b2512 !important;
+  color: #570522 !important;
   font-weight: 800;
   font-size: 28px;
   line-height: 1.15;

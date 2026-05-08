@@ -21,7 +21,7 @@
     {%- if has_hero_image -%}
       <div class="bdc-hero-overlay" style="
         opacity: {{ section.settings.overlay_opacity | default: 45 | divided_by: 100.0 }};
-        background-color: {% case section.settings.overlay_color %}{% when 'warm' %}#5b2512{% when 'black' %}#000000{% else %}#3b1a0a{% endcase %};
+        background-color: {% case section.settings.overlay_color %}{% when 'warm' %}#570522{% when 'black' %}#000000{% else %}#3b1a0a{% endcase %};
       "></div>
     {%- endif -%}
 
@@ -49,7 +49,7 @@
 
       <a href="#bdc-form-{{ sid }}" class="bdc-hero-cta"
         {% if has_hero_image %}
-          style="background-color: {{ section.settings.hero_button_bg_color | default: '#ffffff' }}; color: {{ section.settings.hero_button_text_color | default: '#5b2512' }}; box-shadow: 0 4px 16px rgba(0,0,0,0.25);"
+          style="background-color: {{ section.settings.hero_button_bg_color | default: '#ffffff' }}; color: {{ section.settings.hero_button_text_color | default: '#570522' }}; box-shadow: 0 4px 16px rgba(0,0,0,0.25);"
         {% endif %}
         >
         {{ section.settings.hero_button_text | default: 'Join the Club' | escape }}
@@ -458,7 +458,7 @@
   }
 
   // Confetti
-  var CONFETTI_COLORS = ['#e68b3c','#5b2512','#f4c542','#e85d75','#6bc5d2','#a8e06c','#d4a0e8','#ff6b9d','#ffd93d','#fff'];
+  var CONFETTI_COLORS = ['#e68c3b','#570522','#f4c542','#e85d75','#6bc5d2','#a8e06c','#d4a0e8','#ff6b9d','#ffd93d','#fff'];
   var PARTY_EMOJI = ['🎂','🧁','🎁','🎈','🎉','🎊','⭐','✨','🍰','💛','🎀','🥳'];
 
   function launchConfetti() {
@@ -594,7 +594,7 @@
       "type": "color",
       "id": "hero_button_text_color",
       "label": "Button text color",
-      "default": "#5b2512"
+      "default": "#570522"
     },
     {
       "type": "range",

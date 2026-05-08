@@ -11,7 +11,7 @@
 
 <style>
   .postcard-gallery {
-    --cream: #FFF8F0;
+    --cream: #fffaf2;
     --brown-dark: #4A2C2A;
     --brown-text: #2C1810;
     --caramel: #D4A574;
@@ -258,7 +258,7 @@
   }
 
   .postcard-lightbox-title {
-    color: #FFF8F0;
+    color: #fffaf2;
     font-size: 28px;
     font-weight: 700;
     margin: 0 0 20px 0;
@@ -279,7 +279,7 @@
   }
 
   .postcard-lightbox-btn:hover {
-    background: #FFF8F0;
+    background: #fffaf2;
     transform: translateY(-2px);
   }
 
@@ -289,7 +289,7 @@
     right: 0;
     background: none;
     border: none;
-    color: #FFF8F0;
+    color: #fffaf2;
     font-size: 40px;
     cursor: pointer;
     padding: 10px;
@@ -483,7 +483,7 @@
           {% assign padding_bottom = block.settings.padding_bottom | default: 0 %}
           {% assign padding_left = block.settings.padding_left | default: 0 %}
           {% assign image_fit = block.settings.image_fit | default: 'cover' %}
-          {% assign bg_color = block.settings.background_color | default: '#FFF8F0' %}
+          {% assign bg_color = block.settings.background_color | default: '#fffaf2' %}
 
           {% comment %} Get product URL {% endcomment %}
           {% assign product_url = block.settings.product_link %}
@@ -835,7 +835,7 @@
       "type": "color_background",
       "id": "background_color",
       "label": "Background",
-      "default": "linear-gradient(180deg, #FFF8F0 0%, rgba(232, 180, 184, 0.2) 100%)"
+      "default": "linear-gradient(180deg, #fffaf2 0%, rgba(232, 180, 184, 0.2) 100%)"
     },
     {
       "type": "header",
@@ -989,7 +989,7 @@
           "type": "color",
           "id": "background_color",
           "label": "Box background color",
-          "default": "#FFF8F0",
+          "default": "#fffaf2",
           "info": "Visible when using Contain mode"
         },
         {

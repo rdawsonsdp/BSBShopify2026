@@ -47,7 +47,7 @@
         "enable": false,
         "message_text": "",
         "message_link": "",
-        "notification-bar--background-color": "#5b2512",
+        "notification-bar--background-color": "#570522",
         "notification-bar--text-color": "#ffffff",
         "social-enable": false
       }
@@ -66,7 +66,7 @@
         "hours_fri": "10am-6pm",
         "hours_sat": "10am-6pm",
         "hours_sun": "12pm-5pm",
-        "background_color": "#FFF8F0",
+        "background_color": "#fffaf2",
         "text_color": "#570522"
       }
     },

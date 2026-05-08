@@ -1,0 +1,479 @@
+{% comment %}
+  BSB custom slide-out cart drawer.
+  Server-rendered line items (image | title + remove | qty + total).
+  Form-based add/remove/qty (page reloads, drawer auto-reopens via cookie).
+{% endcomment %}
+
+<aside class="bsb-cart-drawer" id="bsb-cart-drawer" aria-hidden="true" aria-label="Your cart">
+  <div class="bsb-cart-drawer__overlay" data-bsb-cart-close></div>
+  <div class="bsb-cart-drawer__panel" role="dialog" aria-modal="true">
+    <header class="bsb-cart-drawer__header">
+      <h2 class="bsb-cart-drawer__title">Your Cart</h2>
+      <button type="button" class="bsb-cart-drawer__close" aria-label="Close cart" data-bsb-cart-close>
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </header>
+
+    <div class="bsb-cart-drawer__body">
+      {% if cart.item_count > 0 %}
+        <ul class="bsb-cart-drawer__items" role="list">
+          {% for item in cart.items %}
+            <li class="bsb-cart-item" data-line="{{ forloop.index }}">
+              <a href="{{ item.url }}" class="bsb-cart-item__image" aria-label="{{ item.product.title | escape }}">
+                {% if item.image %}
+                  <img src="{{ item.image | image_url: width: 200 }}" alt="{{ item.title | escape }}" width="100" height="100" loading="lazy">
+                {% endif %}
+              </a>
+              <div class="bsb-cart-item__info">
+                <a href="{{ item.url }}" class="bsb-cart-item__title">{{ item.product.title }}</a>
+                {% unless item.variant.title contains 'Default' or item.product.has_only_default_variant %}
+                  <p class="bsb-cart-item__variant">{{ item.variant.title }}</p>
+                {% endunless %}
+                {% if item.properties.size > 0 %}
+                  {% for property in item.properties %}
+                    {% if property.last != blank %}
+                      <p class="bsb-cart-item__property"><span>{{ property.first }}:</span> {{ property.last }}</p>
+                    {% endif %}
+                  {% endfor %}
+                {% endif %}
+                <form action="{{ routes.cart_change_url }}" method="post" class="bsb-cart-item__form">
+                  <input type="hidden" name="line" value="{{ forloop.index }}">
+                  <input type="hidden" name="quantity" value="0">
+                  <button type="submit" class="bsb-cart-item__remove">Remove</button>
+                </form>
+              </div>
+              <div class="bsb-cart-item__qty-price">
+                <form action="{{ routes.cart_change_url }}" method="post" class="bsb-cart-item__qty-form">
+                  <input type="hidden" name="line" value="{{ forloop.index }}">
+                  <div class="bsb-cart-item__qty">
+                    <button type="submit" name="quantity" value="{{ item.quantity | minus: 1 }}" class="bsb-cart-item__qty-btn" aria-label="Decrease quantity">−</button>
+                    <span class="bsb-cart-item__qty-value">{{ item.quantity }}</span>
+                    <button type="submit" name="quantity" value="{{ item.quantity | plus: 1 }}" class="bsb-cart-item__qty-btn" aria-label="Increase quantity">+</button>
+                  </div>
+                </form>
+                <p class="bsb-cart-item__total">{{ item.final_line_price | money }}</p>
+              </div>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <div class="bsb-cart-drawer__empty">
+          <p>Your cart is empty.</p>
+          <a href="{{ routes.collections_url }}" class="bsb-cart-drawer__shop-link">Browse the bakery</a>
+        </div>
+      {% endif %}
+    </div>
+
+    {% if cart.item_count > 0 %}
+      <div class="bsb-cart-drawer__zapiet">
+        {% comment %} Zapiet Pickup + Delivery — auto-injects into these hook points {% endcomment %}
+        <div id="zapiet-pickup-delivery-shipping"></div>
+        <div data-zapiet-pickup-delivery="picker"></div>
+        <div data-zapiet-pickup-delivery-cart></div>
+      </div>
+      <footer class="bsb-cart-drawer__footer">
+        <div class="bsb-cart-drawer__subtotal-row">
+          <span class="bsb-cart-drawer__subtotal-label">Subtotal</span>
+          <span class="bsb-cart-drawer__subtotal-value">{{ cart.total_price | money }}</span>
+        </div>
+        <p class="bsb-cart-drawer__taxes">Taxes and shipping calculated at checkout.</p>
+        <div class="bsb-cart-drawer__actions">
+          <a href="{{ routes.cart_url }}" class="bsb-cart-drawer__view-cart">View cart</a>
+          <a href="/checkout" class="bsb-cart-drawer__checkout">Checkout</a>
+        </div>
+      </footer>
+    {% endif %}
+  </div>
+</aside>
+
+<style>
+  .bsb-cart-drawer {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    pointer-events: none;
+    visibility: hidden;
+  }
+  body.bsb-cart-drawer-open .bsb-cart-drawer {
+    pointer-events: auto;
+    visibility: visible;
+  }
+
+  .bsb-cart-drawer__overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(29, 10, 4, 0.4);
+    opacity: 0;
+    transition: opacity 280ms ease;
+  }
+  body.bsb-cart-drawer-open .bsb-cart-drawer__overlay {
+    opacity: 1;
+  }
+
+  .bsb-cart-drawer__panel {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    max-width: 420px;
+    background: #ffffff;
+    color: #570522;
+    font-family: 'Arsenal', sans-serif;
+    transform: translateX(100%);
+    transition: transform 280ms cubic-bezier(0.2, 0.8, 0.2, 1);
+    box-shadow: -12px 0 36px rgba(91, 37, 18, 0.2);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  body.bsb-cart-drawer-open .bsb-cart-drawer__panel {
+    transform: translateX(0);
+  }
+
+  .bsb-cart-drawer__header {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid rgba(91, 37, 18, 0.12);
+    background: #fffaf2;
+  }
+  .bsb-cart-drawer__title {
+    font-family: 'Arsenal', sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #570522;
+    margin: 0;
+  }
+  .bsb-cart-drawer__close {
+    background: transparent;
+    border: 1px solid rgba(91, 37, 18, 0.2);
+    border-radius: 4px;
+    width: 36px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #570522;
+    cursor: pointer;
+    transition: background 160ms ease;
+  }
+  .bsb-cart-drawer__close:hover {
+    background: rgba(91, 37, 18, 0.06);
+  }
+
+  .bsb-cart-drawer__body {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    padding: 0;
+  }
+
+  .bsb-cart-drawer__items {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .bsb-cart-item {
+    display: grid;
+    grid-template-columns: 80px 1fr auto;
+    gap: 14px;
+    padding: 16px 20px;
+    border-bottom: 1px solid rgba(91, 37, 18, 0.10);
+  }
+  .bsb-cart-item__image {
+    display: block;
+    width: 80px;
+    height: 80px;
+    border-radius: 6px;
+    overflow: hidden;
+    background: #f7ead6;
+  }
+  .bsb-cart-item__image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .bsb-cart-item__info {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .bsb-cart-item__title {
+    font-family: 'Arsenal', sans-serif;
+    font-weight: 700;
+    color: #570522;
+    text-decoration: none;
+    font-size: 15px;
+    line-height: 1.25;
+  }
+  .bsb-cart-item__title:hover {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .bsb-cart-item__variant,
+  .bsb-cart-item__property {
+    font-size: 12px;
+    color: rgba(91, 37, 18, 0.72);
+    margin: 0;
+    line-height: 1.3;
+  }
+  .bsb-cart-item__property span {
+    font-weight: 600;
+  }
+  .bsb-cart-item__form {
+    margin: 4px 0 0;
+  }
+  .bsb-cart-item__remove {
+    background: none;
+    border: none;
+    padding: 0;
+    color: rgba(91, 37, 18, 0.7);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    font-size: 12px;
+    font-family: 'Arsenal', sans-serif;
+    cursor: pointer;
+  }
+  .bsb-cart-item__remove:hover {
+    color: #570522;
+  }
+  .bsb-cart-item__qty-price {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 8px;
+    min-width: 90px;
+  }
+  .bsb-cart-item__qty-form {
+    margin: 0;
+  }
+  .bsb-cart-item__qty {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid rgba(91, 37, 18, 0.2);
+    border-radius: 4px;
+    overflow: hidden;
+    background: #ffffff;
+  }
+  .bsb-cart-item__qty-btn {
+    background: transparent;
+    border: none;
+    width: 28px;
+    height: 30px;
+    color: #570522;
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+    transition: background 120ms ease;
+  }
+  .bsb-cart-item__qty-btn:hover {
+    background: rgba(91, 37, 18, 0.06);
+  }
+  .bsb-cart-item__qty-value {
+    min-width: 28px;
+    text-align: center;
+    font-weight: 600;
+    font-size: 14px;
+    color: #570522;
+  }
+  .bsb-cart-item__total {
+    margin: 0;
+    font-weight: 700;
+    color: #570522;
+    font-size: 14px;
+  }
+
+  .bsb-cart-drawer__zapiet {
+    padding: 12px 20px;
+    border-top: 1px solid rgba(91, 37, 18, 0.10);
+    background: #ffffff;
+  }
+  .bsb-cart-drawer__zapiet:empty {
+    display: none;
+  }
+  @media (max-width: 480px) {
+    .bsb-cart-drawer__zapiet {
+      padding: 12px 16px;
+    }
+  }
+
+  .bsb-cart-drawer__empty {
+    padding: 60px 24px;
+    text-align: center;
+    color: rgba(91, 37, 18, 0.7);
+  }
+  .bsb-cart-drawer__empty p {
+    margin: 0 0 16px;
+    font-size: 16px;
+  }
+  .bsb-cart-drawer__shop-link {
+    display: inline-block;
+    color: #ba5b28;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    font-weight: 600;
+  }
+
+  .bsb-cart-drawer__footer {
+    flex: 0 0 auto;
+    padding: 16px 20px 20px;
+    background: #fffaf2;
+    border-top: 1px solid rgba(91, 37, 18, 0.12);
+  }
+  .bsb-cart-drawer__subtotal-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: 16px;
+    font-weight: 700;
+    color: #570522;
+  }
+  .bsb-cart-drawer__taxes {
+    margin: 4px 0 14px;
+    font-size: 12px;
+    color: rgba(91, 37, 18, 0.65);
+    font-style: italic;
+  }
+  .bsb-cart-drawer__actions {
+    display: grid;
+    grid-template-columns: 1fr 1.4fr;
+    gap: 10px;
+  }
+  .bsb-cart-drawer__view-cart {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 14px;
+    font-family: 'Arsenal', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #570522;
+    background: transparent;
+    border: 1.5px solid #570522;
+    border-radius: 4px;
+    text-decoration: none;
+    transition: background 160ms ease;
+  }
+  .bsb-cart-drawer__view-cart:hover {
+    background: rgba(91, 37, 18, 0.06);
+  }
+  .bsb-cart-drawer__checkout {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 14px;
+    font-family: 'Arsenal', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #fffaf2;
+    background: linear-gradient(180deg, #6c0a2e 0%, #570522 60%, #45041b 100%);
+    border: 1px solid #2e0212;
+    border-radius: 4px;
+    text-decoration: none;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.20),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.28),
+      0 2px 0 rgba(46, 2, 18, 0.5);
+    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.35);
+    transition: filter 160ms ease;
+  }
+  .bsb-cart-drawer__checkout:hover {
+    filter: brightness(1.06);
+  }
+
+  @media (max-width: 480px) {
+    .bsb-cart-drawer__panel {
+      max-width: 100vw;
+    }
+    .bsb-cart-item {
+      grid-template-columns: 70px 1fr auto;
+      padding: 14px 16px;
+    }
+    .bsb-cart-item__image {
+      width: 70px;
+      height: 70px;
+    }
+    .bsb-cart-drawer__header {
+      padding: 14px 16px;
+    }
+    .bsb-cart-drawer__footer {
+      padding: 14px 16px 18px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .bsb-cart-drawer__panel,
+    .bsb-cart-drawer__overlay {
+      transition: none;
+    }
+  }
+</style>
+
+<script>
+  (function () {
+    var BSB_CART_KEY = 'bsb-cart-drawer-open';
+
+    function openDrawer() {
+      document.body.classList.add('bsb-cart-drawer-open');
+      document.documentElement.style.overflow = 'hidden';
+    }
+    function closeDrawer() {
+      document.body.classList.remove('bsb-cart-drawer-open');
+      document.documentElement.style.overflow = '';
+      try { sessionStorage.removeItem(BSB_CART_KEY); } catch (e) {}
+    }
+
+    // Hijack any existing cart icon link / button
+    document.addEventListener('click', function (e) {
+      var trigger = e.target.closest('a[href="/cart"], a[href$="/cart"], .slide-menu-cart, [data-bsb-cart-open]');
+      if (trigger) {
+        e.preventDefault();
+        e.stopPropagation();
+        openDrawer();
+        return;
+      }
+      var closer = e.target.closest('[data-bsb-cart-close]');
+      if (closer) {
+        e.preventDefault();
+        closeDrawer();
+      }
+    });
+
+    // ESC closes drawer
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && document.body.classList.contains('bsb-cart-drawer-open')) {
+        closeDrawer();
+      }
+    });
+
+    // Reopen drawer after a qty/remove form submit (sessionStorage flag)
+    document.addEventListener('submit', function (e) {
+      if (e.target.matches('.bsb-cart-item__form, .bsb-cart-item__qty-form')) {
+        try { sessionStorage.setItem(BSB_CART_KEY, '1'); } catch (err) {}
+      }
+    });
+
+    document.addEventListener('DOMContentLoaded', function () {
+      try {
+        if (sessionStorage.getItem(BSB_CART_KEY) === '1') {
+          openDrawer();
+          sessionStorage.removeItem(BSB_CART_KEY);
+        }
+      } catch (e) {}
+    });
+  })();
+</script>

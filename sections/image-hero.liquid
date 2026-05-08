@@ -1,6 +1,6 @@
 {%- liquid
   assign image = section.settings.image
-  assign fallback_filename = section.settings.fallback_filename | default: 'bsb-stephanie-hero.jpg'
+  assign fallback_filename = section.settings.fallback_filename | default: 'bsb-storefront-stephanie.jpg'
   assign default_image_url = fallback_filename | asset_url
   assign overlay_alpha = section.settings.overlay_opacity | divided_by: 100.0
 -%}

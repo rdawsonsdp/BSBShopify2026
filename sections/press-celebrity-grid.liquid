@@ -1,0 +1,282 @@
+{% comment %}
+  LIFT: Authority + Anxiety — celebrity / press image grid. Visual social proof
+  carries more weight than text. Used on the shipping page (Steve Harvey, James
+  Beard, VP Kamala Harris) to legitimize a Chicago bakery shipping nationwide.
+{% endcomment %}
+
+<section class="press-grid press-grid--{{ section.id }}" aria-label="{{ section.settings.heading | default: 'In the press' | escape }}">
+  <div class="press-grid__inner">
+    {% if section.settings.eyebrow != blank %}
+      <p class="press-grid__eyebrow">{{ section.settings.eyebrow | escape }}</p>
+    {% endif %}
+    {% if section.settings.heading != blank %}
+      <h2 class="press-grid__heading">{{ section.settings.heading | escape }}</h2>
+    {% endif %}
+    {% if section.settings.subheading != blank %}
+      <p class="press-grid__subheading">{{ section.settings.subheading | escape }}</p>
+    {% endif %}
+
+    {% if section.blocks.size > 0 %}
+      <div class="press-grid__items">
+        {% for block in section.blocks %}
+          <article class="press-grid__card" {{ block.shopify_attributes }}>
+            <div class="press-grid__media">
+              {% if block.settings.image != blank %}
+                <img
+                  class="press-grid__image"
+                  src="{{ block.settings.image | image_url: width: 800 }}"
+                  alt="{{ block.settings.image_alt | default: block.settings.title | escape }}"
+                  loading="lazy"
+                  width="800"
+                  height="800"
+                >
+              {% else %}
+                <div class="press-grid__placeholder" aria-hidden="true">
+                  <span>{{ block.settings.title | default: '·' | slice: 0, 1 | upcase }}</span>
+                </div>
+              {% endif %}
+            </div>
+            <div class="press-grid__content">
+              {% if block.settings.title != blank %}
+                <p class="press-grid__title">{{ block.settings.title | escape }}</p>
+              {% endif %}
+              {% if block.settings.subtitle != blank %}
+                <p class="press-grid__subtitle">{{ block.settings.subtitle | escape }}</p>
+              {% endif %}
+            </div>
+          </article>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+</section>
+
+<style>
+  .press-grid--{{ section.id }} {
+    background: {{ section.settings.background_color }};
+    color: {{ section.settings.text_color }};
+    padding: 36px 16px;
+  }
+  .press-grid--{{ section.id }} .press-grid__inner {
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  .press-grid--{{ section.id }} .press-grid__eyebrow {
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    font-weight: 800;
+    color: {{ section.settings.accent_color }};
+    text-align: center;
+    margin: 0 0 8px;
+  }
+  .press-grid--{{ section.id }} .press-grid__heading {
+    font-size: clamp(22px, 5vw, 32px);
+    font-weight: 800;
+    text-align: center;
+    margin: 0 0 8px;
+    color: inherit;
+    line-height: 1.15;
+  }
+  .press-grid--{{ section.id }} .press-grid__subheading {
+    font-size: 15px;
+    text-align: center;
+    margin: 0 auto 24px;
+    max-width: 600px;
+    line-height: 1.5;
+    opacity: 0.82;
+  }
+  .press-grid--{{ section.id }} .press-grid__items {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 22px;
+    margin-top: 8px;
+  }
+  .press-grid--{{ section.id }} .press-grid__card {
+    display: block;
+    margin: 0;
+  }
+  .press-grid--{{ section.id }} .press-grid__media {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+    border-radius: 10px;
+    background: rgba(91, 37, 18, 0.06);
+    box-shadow:
+      0 4px 14px rgba(91, 37, 18, 0.16),
+      0 1px 0 rgba(255, 255, 255, 0.55) inset;
+    transition: transform 320ms cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 320ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .press-grid--{{ section.id }} .press-grid__card:hover .press-grid__media,
+  .press-grid--{{ section.id }} .press-grid__card:focus-within .press-grid__media {
+    transform: translateY(-4px);
+    box-shadow:
+      0 14px 32px rgba(91, 37, 18, 0.30),
+      0 2px 0 rgba(255, 255, 255, 0.55) inset;
+  }
+  .press-grid--{{ section.id }} .press-grid__image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center top;
+    display: block;
+    transition: transform 700ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .press-grid--{{ section.id }} .press-grid__card:hover .press-grid__image {
+    transform: scale(1.04);
+  }
+  .press-grid--{{ section.id }} .press-grid__placeholder {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background:
+      radial-gradient(120% 80% at 30% 25%, rgba(255, 255, 255, 0.18), transparent 60%),
+      linear-gradient(135deg, {{ section.settings.text_color }} 0%, {{ section.settings.accent_color }} 100%);
+    color: #fffaf2;
+    font-size: 64px;
+    font-weight: 800;
+    font-family: inherit;
+  }
+  .press-grid--{{ section.id }} .press-grid__content {
+    padding: 14px 4px 0;
+    text-align: center;
+  }
+  .press-grid--{{ section.id }} .press-grid__title {
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: inherit;
+    margin: 0 0 4px;
+    line-height: 1.25;
+  }
+  .press-grid--{{ section.id }} .press-grid__subtitle {
+    font-size: 14px;
+    color: inherit;
+    opacity: 0.78;
+    line-height: 1.4;
+    margin: 0;
+  }
+
+  @media (min-width: 600px) {
+    .press-grid--{{ section.id }} .press-grid__items {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+    }
+  }
+  @media (min-width: 768px) {
+    .press-grid--{{ section.id }} {
+      padding: 64px 24px;
+    }
+    .press-grid--{{ section.id }} .press-grid__items {
+      gap: 28px;
+    }
+    .press-grid--{{ section.id }} .press-grid__title {
+      font-size: 15px;
+    }
+    .press-grid--{{ section.id }} .press-grid__subtitle {
+      font-size: 15px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .press-grid--{{ section.id }} .press-grid__media,
+    .press-grid--{{ section.id }} .press-grid__image {
+      transition: none;
+      transform: none;
+    }
+  }
+</style>
+
+{% schema %}
+{
+  "name": "Press / Celebrity Grid",
+  "settings": [
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow",
+      "default": "AS SEEN BY"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "America saw fit to take notice."
+    },
+    {
+      "type": "textarea",
+      "id": "subheading",
+      "label": "Subheading"
+    },
+    {
+      "type": "header",
+      "content": "Colors"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background",
+      "default": "#fffaf2"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text",
+      "default": "#570522"
+    },
+    {
+      "type": "color",
+      "id": "accent_color",
+      "label": "Accent",
+      "default": "#ba5b28"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "card",
+      "name": "Press / accolade card",
+      "limit": 6,
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Photo",
+          "info": "Square crop, 800×800 or larger. Photos top-aligned so faces stay in frame."
+        },
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Title",
+          "info": "The source / accolade name (e.g., \"Steve Harvey Show\", \"James Beard Foundation\")."
+        },
+        {
+          "type": "text",
+          "id": "subtitle",
+          "label": "Subtitle",
+          "info": "Context line (e.g., \"Best Baker in America\", \"Outstanding Pastry Chef · 2019\")."
+        },
+        {
+          "type": "text",
+          "id": "image_alt",
+          "label": "Image alt text (optional)"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Press / Celebrity Grid",
+      "category": "Storytelling",
+      "blocks": [
+        { "type": "card", "settings": { "title": "Steve Harvey Show", "subtitle": "Best Baker in America" } },
+        { "type": "card", "settings": { "title": "James Beard Foundation", "subtitle": "Outstanding Pastry Chef · 2019" } },
+        { "type": "card", "settings": { "title": "VP Kamala Harris", "subtitle": "Visited Brown Sugar Bakery · 2021" } }
+      ]
+    }
+  ]
+}
+{% endschema %}

@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Allura&family=Arsenal:wght@400;700&family=Noto+Sans:wght@400;600;700&display=swap');
+
 /*
 
 Please add any custom CSS code in here, it will be easier to transfer if updating themes.
@@ -108,101 +110,214 @@ We highly recommend labelling changes, or App installs, so these can also be upd
   }
 }
 
-/* Collection page: featured single-column card layout on mobile (≤767px) */
-@media screen and (max-width: 767px) {
-  .container--collection-page #template--collection .grid__item.col-12 {
-    padding-left: 16px;
-    padding-right: 16px;
-    margin-bottom: 28px;
-  }
+/* (Removed older single-column collection card layout — replaced by the
+   magazine-tile design above which applies across viewports.) */
 
-  .container--collection-page #template--collection .grid__item.col-12 .indiv-product {
-    background: #ffffff;
-    border-radius: 14px;
-    overflow: hidden;
-    box-shadow:
-      0 2px 6px rgba(91, 37, 18, 0.10),
-      0 12px 28px rgba(91, 37, 18, 0.14);
-    transition:
-      transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1),
-      box-shadow 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+/* Even gap on the collection / featured-collection grids — overrides
+   Bootstrap-style negative margins on .row and column padding on .col so
+   tiles line up perfectly. */
+.row.product-grid,
+ul.row.product-grid,
+.row.homepage-featured-products {
+  display: grid !important;
+  grid-template-columns: repeat(2, 1fr) !important;
+  gap: 14px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  list-style: none !important;
+  width: 100% !important;
+}
+@media screen and (min-width: 768px) {
+  .row.product-grid,
+  ul.row.product-grid,
+  .row.homepage-featured-products {
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 22px !important;
   }
-
-  .container--collection-page #template--collection .grid__item.col-12 .indiv-product:active {
-    transform: translateY(-2px);
-    box-shadow:
-      0 4px 10px rgba(91, 37, 18, 0.14),
-      0 16px 32px rgba(91, 37, 18, 0.20);
+}
+@media screen and (min-width: 768px) {
+  .row.homepage-featured-products:has(> .four_columns) {
+    grid-template-columns: repeat(4, 1fr) !important;
   }
-
-  .container--collection-page #template--collection .grid__item.col-12 .indiv-product__image-wrapper {
-    width: 100%;
+  .row.homepage-featured-products:has(> .two_columns) {
+    grid-template-columns: repeat(2, 1fr) !important;
   }
+}
+.row.product-grid > *,
+ul.row.product-grid > *,
+.row.homepage-featured-products > * {
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 0 !important;
+  flex: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  list-style: none !important;
+}
 
-  .container--collection-page #template--collection .grid__item.col-12 .indiv-product .grid__image,
-  .container--collection-page #template--collection .grid__item.col-12 .indiv-product .grid__image img,
-  .container--collection-page #template--collection .grid__item.col-12 .indiv-product .aspect-ratio {
-    width: 100%;
-    display: block;
-  }
-
-  .container--collection-page #template--collection .grid__item.col-12 .indiv-product .hp-title {
-    padding: 18px 18px 8px;
-  }
-
-  .container--collection-page #template--collection .grid__item.col-12 .indiv-product .indiv-product-title-text {
-    font-size: 20px;
-    line-height: 1.25;
-    font-weight: 700;
-    -webkit-line-clamp: 3;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-
-  .container--collection-page #template--collection .grid__item.col-12 .indiv-product-vendor-text {
-    font-size: 12px;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    opacity: 0.7;
-    margin-bottom: 4px;
-  }
-
-  .container--collection-page #template--collection .grid__item.col-12 .indiv-product .money-styling {
-    font-size: 18px;
-    font-weight: 600;
-    line-height: 1.3;
-  }
-
-  .container--collection-page #template--collection .grid__item.col-12 .indiv-product .quick-add-wrapper {
-    padding: 0 18px 18px;
-    margin-top: 10px;
-  }
-
-  .container--collection-page #template--collection .grid__item.col-12 .indiv-product .quick-add-button,
-  .container--collection-page #template--collection .grid__item.col-12 .indiv-product .quick-add-button-variants,
-  .container--collection-page #template--collection .grid__item.col-12 .indiv-product .sold-out-button {
-    font-size: 15px;
-    padding: 14px 18px;
-    min-height: 52px;
-    white-space: normal;
-    border-radius: 8px;
-  }
-
-  .container--collection-page #template--collection .grid__item.col-12 .fresh-badge {
-    font-size: 12px;
-    padding: 6px 12px;
-    border-radius: 999px;
+/* Page padding around the whole grid */
+.collection-template #AjaxinateContainer,
+.container--collection-page #AjaxinateContainer,
+#template--collection #AjaxinateContainer {
+  padding: 0 14px !important;
+}
+@media screen and (min-width: 768px) {
+  .collection-template #AjaxinateContainer,
+  .container--collection-page #AjaxinateContainer,
+  #template--collection #AjaxinateContainer {
+    padding: 0 24px !important;
   }
 }
 
-/* Hide pricing on product cards site-wide — emotional engagement only.
-   Price still shows on the product detail page (different markup).
-   Sale badge and sold-out badge still appear (separate markup). */
+/* Pricing now shown on product cards — user-requested.
+   Range "$min – $max" rendered when product.price_varies (see product-grid--indiv-product.liquid). */
+
+/* ============================================
+   Collection page product cards — magazine tile.
+   Image fills card, dark gradient at bottom,
+   bold white title with caramel accent line,
+   price + range in white below. Matches the
+   home page button + cake tile design.
+   ============================================ */
+.indiv-product {
+  position: relative !important;
+  border-radius: 10px !important;
+  overflow: hidden !important;
+  aspect-ratio: 1 / 1;
+  background: #fffaf2 !important;
+  box-shadow:
+    0 4px 14px rgba(91, 37, 18, 0.16),
+    0 1px 0 rgba(255, 255, 255, 0.55) inset !important;
+  transition:
+    transform 320ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    box-shadow 320ms cubic-bezier(0.2, 0.8, 0.2, 1) !important;
+  margin-bottom: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+}
+
+.indiv-product:hover,
+.indiv-product:focus-within {
+  transform: translateY(-6px);
+  box-shadow:
+    0 18px 44px rgba(91, 37, 18, 0.34),
+    0 2px 0 rgba(255, 255, 255, 0.55) inset !important;
+}
+
+.indiv-product .indiv-product__image-wrapper {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.indiv-product .grid__image,
+.indiv-product .grid__image .aspect-ratio,
+.indiv-product .collection-image--zoom-effect,
+.indiv-product .zoom-effect--inner {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  display: block !important;
+}
+
+.indiv-product img,
+.indiv-product picture {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  display: block !important;
+}
+
+.indiv-product .indiv-product__image-wrapper::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0) 45%,
+    rgba(0, 0, 0, 0.30) 65%,
+    rgba(29, 10, 4, 0.78) 100%
+  );
+  pointer-events: none;
+  z-index: 2;
+}
+
+.indiv-product .d-flex,
+.indiv-product .hp-title {
+  position: absolute !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  padding: 14px 16px 16px !important;
+  z-index: 3 !important;
+  background: transparent !important;
+  text-align: left !important;
+  display: block !important;
+}
+
+.indiv-product .indiv-product__link,
+.indiv-product .indiv-product__link:hover {
+  text-decoration: none !important;
+  color: inherit !important;
+}
+
+.indiv-product .indiv-product-title-text {
+  display: block !important;
+  font-size: clamp(16px, 3.6vw, 22px) !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.015em;
+  line-height: 1.1 !important;
+  color: #fffaf2 !important;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.55);
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.indiv-product .indiv-product-title-text::after {
+  content: "";
+  display: block;
+  width: 28px;
+  height: 2px;
+  background: #e68c3b;
+  margin-top: 8px;
+  border-radius: 2px;
+  box-shadow: 0 0 10px rgba(230, 140, 59, 0.5);
+}
+
+.indiv-product .money-styling {
+  display: block !important;
+  margin-top: 8px !important;
+  font-size: 13px !important;
+  line-height: 1.3 !important;
+}
+
 .indiv-product .money-styling,
-.indiv-product .compare-at-price,
-.indiv-product .current-price {
-  display: none !important;
+.indiv-product .money-styling .money,
+.indiv-product .current-price,
+.indiv-product .current-price .money,
+.indiv-product .money-range-sep {
+  color: #fffaf2 !important;
+  font-weight: 600 !important;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.55) !important;
+}
+
+.indiv-product .compare-at-price {
+  opacity: 0.7;
+  text-decoration: line-through;
+  margin-left: 6px;
+}
+
+.indiv-product .fresh-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 4;
 }
 
 /* Hide vendor name on product cards site-wide — always Brown Sugar Bakery, redundant clutter. */
@@ -381,5 +496,300 @@ We highly recommend labelling changes, or App installs, so these can also be upd
   }
   #shopify-section-image-with-text-block {
     padding: 8px 0;
+  }
+}
+/* ============================================
+   Home page — store strip at top, header
+   overlays the hero with logo CENTERED.
+   Maroon accent line at the very top.
+   Cream scrim at top of hero for legibility.
+   ============================================ */
+
+/* Hide announcement bar + topical announcement (keep store strip) */
+body.template-index [id$="__topical_announcement"],
+body.template-index [id$="__announcement-bar"] {
+  display: none !important;
+}
+
+/* Hide menu, search, sticky duplicate */
+body.template-index .header-menu-wrapper,
+body.template-index .sticky-desktop-menu,
+body.template-index .main-navigation-wrapper,
+body.template-index .header-row + .header-row,
+body.template-index .sticky-header-wrapper {
+  display: none !important;
+}
+
+body.template-index .slide-menu-mobile,
+body.template-index .mobile-menu-wrapper {
+  display: none !important;
+}
+
+body.template-index .header-search,
+body.template-index .header-search-bar,
+body.template-index .header-icons-container [class*="search"],
+body.template-index .mobile-header-wrap--icons [class*="search"] {
+  display: none !important;
+}
+
+/* Header padding stays compact */
+body.template-index .header-wrapper .header-row {
+  padding-top: 14px;
+  padding-bottom: 14px;
+}
+
+/* Home hero — half height on desktop only */
+@media screen and (min-width: 768px) {
+  body.template-index .bsb-image-hero .bsb-image-hero__media {
+    aspect-ratio: 32 / 9 !important;
+    max-height: 38vh !important;
+  }
+}
+
+/* Maroon accent line pinned to viewport top */
+body.template-index::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: #570522;
+  z-index: 100;
+  pointer-events: none;
+}
+
+/* Make #main-body the positioning context for the absolute header */
+body.template-index #main-body {
+  position: relative;
+}
+
+/* Store strip stays in flow at the top of the page */
+body.template-index [id$="__store_status_strip"] {
+  position: relative;
+  z-index: 60;
+}
+
+/* Header floats over the hero/video — logo + cart icons, just below the store strip */
+body.template-index [id$="__header"] {
+  position: absolute;
+  top: 36px;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  background: transparent !important;
+}
+
+body.template-index #theme-section-header,
+body.template-index .header-wrapper,
+body.template-index .header-row,
+body.template-index .header-content,
+body.template-index .header-logo-wrapper {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+/* Hero comes right under the strip; header overlays its top portion */
+body.template-index #main {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+body.template-index .index-sections {
+  position: relative;
+}
+
+body.template-index .index-sections > .shopify-section:first-child::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 140px;
+  background: linear-gradient(180deg, rgba(255, 250, 242, 0.55) 0%, rgba(255, 250, 242, 0) 100%);
+  pointer-events: none;
+  z-index: 5;
+}
+
+body.template-index .header-logo-container .site-header__logo-image img,
+body.template-index .mobile-logo-column .site-header__logo-image img {
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.18));
+}
+
+/* On mobile, hide the desktop video hero — image-hero (mobile_only) takes its place */
+@media screen and (max-width: 767px) {
+  body.template-index [id$="__video_video_with_text_overlay_XLJRPp"] {
+    display: none !important;
+  }
+}
+
+/* Cart drawer — uses the theme's default styling (matches production).
+   Only override: responsive width on mobile and clamp app widgets. */
+.cart-drawer-right,
+.fresh-shopping-right.cart-drawer-right {
+  width: 420px;
+  max-width: 100vw;
+  overflow-x: hidden !important;
+  box-sizing: border-box;
+}
+.cart-drawer-right *,
+.fresh-shopping-right.cart-drawer-right * {
+  box-sizing: border-box !important;
+  max-width: 100% !important;
+}
+.cart-drawer-form,
+.cart-drawer-form > * {
+  width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+@media (max-width: 480px) {
+  .cart-drawer-right,
+  .fresh-shopping-right.cart-drawer-right {
+    width: 100vw !important;
+    max-width: 100vw !important;
+  }
+}
+
+/* Cart page — small logo, upper-left */
+body.template-cart .header-content {
+  justify-content: space-between;
+  align-items: center;
+}
+body.template-cart .header-logo-container.header-content--logo {
+  text-align: left !important;
+  justify-content: flex-start !important;
+  margin: 0 !important;
+  flex: 0 0 auto;
+}
+body.template-cart .site-header__logo,
+body.template-cart .site-header__logo-image,
+body.template-cart .site-header__logo-image img {
+  text-align: left !important;
+  margin-left: 0 !important;
+  margin-right: auto !important;
+}
+body.template-cart .site-header__logo-image img {
+  max-width: 150px !important;
+  width: 150px !important;
+  height: auto !important;
+}
+body.template-cart .mobile-header--wrapper {
+  justify-content: space-between !important;
+}
+body.template-cart .mobile-logo-column {
+  text-align: left !important;
+  justify-content: flex-start !important;
+  flex: 1 1 auto;
+}
+body.template-cart .mobile-logo-column .site-header__logo-image,
+body.template-cart .mobile-logo-column .site-header__logo-image img {
+  margin-left: 0 !important;
+  text-align: left !important;
+  max-width: 120px !important;
+  width: 120px !important;
+}
+
+/* ============================================
+   Product detail page (PDP) — image spans full
+   width above the buy column. Stack layout.
+   ============================================ */
+.container--product-page .product-medias.col-md-6,
+.container--product-page .col-sm-12.col-md-6:not(.product-medias) {
+  flex: 0 0 100% !important;
+  max-width: 100% !important;
+  width: 100% !important;
+}
+.container--product-page .col-sm-12.col-md-6:not(.product-medias) {
+  margin-top: 28px;
+}
+.container--product-page .product-single__media,
+.container--product-page .product-single__photo {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+.container--product-page .product-single__media__image {
+  width: 100% !important;
+  height: auto !important;
+  display: block;
+}
+
+/* ============================================
+   Brand typography — Arsenal everywhere.
+   Body / descriptions: Arsenal Regular (400).
+   Headings + product names: Arsenal Bold (700).
+   The "Brown Sugar" script (Allura) is reserved
+   for the .custom-buttons-heading quote only.
+   ============================================ */
+body,
+body p,
+body li,
+body td,
+body span,
+body div,
+body label,
+body input,
+body select,
+body textarea,
+body button,
+body a {
+  font-family: 'Arsenal', sans-serif;
+}
+
+body h1,
+body h2,
+body h3,
+body h4,
+body h5,
+body h6,
+.indiv-product .indiv-product-title-text,
+.hero-product-showcase__product-title,
+.hero-product-showcase__heading,
+.custom-button__label,
+.product-description-header,
+.bsb-grid__heading,
+.events-trust__heading,
+.press-grid__heading,
+.press-grid__title,
+.ship-rhythm__heading,
+.shipping-calendar__heading,
+.shipping-info-tiles__heading,
+.events-closing-cta__heading,
+.heritage-story__heading,
+.faq-accordion__heading,
+.bsb-image-hero__heading,
+.page-banner-strip__heading {
+  font-family: 'Arsenal', sans-serif !important;
+  font-weight: 700 !important;
+}
+
+/* Eyebrows / small caps lines — Arsenal Regular tracked-out */
+.bsb-grid__eyebrow,
+.events-trust__eyebrow,
+.press-grid__eyebrow,
+.ship-rhythm__eyebrow,
+.shipping-calendar__eyebrow,
+.shipping-info-tiles__eyebrow,
+.heritage-story__eyebrow,
+.bsb-image-hero__eyebrow,
+.page-banner-strip__eyebrow,
+.custom-buttons-eyebrow,
+.custom-buttons-attribution {
+  font-family: 'Arsenal', sans-serif !important;
+}
+
+/* The Allura quote heading stays — explicitly preserve it */
+.custom-buttons-heading {
+  font-family: 'Allura', 'Brush Script MT', cursive !important;
+}
+
+/* Bigger logo on mobile (global, not scoped to home) */
+@media (max-width: 767px) {
+  .mobile-logo-column .site-header__logo-image,
+  .mobile-logo-column .site-header__logo-image img {
+    max-width: 240px !important;
+    width: 240px !important;
+    height: auto !important;
   }
 }

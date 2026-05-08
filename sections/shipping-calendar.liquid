@@ -64,6 +64,16 @@
           </span>
           <span class="visually-hidden">Wednesday: both a ship day (arriving Friday) and the arrival day for Monday shipments.</span>
         </button>
+        <span class="shipping-calendar__confetti" aria-hidden="true">
+          <span class="shipping-calendar__confetti-piece"></span>
+          <span class="shipping-calendar__confetti-piece"></span>
+          <span class="shipping-calendar__confetti-piece"></span>
+          <span class="shipping-calendar__confetti-piece"></span>
+          <span class="shipping-calendar__confetti-piece"></span>
+          <span class="shipping-calendar__confetti-piece"></span>
+          <span class="shipping-calendar__confetti-piece"></span>
+          <span class="shipping-calendar__confetti-piece"></span>
+        </span>
       </li>
 
       <li class="shipping-calendar__day shipping-calendar__day--arrival" data-day="thu" data-role="arrival" data-pair="tue">
@@ -74,6 +84,16 @@
           </span>
           <span class="visually-hidden">Thursday: arrival day. Cakes shipped Tuesday arrive today.</span>
         </button>
+        <span class="shipping-calendar__confetti" aria-hidden="true">
+          <span class="shipping-calendar__confetti-piece"></span>
+          <span class="shipping-calendar__confetti-piece"></span>
+          <span class="shipping-calendar__confetti-piece"></span>
+          <span class="shipping-calendar__confetti-piece"></span>
+          <span class="shipping-calendar__confetti-piece"></span>
+          <span class="shipping-calendar__confetti-piece"></span>
+          <span class="shipping-calendar__confetti-piece"></span>
+          <span class="shipping-calendar__confetti-piece"></span>
+        </span>
       </li>
 
       <li class="shipping-calendar__day shipping-calendar__day--arrival" data-day="fri" data-role="arrival" data-pair="wed">
@@ -84,6 +104,16 @@
           </span>
           <span class="visually-hidden">Friday: arrival day. Cakes shipped Wednesday arrive today.</span>
         </button>
+        <span class="shipping-calendar__confetti" aria-hidden="true">
+          <span class="shipping-calendar__confetti-piece"></span>
+          <span class="shipping-calendar__confetti-piece"></span>
+          <span class="shipping-calendar__confetti-piece"></span>
+          <span class="shipping-calendar__confetti-piece"></span>
+          <span class="shipping-calendar__confetti-piece"></span>
+          <span class="shipping-calendar__confetti-piece"></span>
+          <span class="shipping-calendar__confetti-piece"></span>
+          <span class="shipping-calendar__confetti-piece"></span>
+        </span>
       </li>
 
       <li class="shipping-calendar__day shipping-calendar__day--closed" data-day="sat" data-role="closed">
@@ -186,6 +216,7 @@
   .shipping-calendar--{{ section.id }} .shipping-calendar__day {
     margin: 0;
     padding: 0;
+    position: relative;
   }
   .shipping-calendar--{{ section.id }} .shipping-calendar__tile {
     width: 100%;
@@ -267,12 +298,53 @@
   }
 
   /* Active + connected pulse states */
-  .shipping-calendar--{{ section.id }} .shipping-calendar__tile[aria-pressed="true"] {
+
+  /* Selected ship-day: tile fills with maroon, dow text + ship pill flip to cream */
+  .shipping-calendar--{{ section.id }} .shipping-calendar__day--ship .shipping-calendar__tile[aria-pressed="true"],
+  .shipping-calendar--{{ section.id }} .shipping-calendar__day--both .shipping-calendar__tile[aria-pressed="true"] {
+    background: {{ section.settings.ship_color }};
     border-color: {{ section.settings.ship_color }};
-    background: #fffaf2;
-    box-shadow: 0 4px 14px rgba(91, 37, 18, 0.22);
-    transform: translateY(-1px);
+    color: #fffaf2;
+    box-shadow: 0 6px 20px rgba(91, 37, 18, 0.32);
+    transform: translateY(-2px);
   }
+  .shipping-calendar--{{ section.id }} .shipping-calendar__day--ship .shipping-calendar__tile[aria-pressed="true"] .shipping-calendar__dow,
+  .shipping-calendar--{{ section.id }} .shipping-calendar__day--both .shipping-calendar__tile[aria-pressed="true"] .shipping-calendar__dow {
+    opacity: 1;
+    color: #fffaf2;
+  }
+  .shipping-calendar--{{ section.id }} .shipping-calendar__day--ship .shipping-calendar__tile[aria-pressed="true"] .shipping-calendar__pill--ship,
+  .shipping-calendar--{{ section.id }} .shipping-calendar__day--both .shipping-calendar__tile[aria-pressed="true"] .shipping-calendar__pill--ship {
+    background: #fffaf2;
+    color: {{ section.settings.ship_color }};
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.6),
+      inset 0 -1px 0 rgba(91, 37, 18, 0.18);
+  }
+  .shipping-calendar--{{ section.id }} .shipping-calendar__day--both .shipping-calendar__tile[aria-pressed="true"] .shipping-calendar__pill--arrival {
+    background: #e68c3b;
+  }
+
+  /* Selected arrival-day: tile fills with caramel, arrival pill inverts */
+  .shipping-calendar--{{ section.id }} .shipping-calendar__day--arrival .shipping-calendar__tile[aria-pressed="true"] {
+    background: {{ section.settings.arrival_color }};
+    border-color: {{ section.settings.arrival_color }};
+    color: #fffaf2;
+    box-shadow: 0 6px 20px rgba(186, 91, 40, 0.32);
+    transform: translateY(-2px);
+  }
+  .shipping-calendar--{{ section.id }} .shipping-calendar__day--arrival .shipping-calendar__tile[aria-pressed="true"] .shipping-calendar__dow {
+    opacity: 1;
+    color: #fffaf2;
+  }
+  .shipping-calendar--{{ section.id }} .shipping-calendar__day--arrival .shipping-calendar__tile[aria-pressed="true"] .shipping-calendar__pill--arrival {
+    background: #fffaf2;
+    color: {{ section.settings.arrival_color }};
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.6),
+      inset 0 -1px 0 rgba(91, 37, 18, 0.16);
+  }
+
   .shipping-calendar--{{ section.id }} .shipping-calendar__day.is-connected .shipping-calendar__tile {
     border-color: {{ section.settings.arrival_color }};
     background: #fffaf2;
@@ -288,6 +360,98 @@
     35%  { transform: scale(1.06); }
     70%  { transform: scale(0.99); }
     100% { transform: scale(1); }
+  }
+
+  /* Confetti burst — fires on arrival tile when a ship day is selected */
+  .shipping-calendar--{{ section.id }} .shipping-calendar__confetti {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    overflow: visible;
+    z-index: 2;
+  }
+  .shipping-calendar--{{ section.id }} .shipping-calendar__confetti-piece {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 6px;
+    height: 8px;
+    border-radius: 1px;
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+  }
+  .shipping-calendar--{{ section.id }} .shipping-calendar__day.is-celebrating .shipping-calendar__confetti-piece {
+    animation-duration: 850ms;
+    animation-timing-function: cubic-bezier(0.18, 0.74, 0.4, 1);
+    animation-fill-mode: forwards;
+  }
+  .shipping-calendar--{{ section.id }} .shipping-calendar__day.is-celebrating .shipping-calendar__confetti-piece:nth-child(1) {
+    background: #570522;
+    animation-name: confetti-1-{{ section.id }};
+  }
+  .shipping-calendar--{{ section.id }} .shipping-calendar__day.is-celebrating .shipping-calendar__confetti-piece:nth-child(2) {
+    background: #ba5b28;
+    animation-name: confetti-2-{{ section.id }};
+  }
+  .shipping-calendar--{{ section.id }} .shipping-calendar__day.is-celebrating .shipping-calendar__confetti-piece:nth-child(3) {
+    background: #e68c3b;
+    animation-name: confetti-3-{{ section.id }};
+  }
+  .shipping-calendar--{{ section.id }} .shipping-calendar__day.is-celebrating .shipping-calendar__confetti-piece:nth-child(4) {
+    background: #facac1;
+    animation-name: confetti-4-{{ section.id }};
+  }
+  .shipping-calendar--{{ section.id }} .shipping-calendar__day.is-celebrating .shipping-calendar__confetti-piece:nth-child(5) {
+    background: #570522;
+    animation-name: confetti-5-{{ section.id }};
+  }
+  .shipping-calendar--{{ section.id }} .shipping-calendar__day.is-celebrating .shipping-calendar__confetti-piece:nth-child(6) {
+    background: #ba5b28;
+    animation-name: confetti-6-{{ section.id }};
+  }
+  .shipping-calendar--{{ section.id }} .shipping-calendar__day.is-celebrating .shipping-calendar__confetti-piece:nth-child(7) {
+    background: #e68c3b;
+    animation-name: confetti-7-{{ section.id }};
+  }
+  .shipping-calendar--{{ section.id }} .shipping-calendar__day.is-celebrating .shipping-calendar__confetti-piece:nth-child(8) {
+    background: #facac1;
+    animation-name: confetti-8-{{ section.id }};
+  }
+  @keyframes confetti-1-{{ section.id }} {
+    0%   { opacity: 1; transform: translate(-50%, -50%) rotate(0deg); }
+    100% { opacity: 0; transform: translate(calc(-50% - 58px), calc(-50% - 46px)) rotate(280deg); }
+  }
+  @keyframes confetti-2-{{ section.id }} {
+    0%   { opacity: 1; transform: translate(-50%, -50%) rotate(0deg); }
+    100% { opacity: 0; transform: translate(calc(-50% - 6px), calc(-50% - 64px)) rotate(-200deg); }
+  }
+  @keyframes confetti-3-{{ section.id }} {
+    0%   { opacity: 1; transform: translate(-50%, -50%) rotate(0deg); }
+    100% { opacity: 0; transform: translate(calc(-50% + 50px), calc(-50% - 52px)) rotate(240deg); }
+  }
+  @keyframes confetti-4-{{ section.id }} {
+    0%   { opacity: 1; transform: translate(-50%, -50%) rotate(0deg); }
+    100% { opacity: 0; transform: translate(calc(-50% + 68px), calc(-50% + 4px)) rotate(-300deg); }
+  }
+  @keyframes confetti-5-{{ section.id }} {
+    0%   { opacity: 1; transform: translate(-50%, -50%) rotate(0deg); }
+    100% { opacity: 0; transform: translate(calc(-50% + 46px), calc(-50% + 38px)) rotate(220deg); }
+  }
+  @keyframes confetti-6-{{ section.id }} {
+    0%   { opacity: 1; transform: translate(-50%, -50%) rotate(0deg); }
+    100% { opacity: 0; transform: translate(calc(-50% + 4px), calc(-50% + 60px)) rotate(-180deg); }
+  }
+  @keyframes confetti-7-{{ section.id }} {
+    0%   { opacity: 1; transform: translate(-50%, -50%) rotate(0deg); }
+    100% { opacity: 0; transform: translate(calc(-50% - 44px), calc(-50% + 50px)) rotate(320deg); }
+  }
+  @keyframes confetti-8-{{ section.id }} {
+    0%   { opacity: 1; transform: translate(-50%, -50%) rotate(0deg); }
+    100% { opacity: 0; transform: translate(calc(-50% - 64px), calc(-50% + 6px)) rotate(-240deg); }
   }
 
   /* Live region */
@@ -395,7 +559,8 @@
 
   @media (prefers-reduced-motion: reduce) {
     .shipping-calendar--{{ section.id }} .shipping-calendar__tile,
-    .shipping-calendar--{{ section.id }} .shipping-calendar__day.is-pulsing .shipping-calendar__tile {
+    .shipping-calendar--{{ section.id }} .shipping-calendar__day.is-pulsing .shipping-calendar__tile,
+    .shipping-calendar--{{ section.id }} .shipping-calendar__day.is-celebrating .shipping-calendar__confetti-piece {
       transition: none;
       animation: none;
     }
@@ -438,7 +603,7 @@
 
     function clearAll() {
       for (var i = 0; i < tiles.length; i++) {
-        tiles[i].classList.remove('is-connected', 'is-pulsing');
+        tiles[i].classList.remove('is-connected', 'is-pulsing', 'is-celebrating');
         var btn = tiles[i].querySelector('.shipping-calendar__tile');
         if (btn) btn.setAttribute('aria-pressed', 'false');
       }
@@ -453,6 +618,19 @@
       setTimeout(function () {
         el.classList.remove('is-pulsing');
       }, 650);
+    }
+
+    function celebrate(el) {
+      // Pulse + confetti burst — used when a ship day is selected and the
+      // arrival tile lights up. "Your cake arrives this day."
+      pulse(el);
+      if (!el || prefersReducedMotion) return;
+      el.classList.remove('is-celebrating');
+      void el.offsetWidth;
+      el.classList.add('is-celebrating');
+      setTimeout(function () {
+        el.classList.remove('is-celebrating');
+      }, 900);
     }
 
     function announce(msg) {
@@ -470,7 +648,7 @@
       var btn = shipEl.querySelector('.shipping-calendar__tile');
       if (btn) btn.setAttribute('aria-pressed', 'true');
       arrivalEl.classList.add('is-connected');
-      pulse(arrivalEl);
+      celebrate(arrivalEl);
 
       var cutoff = cutoffByShip[shipCode];
       var msg;

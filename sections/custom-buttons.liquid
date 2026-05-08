@@ -1,379 +1,454 @@
 {% comment %}
-  Custom Responsive Buttons Section
-  Intent-based buttons that direct shoppers to the collection matching their reason for visiting.
+  LIFT: Relevance + Value — image-first nav tiles. Cream-banded section creates
+  separation from the hero above; editorial eyebrow + heading set hierarchy;
+  big confident labels carry the brand. Featured tile gets a caramel underline.
 {% endcomment %}
 
-{% assign btn_class = 'btn' %}
-{% if settings.button_style %}
-  {% assign btn_class = btn_class | append: ' btn--' | append: settings.button_style %}
-{% endif %}
-
 <style>
+  .custom-buttons-section {
+    background: #f7ead6;
+    padding: 32px 0 16px;
+    margin: 0;
+  }
+
+  .custom-buttons-header {
+    max-width: 1200px;
+    margin: 0 auto 16px;
+    padding: 0 16px;
+    text-align: center;
+  }
+
+  .custom-buttons-eyebrow {
+    display: block;
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    font-weight: 800;
+    color: #ba5b28;
+    margin: 0 0 12px;
+  }
+
+  .custom-buttons-heading {
+    font-family: 'Allura', 'Brush Script MT', cursive;
+    font-size: clamp(40px, 9vw, 68px);
+    font-weight: 400;
+    line-height: 1.05;
+    letter-spacing: 0;
+    color: #570522;
+    margin: 0;
+    quotes: '\201C' '\201D';
+  }
+  .custom-buttons-heading::before {
+    content: open-quote;
+    margin-right: 2px;
+  }
+  .custom-buttons-heading::after {
+    content: close-quote;
+    margin-left: 2px;
+  }
+  .custom-buttons-attribution {
+    display: block;
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: #570522;
+    opacity: 0.7;
+    margin: 10px 0 0;
+  }
+
   .custom-buttons-container {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
-    margin: 24px auto;
+    gap: 14px;
+    margin: 0 auto;
     max-width: 1200px;
-    padding: 0 20px;
+    padding: 0 16px;
   }
 
   .custom-button-wrapper {
-    display: flex;
-    min-width: 0;
+    position: relative;
+    display: block;
+    border-radius: 10px;
+    overflow: hidden;
+    aspect-ratio: 1 / 1;
+    background: #fffaf2;
+    box-shadow:
+      0 4px 14px rgba(91, 37, 18, 0.16),
+      0 1px 0 rgba(255, 255, 255, 0.55) inset;
+    transform: translateY(0);
+    transition:
+      transform 320ms cubic-bezier(0.2, 0.8, 0.2, 1),
+      box-shadow 320ms cubic-bezier(0.2, 0.8, 0.2, 1);
   }
 
-  .custom-button-wrapper.is-full-row {
-    grid-column: 1 / -1;
+  .custom-button-wrapper:hover,
+  .custom-button-wrapper:focus-within {
+    transform: translateY(-6px);
+    box-shadow:
+      0 18px 44px rgba(91, 37, 18, 0.34),
+      0 2px 0 rgba(255, 255, 255, 0.55) inset;
   }
 
   .custom-button {
-    width: 100%;
-    min-width: 0;
-    height: 56px;
-    min-height: 56px;
-    text-align: center;
-    padding: 14px 8px;
-    font-weight: 700;
-    font-size: 13px;
-    line-height: 1.2;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    white-space: nowrap;
-    overflow: hidden;
+    display: block;
     position: relative;
-    overflow: hidden;
-    border-radius: 8px;
-    box-shadow:
-      0 2px 4px rgba(91, 37, 18, 0.12),
-      0 6px 14px rgba(91, 37, 18, 0.18),
-      inset 0 1px 0 rgba(255, 255, 255, 0.18);
-    transform: translateY(0);
-    transition:
-      transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1),
-      box-shadow 220ms cubic-bezier(0.2, 0.8, 0.2, 1),
-      filter 220ms ease;
-    will-change: transform, box-shadow;
+    width: 100%;
+    height: 100%;
+    text-decoration: none;
+    color: #fffaf2;
   }
 
-  .custom-button::before {
+  .custom-button__media {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+  }
+
+  .custom-button__image {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 700ms cubic-bezier(0.2, 0.8, 0.2, 1);
+    will-change: transform;
+  }
+
+  .custom-button__placeholder {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(120% 80% at 30% 25%, rgba(255, 255, 255, 0.20), transparent 60%),
+      linear-gradient(135deg, #570522 0%, #ba5b28 100%);
+  }
+
+  .custom-button-wrapper:hover .custom-button__image,
+  .custom-button-wrapper:focus-within .custom-button__image {
+    transform: scale(1.05);
+  }
+
+  .custom-button:focus-visible {
+    outline: 2px solid #e68c3b;
+    outline-offset: 3px;
+  }
+
+  /* Dark gradient at the bottom only — keeps the photo bright but locks in legibility */
+  .custom-button__media::after {
     content: "";
     position: absolute;
-    top: 0;
-    left: -120%;
-    width: 60%;
-    height: 100%;
+    inset: 0;
     background: linear-gradient(
-      120deg,
-      transparent 0%,
-      rgba(255, 255, 255, 0.28) 50%,
-      transparent 100%
+      180deg,
+      rgba(0, 0, 0, 0) 45%,
+      rgba(0, 0, 0, 0.30) 70%,
+      rgba(29, 10, 4, 0.78) 100%
     );
-    transform: skewX(-20deg);
-    transition: left 600ms ease;
     pointer-events: none;
   }
 
-  .custom-button svg {
-    flex-shrink: 0;
-    transition: transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  .custom-button__content {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 14px 16px 16px;
+    z-index: 2;
+    text-align: left;
   }
 
-  .custom-button:hover,
-  .custom-button:focus-visible {
-    transform: translateY(-3px);
-    background-color: #570522;
-    border-color: #570522;
-    color: #ffffff;
-    box-shadow:
-      0 6px 10px rgba(87, 5, 34, 0.24),
-      0 14px 28px rgba(87, 5, 34, 0.34),
-      inset 0 1px 0 rgba(255, 255, 255, 0.18);
-    outline: none;
+  .custom-button__label {
+    display: block;
+    font-size: clamp(20px, 5vw, 26px);
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -0.015em;
+    color: #fffaf2;
+    text-shadow: 0 2px 12px rgba(0, 0, 0, 0.55);
+    margin: 0;
   }
 
-  .custom-button:hover::before,
-  .custom-button:focus-visible::before {
-    left: 130%;
-  }
-
-  .custom-button:hover svg,
-  .custom-button:focus-visible svg {
-    transform: scale(1.12);
-  }
-
-  .custom-button:active {
-    transform: translateY(-1px);
-    box-shadow:
-      0 2px 4px rgba(91, 37, 18, 0.18),
-      0 4px 10px rgba(91, 37, 18, 0.18);
-    transition-duration: 80ms;
-  }
-
-  /* Featured button (e.g., Mother's Day during the seasonal window) */
-  .custom-button-wrapper {
-    flex-direction: column;
-    align-items: stretch;
+  .custom-button__label::after {
+    content: "";
+    display: block;
+    width: 28px;
+    height: 2px;
+    background: #e68c3b;
+    margin-top: 8px;
+    border-radius: 2px;
+    box-shadow: 0 0 10px rgba(230, 140, 59, 0.5);
   }
 
   .custom-button__sub {
     display: block;
-    text-align: center;
-    font-size: 11px;
-    line-height: 1.3;
-    color: #570522;
-    opacity: 0.72;
-    margin: 6px 4px 0;
+    margin-top: 8px;
+    font-size: clamp(12px, 2.8vw, 14px);
     font-weight: 500;
-    letter-spacing: 0.01em;
+    line-height: 1.4;
+    color: rgba(255, 250, 242, 0.94);
+    text-shadow: 0 1px 6px rgba(0, 0, 0, 0.55);
   }
 
-  @media screen and (max-width: 575px) {
-    .custom-button__sub {
-      font-size: 10px;
-      margin-top: 4px;
-    }
-  }
-
-  .custom-button.custom-button--featured {
-    background-color: #e68c3b;
-    color: #570522;
-    border-color: #e68c3b;
-    box-shadow:
-      0 3px 6px rgba(230, 140, 59, 0.30),
-      0 10px 22px rgba(230, 140, 59, 0.32),
-      inset 0 1px 0 rgba(255, 255, 255, 0.30);
-    animation: custom-button-pulse 2.4s ease-in-out infinite;
-  }
-
-  .custom-button.custom-button--featured:hover,
-  .custom-button.custom-button--featured:focus-visible {
-    background-color: #570522;
-    color: #ffffff;
-    border-color: #570522;
-    animation: none;
+  /* Featured tile — caramel underline strip at the top of the gradient */
+  .custom-button-wrapper--featured::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 3px;
+    background: #e68c3b;
+    z-index: 3;
   }
 
   .custom-button__featured-badge {
     position: absolute;
-    top: -8px;
-    right: -8px;
-    background-color: #e6432b;
-    color: #ffffff;
+    top: 12px;
+    left: 12px;
+    background: #570522;
+    color: #fffaf2;
     font-size: 10px;
-    font-weight: 800;
-    letter-spacing: 0.06em;
-    padding: 4px 8px;
+    font-weight: 700;
+    letter-spacing: 0.10em;
+    padding: 5px 10px;
     border-radius: 999px;
     text-transform: uppercase;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
-    z-index: 2;
+    z-index: 3;
   }
 
-  @keyframes custom-button-pulse {
-    0%, 100% {
-      box-shadow:
-        0 3px 6px rgba(230, 140, 59, 0.30),
-        0 10px 22px rgba(230, 140, 59, 0.32),
-        inset 0 1px 0 rgba(255, 255, 255, 0.30);
+  @media screen and (min-width: 768px) {
+    .custom-buttons-section {
+      padding: 56px 0 32px;
     }
-    50% {
-      box-shadow:
-        0 4px 10px rgba(230, 140, 59, 0.45),
-        0 14px 30px rgba(230, 140, 59, 0.48),
-        inset 0 1px 0 rgba(255, 255, 255, 0.35);
+    .custom-buttons-header {
+      margin: 0 auto 28px;
+    }
+    .custom-buttons-container {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 22px;
+      padding: 0 24px;
+    }
+
+    .custom-button__content {
+      padding: 20px 22px 24px;
+    }
+
+    .custom-button__label {
+      font-size: 26px;
+    }
+    .custom-button__label::after {
+      width: 36px;
+      margin-top: 10px;
+    }
+
+    .custom-button__sub {
+      font-size: 14px;
+      margin-top: 10px;
     }
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .custom-button.custom-button--featured {
-      animation: none;
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .custom-button,
-    .custom-button::before,
-    .custom-button svg {
+    .custom-button__image {
       transition: none;
-    }
-    .custom-button:hover,
-    .custom-button:focus-visible {
       transform: none;
     }
   }
 
-  @media screen and (min-width: 768px) {
-    .custom-buttons-container {
-      grid-template-columns: repeat(3, 1fr);
-      gap: 15px;
-      margin: 30px auto;
-    }
-
-    .custom-button-wrapper.is-full-row {
-      grid-column: auto;
-    }
-
-    .custom-button {
-      padding: 14px 16px;
-      font-size: 15px;
-    }
-  }
-
-  /* Delivery buttons (Uber Eats + DoorDash) */
+  /* Delivery partners — minimized footnote (most customers come through the apps) */
   .delivery-buttons {
     max-width: 1200px;
     margin: 0 auto 24px;
     padding: 0 20px;
     text-align: center;
+    font-size: 12px;
+    line-height: 1.5;
+    color: #570522;
+    opacity: 0.65;
   }
   .delivery-buttons__label {
+    display: inline;
+    margin: 0 6px 0 0;
     font-size: 12px;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    color: #570522;
-    opacity: 0.7;
-    margin: 0 0 10px;
-    font-weight: 700;
+    letter-spacing: 0;
+    text-transform: none;
+    color: inherit;
+    opacity: 1;
+    font-weight: 500;
   }
   .delivery-buttons__row {
-    display: flex;
-    gap: 12px;
-    justify-content: center;
-    align-items: stretch;
-    flex-wrap: wrap;
+    display: inline;
   }
   .delivery-button {
-    flex: 1 1 160px;
-    max-width: 220px;
-    height: 56px;
-    border-radius: 8px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    text-decoration: none;
-    transition: transform 200ms ease, box-shadow 200ms ease, filter 200ms ease;
-    box-shadow:
-      0 2px 4px rgba(0, 0, 0, 0.14),
-      0 6px 14px rgba(0, 0, 0, 0.16);
+    display: inline;
+    background: transparent !important;
+    color: #570522 !important;
+    text-decoration: underline;
+    text-decoration-color: rgba(87, 5, 34, 0.4);
+    text-underline-offset: 2px;
+    padding: 0 4px;
+    height: auto;
+    transition: opacity 160ms ease;
   }
-  .delivery-button svg {
-    width: auto;
-    height: 26px;
-    max-width: 80%;
+  .delivery-button + .delivery-button::before {
+    content: "·";
+    margin: 0 4px 0 0;
+    text-decoration: none;
+    display: inline-block;
+    color: #570522;
+    opacity: 0.5;
   }
   .delivery-button:hover,
   .delivery-button:focus-visible {
-    transform: translateY(-2px);
-    box-shadow:
-      0 6px 12px rgba(0, 0, 0, 0.22),
-      0 12px 24px rgba(0, 0, 0, 0.22);
-    filter: brightness(1.05);
+    opacity: 0.7;
     outline: none;
   }
-  .delivery-button--uber {
-    background: #000000;
-    color: #ffffff;
+  .delivery-button svg {
+    display: none;
   }
-  .delivery-button--doordash {
-    background: #FF3008;
-    color: #ffffff;
+  .delivery-button::after {
+    content: attr(aria-label);
+  }
+  .delivery-button--uber::after {
+    content: "Uber Eats";
+  }
+  .delivery-button--doordash::after {
+    content: "DoorDash";
   }
 </style>
 
-<div class="custom-buttons-container">
-  <div class="custom-button-wrapper">
-    <a href="{{ section.settings.birthday_url }}" class="custom-button {{ btn_class }}">
-      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M20 21v-8a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8"></path>
-        <path d="M4 16s.5-1 2-1 2.5 2 4 2 2.5-2 4-2 2.5 2 4 2 2-1 2-1"></path>
-        <path d="M2 21h20"></path>
-        <path d="M7 8v3"></path>
-        <path d="M12 8v3"></path>
-        <path d="M17 8v3"></path>
-        <path d="M7 4c0 1-1 1-1 2s1 1 1 2"></path>
-        <path d="M12 4c0 1-1 1-1 2s1 1 1 2"></path>
-        <path d="M17 4c0 1-1 1-1 2s1 1 1 2"></path>
-      </svg>
-      {{ section.settings.birthday_label }}
-    </a>
-    {% if section.settings.birthday_sub != blank %}<span class="custom-button__sub">{{ section.settings.birthday_sub | escape }}</span>{% endif %}
-  </div>
-
-  <div class="custom-button-wrapper">
-    <a href="{{ section.settings.events_url }}" class="custom-button custom-button--featured {{ btn_class }}">
-      {% if section.settings.events_badge != blank %}
-        <span class="custom-button__featured-badge">{{ section.settings.events_badge | escape }}</span>
+<section class="custom-buttons-section" aria-label="{{ section.settings.heading | default: 'Browse our cake collections' | escape }}">
+  {% if section.settings.eyebrow != blank or section.settings.heading != blank %}
+    <header class="custom-buttons-header">
+      {% if section.settings.eyebrow != blank %}
+        <p class="custom-buttons-eyebrow">{{ section.settings.eyebrow | escape }}</p>
       {% endif %}
-      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <line x1="12" y1="2" x2="12" y2="5"></line>
-        <circle cx="12" cy="2" r="0.7" fill="currentColor"></circle>
-        <rect x="9" y="5" width="6" height="5"></rect>
-        <rect x="6" y="10" width="12" height="5"></rect>
-        <rect x="3" y="15" width="18" height="5"></rect>
-        <line x1="2" y1="20" x2="22" y2="20"></line>
-      </svg>
-      {{ section.settings.events_label }}
+      {% if section.settings.heading != blank %}
+        <h2 class="custom-buttons-heading">{{ section.settings.heading | escape }}</h2>
+      {% endif %}
+      {% if section.settings.attribution != blank %}
+        <p class="custom-buttons-attribution">— {{ section.settings.attribution | escape }}</p>
+      {% endif %}
+    </header>
+  {% endif %}
+  <div class="custom-buttons-container">
+  {% comment %} Pickup (Order for Pickup) — moved to top {% endcomment %}
+  <div class="custom-button-wrapper">
+    <a href="{{ section.settings.pickup_url }}" class="custom-button">
+      <span class="custom-button__media">
+        {% if section.settings.pickup_image != blank %}
+          <img class="custom-button__image" src="{{ section.settings.pickup_image | image_url: width: 800 }}" alt="{{ section.settings.pickup_label | escape }}" loading="lazy" width="800" height="800">
+        {% else %}
+          <img class="custom-button__image" src="{{ 'birthday-caramel-loaded.jpg' | asset_url }}" alt="{{ section.settings.pickup_label | escape }}" loading="lazy" width="800" height="800">
+        {% endif %}
+      </span>
+      <span class="custom-button__content">
+        <span class="custom-button__label">{{ section.settings.pickup_label }}</span>
+        {% if section.settings.pickup_sub != blank %}
+          <span class="custom-button__sub">{{ section.settings.pickup_sub | escape }}</span>
+        {% endif %}
+      </span>
     </a>
-    {% if section.settings.events_sub != blank %}<span class="custom-button__sub">{{ section.settings.events_sub | escape }}</span>{% endif %}
   </div>
 
+  {% comment %} Birthdays {% endcomment %}
   <div class="custom-button-wrapper">
-    <a href="{{ section.settings.shipping_url }}" class="custom-button {{ btn_class }}">
-      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <rect x="1" y="3" width="15" height="13"></rect>
-        <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
-        <circle cx="5.5" cy="18.5" r="2.5"></circle>
-        <circle cx="18.5" cy="18.5" r="2.5"></circle>
-      </svg>
-      {{ section.settings.shipping_label }}
+    <a href="{{ section.settings.birthday_url }}" class="custom-button">
+      <span class="custom-button__media">
+        {% if section.settings.birthday_image != blank %}
+          <img class="custom-button__image" src="{{ section.settings.birthday_image | image_url: width: 800 }}" alt="{{ section.settings.birthday_label | escape }}" loading="lazy" width="800" height="800">
+        {% else %}
+          <img class="custom-button__image" src="{{ 'birthday-blue-caramel.jpg' | asset_url }}" alt="{{ section.settings.birthday_label | escape }}" loading="lazy" width="800" height="800">
+        {% endif %}
+      </span>
+      <span class="custom-button__content">
+        <span class="custom-button__label">{{ section.settings.birthday_label }}</span>
+        {% if section.settings.birthday_sub != blank %}
+          <span class="custom-button__sub">{{ section.settings.birthday_sub | escape }}</span>
+        {% endif %}
+      </span>
     </a>
-    {% if section.settings.shipping_sub != blank %}<span class="custom-button__sub">{{ section.settings.shipping_sub | escape }}</span>{% endif %}
   </div>
 
-  <div class="custom-button-wrapper">
-    <a href="{{ section.settings.candy_url }}" class="custom-button {{ btn_class }}">
-      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M14.5 9.5 9.5 14.5"></path>
-        <path d="m8.5 8.5 7 7"></path>
-        <circle cx="12" cy="12" r="4"></circle>
-        <path d="M8 8 4 4"></path>
-        <path d="M4 4v4h4"></path>
-        <path d="m16 16 4 4"></path>
-        <path d="M20 20v-4h-4"></path>
-      </svg>
-      {{ section.settings.candy_label }}
+  {% comment %} Events (featured) {% endcomment %}
+  <div class="custom-button-wrapper custom-button-wrapper--featured">
+    <a href="{{ section.settings.events_url }}" class="custom-button">
+      <span class="custom-button__media">
+        {% if section.settings.events_badge != blank %}
+          <span class="custom-button__featured-badge">{{ section.settings.events_badge | escape }}</span>
+        {% endif %}
+        {% if section.settings.events_image != blank %}
+          <img class="custom-button__image" src="{{ section.settings.events_image | image_url: width: 800 }}" alt="{{ section.settings.events_label | escape }}" loading="lazy" width="800" height="800">
+        {% else %}
+          <img class="custom-button__image" src="{{ 'events-white-tier-red-roses.jpg' | asset_url }}" alt="{{ section.settings.events_label | escape }}" loading="lazy" width="800" height="800">
+        {% endif %}
+      </span>
+      <span class="custom-button__content">
+        <span class="custom-button__label">{{ section.settings.events_label }}</span>
+        {% if section.settings.events_sub != blank %}
+          <span class="custom-button__sub">{{ section.settings.events_sub | escape }}</span>
+        {% endif %}
+      </span>
     </a>
-    {% if section.settings.candy_sub != blank %}<span class="custom-button__sub">{{ section.settings.candy_sub | escape }}</span>{% endif %}
   </div>
 
+  {% comment %} Shipping {% endcomment %}
   <div class="custom-button-wrapper">
-    <a href="{{ section.settings.pickup_url }}" class="custom-button {{ btn_class }}">
-      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
-        <line x1="3" y1="6" x2="21" y2="6"></line>
-        <path d="M16 10a4 4 0 0 1-8 0"></path>
-      </svg>
-      {{ section.settings.pickup_label }}
+    <a href="{{ section.settings.shipping_url }}" class="custom-button">
+      <span class="custom-button__media">
+        {% if section.settings.shipping_image != blank %}
+          <img class="custom-button__image" src="{{ section.settings.shipping_image | image_url: width: 800 }}" alt="{{ section.settings.shipping_label | escape }}" loading="lazy" width="800" height="800">
+        {% else %}
+          <img class="custom-button__image" src="{{ 'birthday-caramel-drip.jpg' | asset_url }}" alt="{{ section.settings.shipping_label | escape }}" loading="lazy" width="800" height="800">
+        {% endif %}
+      </span>
+      <span class="custom-button__content">
+        <span class="custom-button__label">{{ section.settings.shipping_label }}</span>
+        {% if section.settings.shipping_sub != blank %}
+          <span class="custom-button__sub">{{ section.settings.shipping_sub | escape }}</span>
+        {% endif %}
+      </span>
     </a>
-    {% if section.settings.pickup_sub != blank %}<span class="custom-button__sub">{{ section.settings.pickup_sub | escape }}</span>{% endif %}
   </div>
 
+  {% comment %} Candy {% endcomment %}
   <div class="custom-button-wrapper">
-    <a href="{{ section.settings.instore_url }}" class="custom-button {{ btn_class }}"{% if section.settings.instore_url contains '://' %} target="_blank" rel="noopener"{% endif %}>
-      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M3 9l1-5h16l1 5"></path>
-        <path d="M4 9v11a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V9"></path>
-        <path d="M9 21V14h6v7"></path>
-        <circle cx="12" cy="12" r="0.5" fill="currentColor"></circle>
-      </svg>
-      {{ section.settings.instore_label }}
+    <a href="{{ section.settings.candy_url }}" class="custom-button">
+      <span class="custom-button__media">
+        {% if section.settings.candy_image != blank %}
+          <img class="custom-button__image" src="{{ section.settings.candy_image | image_url: width: 800 }}" alt="{{ section.settings.candy_label | escape }}" loading="lazy" width="800" height="800">
+        {% else %}
+          <img class="custom-button__image" src="{{ 'candy-story-image.jpg' | asset_url }}" alt="{{ section.settings.candy_label | escape }}" loading="lazy" width="800" height="800">
+        {% endif %}
+      </span>
+      <span class="custom-button__content">
+        <span class="custom-button__label">{{ section.settings.candy_label }}</span>
+        {% if section.settings.candy_sub != blank %}
+          <span class="custom-button__sub">{{ section.settings.candy_sub | escape }}</span>
+        {% endif %}
+      </span>
     </a>
-    {% if section.settings.instore_sub != blank %}<span class="custom-button__sub">{{ section.settings.instore_sub | escape }}</span>{% endif %}
   </div>
-</div>
+
+  {% comment %} Same-Day In-Store {% endcomment %}
+  <div class="custom-button-wrapper">
+    <a href="{{ section.settings.instore_url }}" class="custom-button"{% if section.settings.instore_url contains '://' %} target="_blank" rel="noopener"{% endif %}>
+      <span class="custom-button__media">
+        {% if section.settings.instore_image != blank %}
+          <img class="custom-button__image" src="{{ section.settings.instore_image | image_url: width: 800 }}" alt="{{ section.settings.instore_label | escape }}" loading="lazy" width="800" height="800">
+        {% else %}
+          <img class="custom-button__image" src="{{ 'bsb-storefront-stephanie.jpg' | asset_url }}" alt="{{ section.settings.instore_label | escape }}" loading="lazy" width="800" height="800">
+        {% endif %}
+      </span>
+      <span class="custom-button__content">
+        <span class="custom-button__label">{{ section.settings.instore_label }}</span>
+        {% if section.settings.instore_sub != blank %}
+          <span class="custom-button__sub">{{ section.settings.instore_sub | escape }}</span>
+        {% endif %}
+      </span>
+    </a>
+  </div>
+  </div>
+</section>
 
 {% if section.settings.uber_url != blank or section.settings.doordash_url != blank %}
 <div class="delivery-buttons">
@@ -406,33 +481,70 @@
   "settings": [
     {
       "type": "header",
+      "content": "Section heading"
+    },
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow",
+      "default": "EXPLORE",
+      "info": "Small caps line above the heading. Empty to hide."
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "I make memories with cake.",
+      "info": "Stephanie's signature line — first-person, warm, declarative. Empty to hide."
+    },
+    {
+      "type": "text",
+      "id": "attribution",
+      "label": "Attribution",
+      "default": "Stephanie",
+      "info": "Signed under the heading (e.g., '— Stephanie'). Empty to hide."
+    },
+    {
+      "type": "header",
       "content": "Birthday Cakes"
+    },
+    {
+      "type": "image_picker",
+      "id": "birthday_image",
+      "label": "Tile image",
+      "info": "Square crop, 800×800 or larger. A pink rosette or single-tier birthday cake works well."
     },
     {
       "type": "text",
       "id": "birthday_label",
-      "label": "Button Label",
+      "label": "Label",
       "default": "Birthdays"
     },
     {
       "type": "url",
       "id": "birthday_url",
-      "label": "Button Link"
+      "label": "Link"
     },
     {
       "type": "text",
       "id": "birthday_sub",
       "label": "Sub-text (optional)",
-      "info": "Small line under the button. e.g., \"Order 3 days ahead for pickup\""
+      "info": "Small line under the label."
     },
     {
       "type": "header",
-      "content": "Events & Catering (featured / pulsing)"
+      "content": "Events & Catering (featured)"
+    },
+    {
+      "type": "image_picker",
+      "id": "events_image",
+      "label": "Tile image",
+      "info": "Square crop, 800×800 or larger. A naked-tier or styled wedding cake works well."
     },
     {
       "type": "text",
       "id": "events_label",
-      "label": "Button Label",
+      "label": "Label",
       "default": "Events"
     },
     {
@@ -444,99 +556,117 @@
     {
       "type": "url",
       "id": "events_url",
-      "label": "Button Link",
-      "info": "Recommend a dedicated /pages/events page with weddings, corporate, and bulk-order info."
+      "label": "Link"
     },
     {
       "type": "text",
       "id": "events_sub",
-      "label": "Sub-text (optional)",
-      "info": "Small line under the button. e.g., \"Weddings, corporate, custom orders\""
+      "label": "Sub-text (optional)"
     },
     {
       "type": "header",
       "content": "Nationwide Shipping"
     },
     {
+      "type": "image_picker",
+      "id": "shipping_image",
+      "label": "Tile image",
+      "info": "Square crop, 800×800 or larger. A boxed cake or shipping-ready package works well."
+    },
+    {
       "type": "text",
       "id": "shipping_label",
-      "label": "Button Label",
+      "label": "Label",
       "default": "Shipping"
     },
     {
       "type": "url",
       "id": "shipping_url",
-      "label": "Button Link"
+      "label": "Link"
     },
     {
       "type": "text",
       "id": "shipping_sub",
-      "label": "Sub-text (optional)",
-      "info": "Small line under the button. e.g., \"Arrives fresh in 2-3 days\""
+      "label": "Sub-text (optional)"
     },
     {
       "type": "header",
       "content": "Candy"
     },
     {
+      "type": "image_picker",
+      "id": "candy_image",
+      "label": "Tile image",
+      "info": "Square crop, 800×800 or larger. A box of caramels or chocolate-dipped candy works well."
+    },
+    {
       "type": "text",
       "id": "candy_label",
-      "label": "Button Label",
+      "label": "Label",
       "default": "Shop Candy"
     },
     {
       "type": "url",
       "id": "candy_url",
-      "label": "Button Link"
+      "label": "Link"
     },
     {
       "type": "text",
       "id": "candy_sub",
-      "label": "Sub-text (optional)",
-      "info": "Small line under the button. e.g., \"Hand-poured & boxed daily\""
+      "label": "Sub-text (optional)"
     },
     {
       "type": "header",
       "content": "Pickup (Shopify pickup-eligible)"
     },
     {
+      "type": "image_picker",
+      "id": "pickup_image",
+      "label": "Tile image",
+      "info": "Square crop, 800×800 or larger. A pre-order cake or pickup counter shot works well."
+    },
+    {
       "type": "text",
       "id": "pickup_label",
-      "label": "Button Label",
+      "label": "Label",
       "default": "Pre Order"
     },
     {
       "type": "url",
       "id": "pickup_url",
-      "label": "Button Link"
+      "label": "Link"
     },
     {
       "type": "text",
       "id": "pickup_sub",
-      "label": "Sub-text (optional)",
-      "info": "Small line under the button. e.g., \"Order ahead, skip the line\""
+      "label": "Sub-text (optional)"
     },
     {
       "type": "header",
       "content": "Pick Up Today In Store (Clover)"
     },
     {
+      "type": "image_picker",
+      "id": "instore_image",
+      "label": "Tile image",
+      "info": "Square crop, 800×800 or larger. A storefront or display-case photo works well."
+    },
+    {
       "type": "text",
       "id": "instore_label",
-      "label": "Button Label",
+      "label": "Label",
       "default": "Same Day"
     },
     {
       "type": "url",
       "id": "instore_url",
-      "label": "Button Link",
+      "label": "Link",
       "info": "Link to the Clover online ordering page or future in-store-only collection"
     },
     {
       "type": "text",
       "id": "instore_sub",
-      "label": "Sub-text (optional)",
-      "info": "Small line under the button. e.g., \"From in-store inventory\""
+      "label": "Sub-text (optional)"
     },
     {
       "type": "header",

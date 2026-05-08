@@ -30,61 +30,53 @@
         "img_1": {
           "type": "image",
           "settings": {
-            "kicker": "GALA",
-            "caption": "Chicago Urban League Gala — 350 guests"
+            "fallback_filename": "events-naked-tier-orchids.png",
+            "kicker": "WEDDING",
+            "caption": "Naked tier, gold leaf, fresh orchids"
           }
         },
         "img_2": {
           "type": "image",
           "settings": {
+            "fallback_filename": "events-presidents-lounge-love.jpg",
             "kicker": "CORPORATE",
-            "caption": "Loop holiday party — 200 guests"
+            "caption": "Valentine's spread at The Presidents Lounge"
           }
         },
         "img_3": {
           "type": "image",
           "settings": {
-            "kicker": "FUNDRAISER",
-            "caption": "Nonprofit annual benefit — 250 guests"
+            "fallback_filename": "events-white-tier-red-roses.jpg",
+            "kicker": "WEDDING",
+            "caption": "White tier, hand-piped, fresh red roses"
           }
         },
         "img_4": {
           "type": "image",
           "settings": {
-            "kicker": "WEDDING",
-            "caption": "Tiered, classic, made on 75th"
+            "fallback_filename": "events-number-55-cake.jpg",
+            "kicker": "MILESTONE",
+            "caption": "Number cake, sugar flowers — fifty-five"
           }
         },
         "img_5": {
           "type": "image",
           "settings": {
-            "kicker": "GALA",
-            "caption": "Black-tie dessert table — 500 guests"
+            "fallback_filename": "events-pink-rosette-birthday.png",
+            "kicker": "BIRTHDAY",
+            "caption": "Pink rosette buttercream — happy birthday, Ashley"
           }
         },
         "img_6": {
           "type": "image",
           "settings": {
-            "kicker": "ANNIVERSARY",
-            "caption": "Fifty years, one cake"
-          }
-        },
-        "img_7": {
-          "type": "image",
-          "settings": {
+            "fallback_filename": "events-pink-strawberry-birthday.jpeg",
             "kicker": "BIRTHDAY",
-            "caption": "Milestone birthday — bespoke"
-          }
-        },
-        "img_8": {
-          "type": "image",
-          "settings": {
-            "kicker": "CORPORATE",
-            "caption": "West Loop client appreciation — 150 guests"
+            "caption": "Strawberries and candles for a milestone night"
           }
         }
       },
-      "block_order": ["img_1", "img_2", "img_3", "img_4", "img_5", "img_6", "img_7", "img_8"],
+      "block_order": ["img_1", "img_2", "img_3", "img_4", "img_5", "img_6"],
       "settings": {
         "eyebrow": "INSPIRATION",
         "heading": "Diana Ross gets around.",
@@ -142,28 +134,6 @@
         "text_color": "#570522"
       }
     },
-    "events_logo_band": {
-      "type": "logo-band",
-      "blocks": {
-        "logo_1": { "type": "logo", "settings": { "alt": "Logo 1" } },
-        "logo_2": { "type": "logo", "settings": { "alt": "Logo 2" } },
-        "logo_3": { "type": "logo", "settings": { "alt": "Logo 3" } },
-        "logo_4": { "type": "logo", "settings": { "alt": "Logo 4" } },
-        "logo_5": { "type": "logo", "settings": { "alt": "Logo 5" } },
-        "logo_6": { "type": "logo", "settings": { "alt": "Logo 6" } },
-        "logo_7": { "type": "logo", "settings": { "alt": "Logo 7" } },
-        "logo_8": { "type": "logo", "settings": { "alt": "Logo 8" } }
-      },
-      "block_order": ["logo_1", "logo_2", "logo_3", "logo_4", "logo_5", "logo_6", "logo_7", "logo_8"],
-      "settings": {
-        "eyebrow": "WE'VE SHOWN UP HERE",
-        "heading": "Some of the rooms we've been in.",
-        "subheading": "",
-        "grayscale": true,
-        "background_color": "#fffaf2",
-        "text_color": "#570522"
-      }
-    },
     "events_form_bottom": {
       "type": "events-planner-wizard",
       "settings": {
@@ -185,7 +155,6 @@
     "events_header",
     "events_form",
     "events_process",
-    "events_logo_band",
     "events_inspiration",
     "events_form_bottom"
   ]

@@ -1,0 +1,294 @@
+{% comment %}
+  LIFT: Clarity + Anxiety — replaces the 7-day calendar widget with a clean
+  three-row flow. Each row shows one shipping path: SHIPS [day] → ARRIVES [day].
+  Same message as the calendar; far easier to scan.
+{% endcomment %}
+
+<section class="ship-rhythm ship-rhythm--{{ section.id }}" aria-label="{{ section.settings.heading | default: 'Our shipping rhythm' | escape }}">
+  <div class="ship-rhythm__inner">
+    {% if section.settings.eyebrow != blank %}
+      <p class="ship-rhythm__eyebrow">{{ section.settings.eyebrow | escape }}</p>
+    {% endif %}
+    {% if section.settings.heading != blank %}
+      <h2 class="ship-rhythm__heading">{{ section.settings.heading | escape }}</h2>
+    {% endif %}
+    {% if section.settings.subheading != blank %}
+      <p class="ship-rhythm__subheading">{{ section.settings.subheading | escape }}</p>
+    {% endif %}
+
+    <ol class="ship-rhythm__rows" role="list">
+      <li class="ship-rhythm__row">
+        <div class="ship-rhythm__node ship-rhythm__node--ship">
+          <span class="ship-rhythm__pill">Ships</span>
+          <span class="ship-rhythm__day">Monday</span>
+        </div>
+        <div class="ship-rhythm__connector" aria-hidden="true">
+          <svg viewBox="0 0 60 24" preserveAspectRatio="none" focusable="false">
+            <path d="M2 12 H50" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none" stroke-dasharray="4 6"/>
+            <path d="M44 4 L56 12 L44 20" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          </svg>
+        </div>
+        <div class="ship-rhythm__node ship-rhythm__node--arrival">
+          <span class="ship-rhythm__pill">Arrives</span>
+          <span class="ship-rhythm__day">Wednesday</span>
+        </div>
+      </li>
+
+      <li class="ship-rhythm__row">
+        <div class="ship-rhythm__node ship-rhythm__node--ship">
+          <span class="ship-rhythm__pill">Ships</span>
+          <span class="ship-rhythm__day">Tuesday</span>
+        </div>
+        <div class="ship-rhythm__connector" aria-hidden="true">
+          <svg viewBox="0 0 60 24" preserveAspectRatio="none" focusable="false">
+            <path d="M2 12 H50" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none" stroke-dasharray="4 6"/>
+            <path d="M44 4 L56 12 L44 20" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          </svg>
+        </div>
+        <div class="ship-rhythm__node ship-rhythm__node--arrival">
+          <span class="ship-rhythm__pill">Arrives</span>
+          <span class="ship-rhythm__day">Thursday</span>
+        </div>
+      </li>
+
+      <li class="ship-rhythm__row">
+        <div class="ship-rhythm__node ship-rhythm__node--ship">
+          <span class="ship-rhythm__pill">Ships</span>
+          <span class="ship-rhythm__day">Wednesday</span>
+        </div>
+        <div class="ship-rhythm__connector" aria-hidden="true">
+          <svg viewBox="0 0 60 24" preserveAspectRatio="none" focusable="false">
+            <path d="M2 12 H50" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none" stroke-dasharray="4 6"/>
+            <path d="M44 4 L56 12 L44 20" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          </svg>
+        </div>
+        <div class="ship-rhythm__node ship-rhythm__node--arrival">
+          <span class="ship-rhythm__pill">Arrives</span>
+          <span class="ship-rhythm__day">Friday</span>
+        </div>
+      </li>
+    </ol>
+
+    {% if section.settings.note != blank %}
+      <p class="ship-rhythm__note">{{ section.settings.note | escape }}</p>
+    {% endif %}
+  </div>
+</section>
+
+<style>
+  .ship-rhythm--{{ section.id }} {
+    background: {{ section.settings.background_color }};
+    color: {{ section.settings.text_color }};
+    padding: 36px 16px;
+  }
+  .ship-rhythm--{{ section.id }} .ship-rhythm__inner {
+    max-width: 920px;
+    margin: 0 auto;
+  }
+  .ship-rhythm--{{ section.id }} .ship-rhythm__eyebrow {
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    font-weight: 800;
+    color: {{ section.settings.accent_color }};
+    text-align: center;
+    margin: 0 0 8px;
+  }
+  .ship-rhythm--{{ section.id }} .ship-rhythm__heading {
+    font-size: clamp(22px, 5vw, 32px);
+    font-weight: 800;
+    text-align: center;
+    margin: 0 0 8px;
+    color: inherit;
+    line-height: 1.15;
+  }
+  .ship-rhythm--{{ section.id }} .ship-rhythm__subheading {
+    font-size: 15px;
+    text-align: center;
+    margin: 0 auto 28px;
+    max-width: 600px;
+    line-height: 1.5;
+    opacity: 0.82;
+  }
+
+  .ship-rhythm--{{ section.id }} .ship-rhythm__rows {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .ship-rhythm--{{ section.id }} .ship-rhythm__row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .ship-rhythm--{{ section.id }} .ship-rhythm__node {
+    flex: 1 1 160px;
+    min-width: 0;
+    padding: 16px 18px;
+    border-radius: 10px;
+    text-align: center;
+    box-shadow:
+      0 4px 14px rgba(91, 37, 18, 0.18),
+      inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  }
+
+  .ship-rhythm--{{ section.id }} .ship-rhythm__node--ship {
+    background: {{ section.settings.ship_color }};
+    color: #fffaf2;
+  }
+
+  .ship-rhythm--{{ section.id }} .ship-rhythm__node--arrival {
+    background: {{ section.settings.arrival_color }};
+    color: #fffaf2;
+  }
+
+  .ship-rhythm--{{ section.id }} .ship-rhythm__pill {
+    display: block;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    opacity: 0.85;
+    margin: 0 0 4px;
+  }
+
+  .ship-rhythm--{{ section.id }} .ship-rhythm__day {
+    display: block;
+    font-size: clamp(20px, 5vw, 26px);
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    line-height: 1.05;
+  }
+
+  .ship-rhythm--{{ section.id }} .ship-rhythm__connector {
+    flex: 0 0 60px;
+    height: 24px;
+    color: {{ section.settings.accent_color }};
+    opacity: 0.85;
+  }
+  .ship-rhythm--{{ section.id }} .ship-rhythm__connector svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  .ship-rhythm--{{ section.id }} .ship-rhythm__note {
+    text-align: center;
+    margin: 24px auto 0;
+    max-width: 600px;
+    font-size: 14px;
+    line-height: 1.55;
+    color: inherit;
+    opacity: 0.78;
+  }
+
+  /* Mobile — stack each row vertically with arrow rotated */
+  @media (max-width: 599px) {
+    .ship-rhythm--{{ section.id }} .ship-rhythm__row {
+      flex-direction: column;
+      gap: 6px;
+    }
+    .ship-rhythm--{{ section.id }} .ship-rhythm__node {
+      flex: 0 0 auto;
+      width: 100%;
+      max-width: 320px;
+    }
+    .ship-rhythm--{{ section.id }} .ship-rhythm__connector {
+      transform: rotate(90deg);
+      flex: 0 0 24px;
+      width: 60px;
+      height: 24px;
+    }
+  }
+
+  @media (min-width: 768px) {
+    .ship-rhythm--{{ section.id }} {
+      padding: 56px 24px 64px;
+    }
+    .ship-rhythm--{{ section.id }} .ship-rhythm__rows {
+      gap: 18px;
+    }
+    .ship-rhythm--{{ section.id }} .ship-rhythm__node {
+      padding: 20px 24px;
+    }
+  }
+</style>
+
+{% schema %}
+{
+  "name": "Shipping Rhythm",
+  "settings": [
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow",
+      "default": "BAKE DAY · SHIP DAY"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "We ship Monday, Tuesday, and Wednesday."
+    },
+    {
+      "type": "textarea",
+      "id": "subheading",
+      "label": "Subheading",
+      "default": "Why those three days? UPS doesn't deliver Sundays — your cake never sits in a warehouse."
+    },
+    {
+      "type": "textarea",
+      "id": "note",
+      "label": "Footnote (optional)",
+      "default": "Order by Sunday 6 PM CT for a Wednesday arrival. By Tuesday 6 PM for end-of-week."
+    },
+    {
+      "type": "header",
+      "content": "Colors"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background",
+      "default": "#f7ead6"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text",
+      "default": "#570522"
+    },
+    {
+      "type": "color",
+      "id": "ship_color",
+      "label": "Ship-day fill",
+      "default": "#570522"
+    },
+    {
+      "type": "color",
+      "id": "arrival_color",
+      "label": "Arrival-day fill",
+      "default": "#ba5b28"
+    },
+    {
+      "type": "color",
+      "id": "accent_color",
+      "label": "Accent (arrows + eyebrow)",
+      "default": "#ba5b28"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Shipping Rhythm",
+      "category": "Storytelling"
+    }
+  ]
+}
+{% endschema %}

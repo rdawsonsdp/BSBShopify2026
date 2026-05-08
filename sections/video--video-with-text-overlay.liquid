@@ -86,19 +86,168 @@
                 video-type="{{ type }}"
                 url="{{ section.settings.url }}"
                 autoplay="true"
-                loop="true"
+                loop="false"
                 mute="true"
                 hide-controls="true"
             >
             </wetheme-video>
+            {%- if section.settings.clip_seconds and section.settings.clip_seconds > 0 or section.settings.start_seconds and section.settings.start_seconds > 0 or section.settings.disable_autoplay_mobile -%}
+              <script>
+                (function () {
+                  var SECTION_ID = {{ section.id | json }};
+                  var START = {{ section.settings.start_seconds | default: 0 | json }};
+                  var CLIP = {{ section.settings.clip_seconds | default: 0 | json }};
+                  var END = CLIP > 0 ? START + CLIP : 0;
+                  var DISABLE_MOBILE = {{ section.settings.disable_autoplay_mobile | default: false | json }};
+                  var IS_MOBILE = window.matchMedia && window.matchMedia('(max-width: 767px)').matches;
+                  var TYPE = {{ type | json }};
+                  var rootSelector = '.homepage-content--' + SECTION_ID;
+
+                  function findIframe(retries) {
+                    var root = document.querySelector(rootSelector);
+                    if (!root) return retries > 0 ? setTimeout(function(){findIframe(retries-1);}, 200) : null;
+                    var iframe = root.querySelector('iframe');
+                    if (!iframe) return retries > 0 ? setTimeout(function(){findIframe(retries-1);}, 200) : null;
+                    return wirePlayer(iframe);
+                  }
+
+                  function wirePlayer(iframe) {
+                    if (TYPE === 'vimeo') {
+                      // Add Vimeo Player API param so postMessage works cross-origin
+                      try {
+                        var src = iframe.getAttribute('src') || '';
+                        if (src && src.indexOf('api=1') === -1) {
+                          var sep = src.indexOf('?') === -1 ? '?' : '&';
+                          iframe.setAttribute('src', src + sep + 'api=1&player_id=clip-' + SECTION_ID);
+                        }
+                      } catch (e) {}
+                      loadVimeoApi(function () {
+                        if (!window.Vimeo || !window.Vimeo.Player) return;
+                        var player = new window.Vimeo.Player(iframe);
+                        if (START > 0) {
+                          player.ready().then(function () {
+                            player.setCurrentTime(START).catch(function(){});
+                          });
+                        }
+                        if (END > 0) {
+                          var stopped = false;
+                          player.on('timeupdate', function (data) {
+                            if (!stopped && data && data.seconds >= END) {
+                              stopped = true;
+                              player.pause().catch(function(){});
+                            }
+                          });
+                        }
+                        if (DISABLE_MOBILE && IS_MOBILE) {
+                          player.ready().then(function () {
+                            player.pause().catch(function(){});
+                          });
+                        }
+                      });
+                    } else if (TYPE === 'youtube') {
+                      // Use the YT IFrame API
+                      try {
+                        var src = iframe.getAttribute('src') || '';
+                        if (src && src.indexOf('enablejsapi=1') === -1) {
+                          var sep = src.indexOf('?') === -1 ? '?' : '&';
+                          iframe.setAttribute('src', src + sep + 'enablejsapi=1');
+                        }
+                      } catch (e) {}
+                      loadYouTubeApi(function () {
+                        if (!window.YT || !window.YT.Player) return;
+                        var player = new window.YT.Player(iframe, {
+                          events: {
+                            onReady: function () {
+                              if (START > 0) {
+                                try { player.seekTo(START, true); } catch (e) {}
+                              }
+                              if (DISABLE_MOBILE && IS_MOBILE) {
+                                try { player.pauseVideo(); } catch (e) {}
+                              }
+                              if (END > 0) {
+                                var ytStopped = false;
+                                var ytTimer = setInterval(function () {
+                                  try {
+                                    if (!ytStopped && player.getCurrentTime() >= END) {
+                                      ytStopped = true;
+                                      player.pauseVideo();
+                                      clearInterval(ytTimer);
+                                    }
+                                  } catch (e) {}
+                                }, 250);
+                              }
+                            }
+                          }
+                        });
+                      });
+                    }
+                  }
+
+                  function loadVimeoApi(cb) {
+                    if (window.Vimeo && window.Vimeo.Player) return cb();
+                    var s = document.createElement('script');
+                    s.src = 'https://player.vimeo.com/api/player.js';
+                    s.onload = cb;
+                    document.head.appendChild(s);
+                  }
+
+                  function loadYouTubeApi(cb) {
+                    if (window.YT && window.YT.Player) return cb();
+                    var prev = window.onYouTubeIframeAPIReady;
+                    window.onYouTubeIframeAPIReady = function () {
+                      if (prev) try { prev(); } catch (e) {}
+                      cb();
+                    };
+                    if (!document.querySelector('script[src*="youtube.com/iframe_api"]')) {
+                      var s = document.createElement('script');
+                      s.src = 'https://www.youtube.com/iframe_api';
+                      document.head.appendChild(s);
+                    }
+                  }
+
+                  if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', function(){ findIframe(20); });
+                  } else {
+                    findIframe(20);
+                  }
+                })();
+              </script>
+            {%- endif -%}
             {% if section.settings.mobileHeight == 'fit' %}
                 <div class="hero-video--mobile-image">
-                    {% if section.settings.image != blank %}
+                    {% if section.settings.mobile_fallback_asset != blank %}
+                        <img src="{{ section.settings.mobile_fallback_asset | asset_url }}" alt="" loading="eager" style="width:100%;height:auto;display:block;object-fit:cover;">
+                    {% elsif section.settings.image != blank %}
                         {% render 'responsive-image' with section.settings.image, alt: section.settings.image.alt %}
                     {% else %}
                         {{ 'lifestyle-1' | placeholder_svg_tag: 'icon--placeholder' }}
                     {% endif %}
                 </div>
+                <style>
+                    @media screen and (max-width: 769px) {
+                        .homepage-content--{{ section.id }}.mobile-height-fit .hero-video--media,
+                        .homepage-content--{{ section.id }} .hero-video--media {
+                            position: relative !important;
+                            height: auto !important;
+                            min-height: 0 !important;
+                            overflow: visible !important;
+                        }
+                        .homepage-content--{{ section.id }} .hero-video--mobile-image {
+                            display: block;
+                            width: 100%;
+                        }
+                        .homepage-content--{{ section.id }} .hero-video--mobile-image img {
+                            width: 100% !important;
+                            height: auto !important;
+                            display: block !important;
+                        }
+                        .homepage-content--{{ section.id }} wetheme-video,
+                        .homepage-content--{{ section.id }} .plyr,
+                        .homepage-content--{{ section.id }} iframe {
+                            display: none !important;
+                        }
+                    }
+                </style>
             {% endif %}
         </div>
         <div class="hero-video--text">
@@ -674,6 +823,43 @@
                 "fr": "Texte des boutons",
                 "pt-PT": "Texto do botão"
             }
+        },
+        {
+            "type": "header",
+            "content": "Clip duration"
+        },
+        {
+            "type": "range",
+            "id": "start_seconds",
+            "label": "Clip start (seconds)",
+            "info": "Where the clip begins inside the source video.",
+            "min": 0,
+            "max": 100,
+            "step": 1,
+            "default": 0
+        },
+        {
+            "type": "range",
+            "id": "clip_seconds",
+            "label": "Clip length (seconds)",
+            "info": "0 = play full video. Otherwise loops [start, start + length].",
+            "min": 0,
+            "max": 60,
+            "step": 1,
+            "default": 0
+        },
+        {
+            "type": "checkbox",
+            "id": "disable_autoplay_mobile",
+            "label": "Don't autoplay on mobile",
+            "info": "Video still loads — visitor can tap to play. Useful for cellular bandwidth.",
+            "default": false
+        },
+        {
+            "type": "text",
+            "id": "mobile_fallback_asset",
+            "label": "Mobile poster (theme asset filename)",
+            "info": "Filename of an image in /assets/ to show instead of the video on mobile. Leave empty to play the video on mobile."
         }
     ],
     "presets": [

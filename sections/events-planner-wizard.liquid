@@ -74,7 +74,7 @@
         <div class="events-planner__choices">
           {%- assign choice_kickers = 'GALA|WEDDING|CORPORATE|ANNIVERSARY|FUNDRAISER|BIRTHDAY|OTHER' | split: '|' -%}
           {%- assign choice_descs = 'Black-tie, large formal|Tiered cakes, traditions|Holiday party, client gifting|Milestone moments|Nonprofit benefit|Milestone birthday|Tell us in the next step' | split: '|' -%}
-          {%- assign choice_images = 'events-collage-1-cake-cutting.jpg|events-collage-4-roses.jpg|events-collage-2-pink-tier.jpg|events-collage-3-anniversary.jpg|events-collage-1-cake-cutting.jpg|events-collage-2-pink-tier.jpg|events-collage-4-roses.jpg' | split: '|' -%}
+          {%- assign choice_images = 'events-white-tier-red-roses.jpg|events-naked-tier-orchids.png|events-presidents-lounge-love.jpg|events-number-55-cake.jpg|events-presidents-lounge-love.jpg|events-pink-rosette-birthday.png|events-pink-strawberry-birthday.jpeg' | split: '|' -%}
           {%- for kicker in choice_kickers -%}
             {%- assign idx = forloop.index0 -%}
             <label class="events-planner__choice">
@@ -156,10 +156,10 @@
           <aside class="events-planner__aside events-planner__aside--gallery">
             <p class="events-planner__aside-eyebrow">Inspiration</p>
             <div class="events-planner__gallery">
-              <span class="events-planner__gallery-tile" style="background-image: url('{{ 'events-collage-1-cake-cutting.jpg' | asset_url }}');" aria-hidden="true"></span>
-              <span class="events-planner__gallery-tile" style="background-image: url('{{ 'events-collage-2-pink-tier.jpg' | asset_url }}');" aria-hidden="true"></span>
-              <span class="events-planner__gallery-tile" style="background-image: url('{{ 'events-collage-3-anniversary.jpg' | asset_url }}');" aria-hidden="true"></span>
-              <span class="events-planner__gallery-tile" style="background-image: url('{{ 'events-collage-4-roses.jpg' | asset_url }}');" aria-hidden="true"></span>
+              <span class="events-planner__gallery-tile" style="background-image: url('{{ 'events-naked-tier-orchids.png' | asset_url }}');" aria-hidden="true"></span>
+              <span class="events-planner__gallery-tile" style="background-image: url('{{ 'events-number-55-cake.jpg' | asset_url }}');" aria-hidden="true"></span>
+              <span class="events-planner__gallery-tile" style="background-image: url('{{ 'events-pink-rosette-birthday.png' | asset_url }}');" aria-hidden="true"></span>
+              <span class="events-planner__gallery-tile" style="background-image: url('{{ 'events-white-tier-red-roses.jpg' | asset_url }}');" aria-hidden="true"></span>
             </div>
           </aside>
         </div>

@@ -207,40 +207,29 @@
     }
   }
 
-  /* Desktop: pinwheel — feature1 (cols 1-2 row 1) | portrait1 (col 3 row 1)
-                       portrait2 (col 1 row 2) | feature2 (cols 2-3 row 2) */
+  /* Desktop: hero (tile 1 = 2×2) + 2 portrait tiles stacked right + 3 landscape tiles bottom row */
   @media screen and (min-width: 900px) {
     .events-collage--{{ section.id }} {
       padding: 64px 24px;
     }
     .events-collage--{{ section.id }} .events-collage__grid {
-      grid-template-columns: 1fr 1fr 1fr;
-      grid-template-rows: auto auto;
-      grid-template-areas:
-        "feature1 feature1 portrait1"
-        "portrait2 feature2 feature2";
-      gap: 32px 22px;
+      grid-template-columns: repeat(3, 1fr);
+      grid-auto-flow: row;
+      gap: 28px 22px;
     }
-    .events-collage--{{ section.id }} .events-collage__item--feature1 {
-      grid-area: feature1;
+    .events-collage--{{ section.id }} .events-collage__item:first-child {
+      grid-column: span 2;
+      grid-row: span 2;
     }
-    .events-collage--{{ section.id }} .events-collage__item--portrait1 {
-      grid-area: portrait1;
+    .events-collage--{{ section.id }} .events-collage__item:first-child .events-collage__media {
+      aspect-ratio: 1 / 1;
     }
-    .events-collage--{{ section.id }} .events-collage__item--portrait2 {
-      grid-area: portrait2;
-    }
-    .events-collage--{{ section.id }} .events-collage__item--feature2 {
-      grid-area: feature2;
-    }
-    /* Wider feature cells get landscape aspect, single-col cells stay portrait */
-    .events-collage--{{ section.id }} .events-collage__item--feature1 .events-collage__media,
-    .events-collage--{{ section.id }} .events-collage__item--feature2 .events-collage__media {
-      aspect-ratio: 16 / 10;
-    }
-    .events-collage--{{ section.id }} .events-collage__item--portrait1 .events-collage__media,
-    .events-collage--{{ section.id }} .events-collage__item--portrait2 .events-collage__media {
+    .events-collage--{{ section.id }} .events-collage__item:nth-child(2) .events-collage__media,
+    .events-collage--{{ section.id }} .events-collage__item:nth-child(3) .events-collage__media {
       aspect-ratio: 4 / 5;
+    }
+    .events-collage--{{ section.id }} .events-collage__item:nth-child(n+4) .events-collage__media {
+      aspect-ratio: 4 / 3;
     }
   }
 </style>

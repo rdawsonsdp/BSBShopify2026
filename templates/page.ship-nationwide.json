@@ -25,33 +25,36 @@
       }
     },
     "shipping_press": {
-      "type": "events-trust-band",
+      "type": "press-celebrity-grid",
       "blocks": {
         "press_1": {
-          "type": "stat",
+          "type": "card",
           "settings": {
-            "number": "Best Baker in America",
-            "label": "Steve Harvey Show"
+            "title": "Steve Harvey Show",
+            "subtitle": "Best Baker in America",
+            "image_alt": "Stephanie Hart on the Steve Harvey Show"
           }
         },
         "press_2": {
-          "type": "stat",
+          "type": "card",
           "settings": {
-            "number": "James Beard Semifinalist",
-            "label": "Outstanding Pastry Chef · 2019"
+            "title": "James Beard Foundation",
+            "subtitle": "Outstanding Pastry Chef · 2019 Semifinalist",
+            "image_alt": "James Beard Foundation award"
           }
         },
         "press_3": {
-          "type": "stat",
+          "type": "card",
           "settings": {
-            "number": "VP Kamala Harris",
-            "label": "Visited Brown Sugar Bakery · 2021"
+            "title": "VP Kamala Harris",
+            "subtitle": "Visited Brown Sugar Bakery · 2021",
+            "image_alt": "Vice President Kamala Harris at Brown Sugar Bakery"
           }
         }
       },
       "block_order": ["press_1", "press_2", "press_3"],
       "settings": {
-        "eyebrow": "",
+        "eyebrow": "AS SEEN BY",
         "heading": "America saw fit to take notice.",
         "background_color": "#fffaf2",
         "text_color": "#570522",
@@ -99,11 +102,17 @@
       }
     },
     "shipping_calendar": {
-      "type": "shipping-calendar",
+      "type": "shipping-rhythm",
       "settings": {
         "eyebrow": "BAKE DAY · SHIP DAY",
+        "heading": "We ship Monday, Tuesday, and Wednesday.",
+        "subheading": "Why those three days? UPS doesn't deliver Sundays — your cake never sits in a warehouse.",
+        "note": "Order by Sunday 6 PM CT for Wednesday arrival. By Tuesday 6 PM for end-of-week.",
         "background_color": "#f7ead6",
-        "text_color": "#570522"
+        "text_color": "#570522",
+        "ship_color": "#570522",
+        "arrival_color": "#ba5b28",
+        "accent_color": "#ba5b28"
       }
     },
     "shipping_info_tiles": {
@@ -161,7 +170,7 @@
         "collection": "featured-shipping-cakes",
         "grid": 4,
         "rows": 1,
-        "show_view_all": false,
+        "show_view_all": true,
         "hide_add_to_cart": false
       }
     },
@@ -184,13 +193,13 @@
   "order": [
     "main",
     "shipping_header",
-    "shipping_press",
     "shipping_featured",
-    "shipping_reviews",
-    "shipping_unboxing",
+    "shipping_press",
     "shipping_calendar",
+    "shipping_reviews",
     "shipping_info_tiles",
     "shipping_guarantee",
+    "shipping_unboxing",
     "shipping_cta"
   ]
 }

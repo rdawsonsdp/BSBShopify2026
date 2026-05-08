@@ -104,7 +104,7 @@
 >
 	<div class="main-body-wrapper{% if template == 'search' %} search-template{% elsif template.name == 'collection' %} collection-template{% endif %}" id="PageContainer" data-cart-action="{{ settings.cart-action }}" data-cart-type="{{ settings.cart-type }}">
 		{% if template != 'cart' %}
-			{% render 'cart-drawer' %}
+			{% render 'bsb-cart-drawer' %}
 		{% endif %}
 
 		<div id="main-body" data-editor-open="{{ request.design_mode }}">

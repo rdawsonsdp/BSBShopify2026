@@ -70,6 +70,22 @@
         "text_color": "#570522"
       }
     },
+    "candy_postcards_caption": {
+      "type": "page-banner-strip",
+      "settings": {
+        "eyebrow": "",
+        "heading": "The Postcard Collection",
+        "heading_tag": "h2",
+        "subheading": "Six classic Chicago postcards. Hand-poured candies inside, packed at 75th Street.",
+        "button_label": "",
+        "button_link": "",
+        "text_align": "center",
+        "background_color": "#fffaf2",
+        "text_color": "#570522",
+        "padding_y": 16,
+        "padding_y_desktop": 24
+      }
+    },
     "candy_header": {
       "type": "page-banner-strip",
       "settings": {
@@ -251,11 +267,12 @@
   },
   "order": [
     "main",
-    "candy_postcards_carousel",
-    "candy_header",
     "candy_story_image",
-    "candy_heritage",
+    "candy_header",
+    "candy_postcards_carousel",
+    "candy_postcards_caption",
     "candy_collage",
+    "candy_heritage",
     "candy_featured",
     "candy_wholesale_form",
     "candy_faq"

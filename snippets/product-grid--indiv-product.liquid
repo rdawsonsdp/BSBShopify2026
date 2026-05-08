@@ -95,7 +95,7 @@
             <span class="money-styling">
               <span class="current-price">
                 {% if liquidObject.price_varies %}
-                  <small>{{ 'products.general.from' | t }}</small> <span class="money">{{ liquidObject.price_min | money }}</span>
+                  <span class="money">{{ liquidObject.price_min | money }}</span><span class="money-range-sep"> – </span><span class="money">{{ liquidObject.price_max | money }}</span>
                 {% else %}
                   <span class="money">{{ liquidObject.price_min | money }}</span>
                 {% endif %}
@@ -132,7 +132,7 @@
                 <span class="money-styling">
                   <span class="current-price">
                     {% if liquidObject.price_varies %}
-                      <small>{{ 'products.general.from' | t }}</small> <span class="money">{{ liquidObject.price_min | money }}</span>
+                      <span class="money">{{ liquidObject.price_min | money }}</span><span class="money-range-sep"> – </span><span class="money">{{ liquidObject.price_max | money }}</span>
                     {% else %}
                       <span class="money">{{ liquidObject.price_min | money }}</span>
                     {% endif %}

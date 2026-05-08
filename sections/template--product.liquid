@@ -160,6 +160,78 @@
           {% endif %}
 
           <div class="product-info-wrapper">
+            {%- liquid
+              assign pickup_collection_handles = product.collections | map: 'handle' | join: ','
+              assign is_pickup_only = false
+              if pickup_collection_handles contains 'available-for-pickup'
+                assign is_pickup_only = true
+              endif
+            -%}
+            {% if is_pickup_only %}
+              <aside class="pdp-pickup-notice" role="note" aria-label="Pickup only — not available for shipping">
+                <div class="pdp-pickup-notice__icon" aria-hidden="true">📍</div>
+                <div class="pdp-pickup-notice__body">
+                  <p class="pdp-pickup-notice__heading">Not available for shipping</p>
+                  <p class="pdp-pickup-notice__sub">In-store pickup only at 328 E 75th Street, Chicago.</p>
+                  <a class="pdp-pickup-notice__link" href="/pages/ship-nationwide?view=ship-nationwide">
+                    Want a cake shipped? See our nationwide shipping cakes →
+                  </a>
+                </div>
+              </aside>
+              <style>
+                .pdp-pickup-notice {
+                  display: flex;
+                  gap: 12px;
+                  align-items: flex-start;
+                  padding: 14px 16px;
+                  margin: 0 0 18px;
+                  background: #fffaf2;
+                  border: 1px solid rgba(91, 37, 18, 0.18);
+                  border-left: 4px solid #570522;
+                  border-radius: 4px;
+                  box-shadow:
+                    inset 0 1px 0 rgba(255, 255, 255, 0.6),
+                    0 1px 2px rgba(91, 37, 18, 0.08);
+                }
+                .pdp-pickup-notice__icon {
+                  font-size: 22px;
+                  line-height: 1;
+                  flex-shrink: 0;
+                  margin-top: 2px;
+                }
+                .pdp-pickup-notice__body {
+                  flex: 1 1 auto;
+                  min-width: 0;
+                }
+                .pdp-pickup-notice__heading {
+                  font-weight: 800;
+                  font-size: 13px;
+                  letter-spacing: 0.06em;
+                  text-transform: uppercase;
+                  color: #570522;
+                  margin: 0 0 4px;
+                }
+                .pdp-pickup-notice__sub {
+                  font-size: 14px;
+                  color: rgba(91, 37, 18, 0.85);
+                  line-height: 1.4;
+                  margin: 0 0 8px;
+                }
+                .pdp-pickup-notice__link {
+                  display: inline-block;
+                  font-size: 13px;
+                  font-weight: 700;
+                  color: #ba5b28;
+                  text-decoration: underline;
+                  text-underline-offset: 3px;
+                  text-decoration-thickness: 1.5px;
+                }
+                .pdp-pickup-notice__link:hover,
+                .pdp-pickup-notice__link:focus-visible {
+                  color: #570522;
+                }
+              </style>
+            {% endif %}
             {% for block in section.blocks %}
               {% case block.type %}
                 {% when '@app' %}

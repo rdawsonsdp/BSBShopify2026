@@ -254,6 +254,17 @@
     }
   }
 
+  /* Zoom-into-sign for the Same Day Orders tile — focuses on the storefront sign */
+  .custom-button-wrapper--zoom-sign .custom-button__image {
+    object-position: center top;
+    transform: scale(1.7);
+    transform-origin: 50% 6%;
+  }
+  .custom-button-wrapper--zoom-sign:hover .custom-button__image,
+  .custom-button-wrapper--zoom-sign:focus-within .custom-button__image {
+    transform: scale(1.78);
+  }
+
   /* Delivery partners — minimized footnote (most customers come through the apps) */
   .delivery-buttons {
     max-width: 1200px;
@@ -430,7 +441,7 @@
   </div>
 
   {% comment %} Same-Day In-Store {% endcomment %}
-  <div class="custom-button-wrapper">
+  <div class="custom-button-wrapper custom-button-wrapper--zoom-sign">
     <a href="{{ section.settings.instore_url }}" class="custom-button"{% if section.settings.instore_url contains '://' %} target="_blank" rel="noopener"{% endif %}>
       <span class="custom-button__media">
         {% if section.settings.instore_image != blank %}

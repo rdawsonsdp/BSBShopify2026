@@ -124,12 +124,17 @@
       var nowMins = now.getHours() * 60 + now.getMinutes();
 
       if (range && nowMins >= range.open && nowMins < range.close) {
+        // Open right now
         strip.classList.add('is-open');
         statusEl.textContent = 'Open now • Closes ' + fmt(range.close);
+      } else if (range && nowMins < range.open) {
+        // Closed but opens later TODAY
+        strip.classList.add('is-closed');
+        statusEl.textContent = 'Opens today at ' + fmt(range.open);
       } else {
+        // Closed today (after closing time, or no hours today) → find next open day
         strip.classList.add('is-closed');
         statusEl.textContent = 'Closed today';
-        // find next open day
         for (var i = 1; i <= 7; i++) {
           var nextKey = dayKeys[(now.getDay() + i) % 7];
           var nextRange = parseRange(strip.getAttribute('data-' + nextKey) || '');

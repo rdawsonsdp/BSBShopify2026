@@ -10,7 +10,6 @@
     <span class="bsb-cart-drawer__top-stripe" aria-hidden="true"></span>
     <header class="bsb-cart-drawer__header">
       <a href="{{ routes.root_url }}" class="bsb-cart-drawer__brand" aria-label="Brown Sugar Bakery — home">
-        <img src="{{ 'bsb-logo.jpg' | asset_url }}" alt="Brown Sugar Bakery" class="bsb-cart-drawer__logo" width="44" height="44" loading="lazy">
         <span class="bsb-cart-drawer__brand-text">
           <span class="bsb-cart-drawer__brand-name">Brown Sugar Bakery</span>
           <span class="bsb-cart-drawer__brand-sub">Your Cart</span>
@@ -510,6 +509,50 @@
       if (e.target.matches('.bsb-cart-item__form, .bsb-cart-item__qty-form')) {
         try { sessionStorage.setItem(BSB_CART_KEY, '1'); } catch (err) {}
       }
+    });
+
+    // Hijack any /cart/add form on the page → AJAX add → reload → drawer
+    // auto-opens via the sessionStorage flag, with the new item rendered.
+    document.addEventListener('submit', function (e) {
+      var form = e.target.closest('form[action$="/cart/add"]');
+      if (!form) return;
+      // Skip if this is the drawer's own form
+      if (form.classList.contains('bsb-cart-item__form') || form.classList.contains('bsb-cart-item__qty-form')) return;
+      e.preventDefault();
+      e.stopPropagation();
+
+      // Disable submit button to prevent double-clicks
+      var submitBtn = form.querySelector('[type="submit"]');
+      var originalLabel;
+      if (submitBtn) {
+        originalLabel = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        if (submitBtn.tagName === 'BUTTON') submitBtn.textContent = 'Adding…';
+      }
+
+      var fd = new FormData(form);
+      fetch('/cart/add.js', {
+        method: 'POST',
+        body: fd,
+        headers: { 'Accept': 'application/json' }
+      })
+      .then(function (res) {
+        if (!res.ok) return res.json().then(function (err) { throw err; });
+        return res.json();
+      })
+      .then(function () {
+        try { sessionStorage.setItem(BSB_CART_KEY, '1'); } catch (e) {}
+        window.location.reload();
+      })
+      .catch(function (err) {
+        console.error('Add to cart failed', err);
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          if (originalLabel) submitBtn.innerHTML = originalLabel;
+        }
+        var msg = (err && err.description) || (err && err.message) || 'Could not add to cart. Please try again.';
+        alert(msg);
+      });
     });
 
     document.addEventListener('DOMContentLoaded', function () {

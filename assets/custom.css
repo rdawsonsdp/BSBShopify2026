@@ -173,6 +173,185 @@ ul.row.product-grid > *,
    Range "$min – $max" rendered when product.price_varies (see product-grid--indiv-product.liquid). */
 
 /* ============================================
+   PDP Judge.me rating badge under the title.
+   Amazon-style: stars + count, click to jump
+   to the reviews section below.
+   ============================================ */
+.bsb-pdp-rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0 14px;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+  transition: opacity 160ms ease;
+}
+.bsb-pdp-rating:hover {
+  opacity: 0.75;
+}
+.bsb-pdp-rating .jdgm-prev-badge,
+.bsb-pdp-rating__widget {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px;
+}
+/* Judge.me's stars — orange, slightly bigger */
+.bsb-pdp-rating .jdgm-prev-badge__stars {
+  color: #e68c3b !important;
+  font-size: 16px !important;
+  letter-spacing: 1px;
+}
+/* The "(N reviews)" text → underline so it reads as a link */
+.bsb-pdp-rating .jdgm-prev-badge__text {
+  font-family: 'Arsenal', sans-serif !important;
+  font-size: 14px !important;
+  color: #570522 !important;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-color: rgba(87, 5, 34, 0.4);
+}
+/* Star-rating link — always visible, persists even if Judge.me has no data */
+.bsb-pdp-rating__fallback {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Arsenal', sans-serif;
+}
+.bsb-pdp-rating__stars {
+  color: #e68c3b;
+  font-size: 18px;
+  letter-spacing: 1px;
+  line-height: 1;
+}
+.bsb-pdp-rating__label {
+  font-size: 14px;
+  color: #570522;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-color: rgba(87, 5, 34, 0.4);
+}
+/* When Judge.me's badge has populated with real stars, hide the fallback */
+.bsb-pdp-rating .jdgm-prev-badge:has(.jdgm-prev-badge__stars) ~ .bsb-pdp-rating__fallback,
+.bsb-pdp-rating .jdgm-preview-badge:has(.jdgm-prev-badge__stars) ~ .bsb-pdp-rating__fallback {
+  display: none;
+}
+/* Hide Judge.me's empty badge — it'd just be a gap */
+.bsb-pdp-rating .jdgm-prev-badge:empty,
+.bsb-pdp-rating .jdgm-preview-badge:empty {
+  display: none !important;
+}
+
+/* PDP reviews section — scroll target with a visible heading + empty state */
+.bsb-pdp-reviews {
+  margin: 40px 0 24px;
+  padding: 24px 20px;
+  background: #fffaf2;
+  border: 1px solid rgba(87, 5, 34, 0.14);
+  border-radius: 8px;
+  scroll-margin-top: 90px;
+}
+.bsb-pdp-reviews__heading {
+  font-family: 'Arsenal', sans-serif !important;
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #570522;
+  margin: 0 0 16px;
+  text-align: center;
+}
+.bsb-pdp-reviews__empty {
+  text-align: center;
+  padding: 16px 0;
+}
+.bsb-pdp-reviews__empty-stars {
+  color: rgba(230, 140, 59, 0.55);
+  font-size: 28px;
+  letter-spacing: 4px;
+  line-height: 1;
+  margin: 0 0 12px;
+}
+.bsb-pdp-reviews__empty-text {
+  color: rgba(87, 5, 34, 0.78);
+  font-size: 14px;
+  margin: 0 0 14px;
+}
+.bsb-pdp-reviews__write {
+  display: inline-block;
+  padding: 10px 20px;
+  font-family: 'Arsenal', sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #570522;
+  border: 1.5px solid #570522;
+  border-radius: 4px;
+  text-decoration: none;
+  transition: background 160ms ease;
+}
+.bsb-pdp-reviews__write:hover {
+  background: rgba(87, 5, 34, 0.06);
+}
+/* When Judge.me has rendered actual reviews, hide the empty state */
+.bsb-pdp-reviews:has(.jdgm-rev) .bsb-pdp-reviews__empty {
+  display: none;
+}
+
+/* ============================================
+   PDP reviews section — collapse to first 3,
+   expand-all toggle below.
+   ============================================ */
+.bsb-pdp-reviews-anchor {
+  scroll-margin-top: 90px;
+}
+/* Default: first 3 reviews show, others hidden via max-height fade */
+.jdgm-rev-widg:not(.bsb-reviews-expanded) .jdgm-rev-widg__reviews {
+  max-height: 1080px;
+  overflow: hidden;
+  position: relative;
+  mask-image: linear-gradient(180deg, #000 calc(100% - 90px), transparent 100%);
+  -webkit-mask-image: linear-gradient(180deg, #000 calc(100% - 90px), transparent 100%);
+}
+.jdgm-rev-widg.bsb-reviews-expanded .jdgm-rev-widg__reviews {
+  max-height: none;
+  overflow: visible;
+  mask-image: none;
+  -webkit-mask-image: none;
+}
+.bsb-reviews-expand-btn {
+  display: block;
+  margin: 14px auto;
+  padding: 12px 28px;
+  font-family: 'Arsenal', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #570522;
+  background: transparent;
+  border: 1.5px solid #570522;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 160ms ease;
+}
+.bsb-reviews-expand-btn:hover {
+  background: rgba(87, 5, 34, 0.06);
+}
+.jdgm-rev-widg.bsb-reviews-expanded .bsb-reviews-expand-btn {
+  display: none;
+}
+
+/* Finger-pointer cursor on every product card (collection grid + home showcase + button tiles) */
+.hero-product-showcase__card,
+.hero-product-showcase__card *,
+.custom-button-wrapper,
+.custom-button-wrapper * {
+  cursor: pointer !important;
+}
+
+/* ============================================
    Collection page product cards — magazine tile.
    Image fills card, dark gradient at bottom,
    bold white title with caramel accent line,
@@ -194,6 +373,10 @@ ul.row.product-grid > *,
   margin-bottom: 0 !important;
   padding: 0 !important;
   border: 0 !important;
+  cursor: pointer !important;
+}
+.indiv-product * {
+  cursor: pointer !important;
 }
 
 .indiv-product:hover,

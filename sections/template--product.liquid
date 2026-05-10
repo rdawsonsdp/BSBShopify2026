@@ -255,6 +255,57 @@
 
                   <h1 class="custom-font product-description-header" {{ block.shopify_attributes }}>{{ product.title }}</h1>
 
+                  {% comment %} Star-rating link — always visible. Judge.me badge sits
+                     next to it and populates when reviews exist. {% endcomment %}
+                  <a href="#bsb-pdp-reviews" class="bsb-pdp-rating" data-bsb-rating-jump aria-label="Jump to product reviews">
+                    <span class="bsb-pdp-rating__fallback">
+                      <span class="bsb-pdp-rating__stars" aria-hidden="true">★★★★★</span>
+                      <span class="bsb-pdp-rating__label">Read reviews</span>
+                    </span>
+                    <span class="jdgm-widget jdgm-preview-badge bsb-pdp-rating__widget" data-id="{{ product.id }}"></span>
+                  </a>
+                  <script>
+                    (function () {
+                      // Wire badge click → scroll to the Judge.me reviews widget on the same page
+                      document.addEventListener('click', function (e) {
+                        var trigger = e.target.closest('[data-bsb-rating-jump]');
+                        if (!trigger) return;
+                        var widg = document.querySelector('#bsb-pdp-reviews, .jdgm-rev-widg, .jdgm-all-reviews-page, #judgeme_product_reviews');
+                        if (!widg) return;
+                        e.preventDefault();
+                        widg.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      });
+
+                      // Add expand-all button under the reviews list once Judge.me renders
+                      function injectExpand() {
+                        var widg = document.querySelector('.jdgm-rev-widg');
+                        if (!widg || widg.dataset.bsbExpanded === '1') return;
+                        var list = widg.querySelector('.jdgm-rev-widg__reviews');
+                        if (!list || list.children.length <= 3) return;
+                        widg.dataset.bsbExpanded = '1';
+                        var btn = document.createElement('button');
+                        btn.type = 'button';
+                        btn.className = 'bsb-reviews-expand-btn';
+                        btn.textContent = 'Show all ' + list.children.length + ' reviews';
+                        btn.addEventListener('click', function () {
+                          widg.classList.add('bsb-reviews-expanded');
+                        });
+                        list.parentNode.insertBefore(btn, list.nextSibling);
+                      }
+
+                      // Judge.me loads async — poll briefly
+                      var attempts = 0;
+                      var poll = setInterval(function () {
+                        attempts++;
+                        if (document.querySelector('.jdgm-rev-widg .jdgm-rev-widg__reviews .jdgm-rev')) {
+                          injectExpand();
+                          clearInterval(poll);
+                        }
+                        if (attempts > 30) clearInterval(poll);
+                      }, 400);
+                    })();
+                  </script>
+
                 {% when 'product-price' %}
 
                   {% unless block.settings.show_discount == 'hide' %}
@@ -476,6 +527,17 @@
 
               {% endcase %}
             {% endfor %}
+          </div>
+
+          {% comment %} Judge.me full reviews widget — scroll target for the rating link {% endcomment %}
+          <div id="bsb-pdp-reviews" class="bsb-pdp-reviews-anchor bsb-pdp-reviews">
+            <h2 class="bsb-pdp-reviews__heading">Customer Reviews</h2>
+            <div class="bsb-pdp-reviews__empty">
+              <p class="bsb-pdp-reviews__empty-stars" aria-hidden="true">★★★★★</p>
+              <p class="bsb-pdp-reviews__empty-text">No reviews yet — be the first to write one.</p>
+              <a href="#" class="bsb-pdp-reviews__write" onclick="document.querySelector('.jdgm-write-rev-link')?.click(); return false;">Write a review</a>
+            </div>
+            <div class="jdgm-widget jdgm-rev-widg" data-id="{{ product.id }}"></div>
           </div>
 
         {% endform %}

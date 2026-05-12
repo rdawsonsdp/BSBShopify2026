@@ -289,41 +289,34 @@
   .delivery-buttons__row {
     display: inline;
   }
-  .delivery-button {
-    display: inline;
-    background: transparent !important;
-    color: #570522 !important;
-    text-decoration: underline;
-    text-decoration-color: rgba(87, 5, 34, 0.4);
-    text-underline-offset: 2px;
-    padding: 0 4px;
-    height: auto;
-    transition: opacity 160ms ease;
+  .delivery-buttons__row {
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    justify-content: center;
   }
-  .delivery-button + .delivery-button::before {
-    content: "·";
-    margin: 0 4px 0 0;
-    text-decoration: none;
-    display: inline-block;
-    color: #570522;
-    opacity: 0.5;
+  .delivery-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent !important;
+    padding: 4px 8px;
+    height: auto;
+    transition: opacity 160ms ease, transform 160ms ease;
   }
   .delivery-button:hover,
   .delivery-button:focus-visible {
-    opacity: 0.7;
+    opacity: 0.8;
+    transform: translateY(-1px);
     outline: none;
   }
-  .delivery-button svg {
-    display: none;
-  }
-  .delivery-button::after {
-    content: attr(aria-label);
-  }
-  .delivery-button--uber::after {
-    content: "Uber Eats";
-  }
-  .delivery-button--doordash::after {
-    content: "DoorDash";
+  .delivery-button__logo {
+    display: block;
+    height: 28px;
+    width: auto;
+    max-width: 140px;
+    object-fit: contain;
   }
 </style>
 
@@ -356,25 +349,6 @@
         <span class="custom-button__label">{{ section.settings.pickup_label }}</span>
         {% if section.settings.pickup_sub != blank %}
           <span class="custom-button__sub">{{ section.settings.pickup_sub | escape }}</span>
-        {% endif %}
-      </span>
-    </a>
-  </div>
-
-  {% comment %} Birthdays {% endcomment %}
-  <div class="custom-button-wrapper">
-    <a href="{{ section.settings.birthday_url }}" class="custom-button">
-      <span class="custom-button__media">
-        {% if section.settings.birthday_image != blank %}
-          <img class="custom-button__image" src="{{ section.settings.birthday_image | image_url: width: 800 }}" alt="{{ section.settings.birthday_label | escape }}" loading="lazy" width="800" height="800">
-        {% else %}
-          <img class="custom-button__image" src="{{ 'birthday-blue-caramel.jpg' | asset_url }}" alt="{{ section.settings.birthday_label | escape }}" loading="lazy" width="800" height="800">
-        {% endif %}
-      </span>
-      <span class="custom-button__content">
-        <span class="custom-button__label">{{ section.settings.birthday_label }}</span>
-        {% if section.settings.birthday_sub != blank %}
-          <span class="custom-button__sub">{{ section.settings.birthday_sub | escape }}</span>
         {% endif %}
       </span>
     </a>
@@ -458,6 +432,25 @@
       </span>
     </a>
   </div>
+
+  {% comment %} Birthdays {% endcomment %}
+  <div class="custom-button-wrapper">
+    <a href="{{ section.settings.birthday_url }}" class="custom-button">
+      <span class="custom-button__media">
+        {% if section.settings.birthday_image != blank %}
+          <img class="custom-button__image" src="{{ section.settings.birthday_image | image_url: width: 800 }}" alt="{{ section.settings.birthday_label | escape }}" loading="lazy" width="800" height="800">
+        {% else %}
+          <img class="custom-button__image" src="{{ 'birthday-blue-caramel.jpg' | asset_url }}" alt="{{ section.settings.birthday_label | escape }}" loading="lazy" width="800" height="800">
+        {% endif %}
+      </span>
+      <span class="custom-button__content">
+        <span class="custom-button__label">{{ section.settings.birthday_label }}</span>
+        {% if section.settings.birthday_sub != blank %}
+          <span class="custom-button__sub">{{ section.settings.birthday_sub | escape }}</span>
+        {% endif %}
+      </span>
+    </a>
+  </div>
   </div>
 </section>
 
@@ -469,17 +462,12 @@
   <div class="delivery-buttons__row">
     {% if section.settings.uber_url != blank %}
       <a href="{{ section.settings.uber_url }}" class="delivery-button delivery-button--uber" target="_blank" rel="noopener" aria-label="Order on Uber Eats">
-        <svg viewBox="0 0 80 28" aria-hidden="true" focusable="false">
-          <text x="40" y="20" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-weight="900" font-size="20" fill="currentColor" letter-spacing="-0.5">Uber</text>
-          <text x="40" y="27" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-weight="700" font-size="6" fill="currentColor" letter-spacing="2">EATS</text>
-        </svg>
+        <img class="delivery-button__logo" src="{{ 'ubereats-logo.png' | asset_url }}" alt="Uber Eats" loading="lazy" width="140" height="40">
       </a>
     {% endif %}
     {% if section.settings.doordash_url != blank %}
       <a href="{{ section.settings.doordash_url }}" class="delivery-button delivery-button--doordash" target="_blank" rel="noopener" aria-label="Order on DoorDash">
-        <svg viewBox="0 0 110 28" aria-hidden="true" focusable="false">
-          <text x="55" y="20" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-weight="900" font-size="18" fill="currentColor" letter-spacing="-0.4">DoorDash</text>
-        </svg>
+        <img class="delivery-button__logo" src="{{ 'doordash-logo.png' | asset_url }}" alt="DoorDash" loading="lazy" width="140" height="40">
       </a>
     {% endif %}
   </div>

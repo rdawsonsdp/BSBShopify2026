@@ -350,6 +350,14 @@
 
                   {% if product.variants.size > 0 %}
 
+                    {%- comment -%} Top-seller badges: only for single-option products with the bsb.top_variants metafield set {%- endcomment -%}
+                    {%- assign bsb_top_values = '|' -%}
+                    {%- if product.options_with_values.size == 1 and product.metafields.bsb.top_variants.value -%}
+                      {%- for v in product.metafields.bsb.top_variants.value -%}
+                        {%- assign bsb_top_values = bsb_top_values | append: v.option1 | append: '|' -%}
+                      {%- endfor -%}
+                    {%- endif -%}
+
                     {% for option in product.options_with_values %}
                       <div {{ block.shopify_attributes }}>
                         <div class="product-form-option col-12{% if hide_default_title == true %} hide{% endif %}">
@@ -375,8 +383,12 @@
                                       {% assign hide = false %}
                                     {% endif %}
 
+                                    {%- assign bsb_match = '|' | append: value | append: '|' -%}
+                                    {%- assign bsb_is_top = false -%}
+                                    {%- if bsb_top_values contains bsb_match -%}{%- assign bsb_is_top = true -%}{%- endif -%}
+
                                     {% unless hide %}
-                                      <option {{ props }} value="{{ value | escape }}">{{ value }}</option>
+                                      <option {{ props }} value="{{ value | escape }}">{% if bsb_is_top %}★ {{ value }} — Top Seller{% else %}{{ value }}{% endif %}</option>
                                     {% endunless %}
                                   {% endfor %}
                               </select>
@@ -420,6 +432,14 @@
                   </div>
 
                 {% when 'payment-buttons' %}
+                    {%- comment -%}
+                      BSB Fulfillment picker rendered inline so it sits above Add to Cart
+                      and inside the product form (line-item-property inputs submit naturally).
+                      Output is gated by settings.fulfillment_engine == 'bsb' inside the snippet,
+                      so this is dead code when the flag is on 'zapiet'.
+                    {%- endcomment -%}
+                    {% render 'product-fulfillment' %}
+
                     {%- liquid
                       assign gift_card_recipient_feature_active = false
                       if block.settings.show_gift_card_recipient and product.gift_card?

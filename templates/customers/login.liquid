@@ -7,6 +7,26 @@
 		<div class="clear"></div>
 	</div>
 
+    {% comment %}
+      Sign in with Shop — Shopify's official one-tap login. Requires the merchant
+      to enable "Sign in with Shop" in admin → Settings → Customer accounts. When
+      enabled, the component renders a button + handles the OAuth dance; when not
+      enabled it renders nothing (the rest of this form still works).
+    {% endcomment %}
+    <div class="bsb-shop-login" style="margin: 0 0 18px;">
+      <shop-login-button version="2"
+        client-id="{{ shop.id }}"
+        scope="email"
+        analytics-context="customer-login"
+        redirect-uri="{{ shop.url }}{{ routes.account_url }}"
+        flow="self"
+      ></shop-login-button>
+      <p style="margin: 8px 0 0; font-size: 12px; color: #570522; opacity: 0.65;">
+        or sign in with your email below
+      </p>
+    </div>
+    <script src="https://cdn.shopify.com/shopifycloud/shop-js/client.js" async></script>
+
     {% form 'customer_login' %}
       {{ form.errors | default_errors }}
 

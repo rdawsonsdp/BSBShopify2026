@@ -147,6 +147,62 @@
       flex-shrink: 0;
     }
   }
+
+  /* BSB: cart count as a maroon badge top-right of the basket icon.
+     Position the badge absolutely against the cart link itself (its nearest
+     positioned ancestor). The count span lives in .header--supporting-text,
+     which is a sibling of .header-icon — not a child — so we anchor higher up. */
+  .header-icons.cart-link .header-link,
+  .header-icons.cart-link a.header-link,
+  .header-icons.cart-link button.header-link {
+    position: relative;
+    overflow: visible;
+  }
+  .header-icons.cart-link .header--supporting-text {
+    padding-left: 0;
+  }
+  /* Badge stays visible even when count is 0 — gives shoppers a constant cue
+     they have a cart icon to click. */
+  .header-icons.cart-link .cart-item-count-header--quantity {
+    position: absolute;
+    top: -4px;
+    right: -6px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    background: #570522;
+    color: #fffaf2;
+    font-size: 11px;
+    font-weight: 800;
+    line-height: 18px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    border: 1.5px solid #fffaf2;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.22);
+    box-sizing: content-box;
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  /* BSB: visible "Account" / "Sign in" label below the person icon */
+  .header-account-link {
+    display: inline-flex !important;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    line-height: 1.1;
+  }
+  .header-account-link .header-account-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: inherit;
+    opacity: 0.92;
+  }
 </style>
 
 {% assign expanded_search_display = 'hidden' %}
@@ -403,6 +459,7 @@
                       <span class="header-icon">
                         {% render 'icon-account' %}
                       </span>
+                      <span class="header-account-label">Account</span>
                     </a>
                 </li>
             {% else %}
@@ -416,6 +473,7 @@
                       <span class="header-icon">
                         {% render 'icon-account' %}
                       </span>
+                      <span class="header-account-label">Sign in</span>
                     </a>
                 </li>
             {% endif %}
@@ -434,7 +492,7 @@
                       </span>
                       {% case section.settings.cart-number %}
                           {% when 'quantity' %}
-                              <span class="header--supporting-text"><span class="cart-item-count-header cart-item-count-header--quantity">{{ cart.item_count }}</span></span>
+                              <span class="header--supporting-text"><span class="cart-item-count-header cart-item-count-header--quantity"{% if cart.item_count == 0 %} data-empty{% endif %}>{{ cart.item_count }}</span></span>
                           {% when 'total' %}
                               <span  data-hulkapps-cart-total class="header--supporting-text"><span class="cart-item-count-header cart-item-count-header--total js-cart-total">{{ cart.total_price | money }}</span></span>
                       {% endcase %}
@@ -457,7 +515,7 @@
                         </span>
                           {% case section.settings.cart-number %}
                               {% when 'quantity' %}
-                                  <span class="header--supporting-text"><span class="cart-item-count-header cart-item-count-header--quantity">{{ cart.item_count }}</span></span>
+                                  <span class="header--supporting-text"><span class="cart-item-count-header cart-item-count-header--quantity"{% if cart.item_count == 0 %} data-empty{% endif %}>{{ cart.item_count }}</span></span>
                               {% when 'total' %}
                                   <span  data-hulkapps-cart-total class="header--supporting-text"><span class="cart-item-count-header cart-item-count-header--total js-cart-total">{{ cart.total_price | money }}</span></span>
                           {% endcase %}

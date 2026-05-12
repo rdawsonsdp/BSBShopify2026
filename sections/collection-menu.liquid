@@ -1,0 +1,710 @@
+{% comment %}
+  LIFT: Clarity — Toast/Tilly-style single-collection product grid.
+
+  Renders all products in the current collection as image-led cards in a 2-col
+  (mobile: 1-col) grid. Clicking any card (or its "+" button) dispatches
+  `bsb:open-product-modal` — handled by snippets/product-customizer-modal.liquid.
+
+  Apply to a collection by setting its Theme Template to "menu" in Shopify Admin →
+  Online Store → Collections → [collection] → Online store section.
+{% endcomment %}
+
+{%- liquid
+  comment
+    Source: collection-context (when used in templates/collection.*.json) OR
+    a setting-driven collection (when dropped on a /pages/ template).
+  endcomment
+  assign coll = collection
+  if section.settings.collection_handle != blank
+    assign coll = collections[section.settings.collection_handle]
+  endif
+  assign hide_header = section.settings.hide_header
+  assign heading_override = section.settings.heading_override
+
+  comment
+    Multi-category mode: hardcoded for the pickup collection so it renders
+    sub-collections as separate sections (Toast/Tilly menu layout).
+  endcomment
+  assign use_multi_cats = false
+  if coll.handle == 'available-for-pickup'
+    assign use_multi_cats = true
+    assign multi_cats_raw = 'same-day-orders-clover|Available same day, in-store||cakes|Cakes||cupcakes|Cupcakes||sheetcakes|Sheetcakes||pudding|Pudding||pies|Pies||mini-cupcakes|Mini cupcakes'
+    assign multi_cats = multi_cats_raw | split: '||'
+  endif
+-%}
+
+<section class="collection-menu collection-menu--{{ section.id }}" data-section-id="{{ section.id }}">
+  <div class="collection-menu__inner">
+
+    {%- unless hide_header -%}
+      <header class="collection-menu__header">
+        {%- if section.settings.show_collection_image and coll.image -%}
+          <div class="collection-menu__hero">
+            <img src="{{ coll.image | image_url: width: 1600 }}"
+                 alt="{{ coll.title | escape }}"
+                 loading="eager" />
+          </div>
+        {%- endif -%}
+
+        <div class="collection-menu__head-text">
+          <h2 class="collection-menu__title">{{ heading_override | default: coll.title | escape }}</h2>
+          {%- comment -%}
+            description_style: 'full' renders rich-text body; 'tagline' compresses
+            the description into a single sentence styled as an inline label.
+          {%- endcomment -%}
+          {%- if section.settings.description_style == 'tagline' -%}
+            {%- assign desc_source = section.settings.description | default: coll.description -%}
+            {%- assign desc_text = desc_source | strip_html | strip_newlines | strip -%}
+            {%- assign desc_first = desc_text | split: '.' | first -%}
+            {%- if desc_first != blank -%}
+              <p class="collection-menu__tagline">{{ desc_first | strip }}.</p>
+            {%- endif -%}
+          {%- elsif section.settings.description != blank -%}
+            <div class="collection-menu__desc">{{ section.settings.description }}</div>
+          {%- elsif coll.description != blank -%}
+            <div class="collection-menu__desc">{{ coll.description }}</div>
+          {%- endif -%}
+          <p class="collection-menu__count" data-count-line>{{ coll.products_count }} {{ coll.products_count | pluralize: 'item', 'items' }}</p>
+        </div>
+      </header>
+    {%- endunless -%}
+
+    {%- if section.settings.show_category_tabs -%}
+      <div class="collection-menu__tabs" role="tablist" aria-label="Filter by category">
+        <button type="button" role="tab" aria-selected="true" class="collection-menu__tab is-active" data-tab="all">All</button>
+        <button type="button" role="tab" aria-selected="false" class="collection-menu__tab" data-tab="cakes">Cakes</button>
+        <button type="button" role="tab" aria-selected="false" class="collection-menu__tab" data-tab="candy">Candy</button>
+      </div>
+    {%- endif -%}
+
+    {%- if section.settings.search_enabled -%}
+      <div class="collection-menu__search">
+        <input type="search"
+               class="collection-menu__search-input"
+               id="collection-menu-search-{{ section.id }}"
+               placeholder="Search {{ coll.title | escape | downcase }}…"
+               aria-label="Filter products"
+               data-search-input />
+      </div>
+    {%- endif -%}
+
+    {%- if use_multi_cats -%}
+      <nav class="collection-menu__cat-nav" aria-label="Jump to a category">
+        {%- for entry in multi_cats -%}
+          {%- assign parts = entry | split: '|' -%}
+          {%- assign cat_handle = parts[0] -%}
+          {%- assign cat_label = parts[1] -%}
+          <a class="collection-menu__cat-pill" href="#cm-cat-{{ cat_handle }}">{{ cat_label }}</a>
+        {%- endfor -%}
+      </nav>
+
+      {%- for entry in multi_cats -%}
+        {%- assign parts = entry | split: '|' -%}
+        {%- assign cat_handle = parts[0] -%}
+        {%- assign cat_label = parts[1] -%}
+
+        {%- comment -%}
+          Classify products from the CURRENT collection by title/type/tags
+          (instead of expecting sub-collections to exist). A product can match
+          multiple categories — e.g. a same-day cake appears in both Cakes
+          and "Available same day".
+        {%- endcomment -%}
+        {%- assign matches = '' -%}
+        {%- for product in coll.products -%}
+          {%- assign pt = product.type | downcase -%}
+          {%- assign tt = product.title | downcase -%}
+          {%- assign tags_lc = product.tags | join: ',' | downcase -%}
+          {%- assign is_mini_cupcake = false -%}
+          {%- if tt contains 'mini' and tt contains 'cup' -%}{%- assign is_mini_cupcake = true -%}{%- endif -%}
+
+          {%- assign matched = false -%}
+          {%- case cat_handle -%}
+            {%- when 'same-day-orders-clover' -%}
+              {%- if tags_lc contains 'same-day' or tags_lc contains 'sameday' or tags_lc contains 'same day' -%}
+                {%- assign matched = true -%}
+              {%- endif -%}
+            {%- when 'cakes' -%}
+              {%- assign has_cake_word = false -%}
+              {%- if tt contains 'cake' or pt contains 'cake' -%}{%- assign has_cake_word = true -%}{%- endif -%}
+              {%- if is_mini_cupcake == false and has_cake_word -%}
+                {%- unless tt contains 'cupcake' or pt contains 'cupcake' or tt contains 'sheet' or tt contains 'pudding' or tt contains 'pie' -%}
+                  {%- assign matched = true -%}
+                {%- endunless -%}
+              {%- endif -%}
+            {%- when 'cupcakes' -%}
+              {%- assign has_cupcake_word = false -%}
+              {%- if tt contains 'cupcake' or pt contains 'cupcake' or tt contains 'cup cake' -%}{%- assign has_cupcake_word = true -%}{%- endif -%}
+              {%- if is_mini_cupcake == false and has_cupcake_word -%}
+                {%- assign matched = true -%}
+              {%- endif -%}
+            {%- when 'sheetcakes' -%}
+              {%- if tt contains 'sheet' or pt contains 'sheet' -%}
+                {%- assign matched = true -%}
+              {%- endif -%}
+            {%- when 'pudding' -%}
+              {%- if tt contains 'pudding' or pt contains 'pudding' -%}
+                {%- assign matched = true -%}
+              {%- endif -%}
+            {%- when 'pies' -%}
+              {%- if tt contains 'pie' or pt contains 'pie' -%}
+                {%- assign matched = true -%}
+              {%- endif -%}
+            {%- when 'mini-cupcakes' -%}
+              {%- if is_mini_cupcake -%}
+                {%- assign matched = true -%}
+              {%- endif -%}
+          {%- endcase -%}
+          {%- if matched -%}
+            {%- assign matches = matches | append: product.handle | append: '|' -%}
+          {%- endif -%}
+        {%- endfor -%}
+
+        <div class="collection-menu__category" id="cm-cat-{{ cat_handle }}">
+          <h2 class="collection-menu__category-title">{{ cat_label }}</h2>
+          {%- if matches != blank -%}
+            <div class="collection-menu__grid" data-grid>
+              {%- for product in coll.products -%}
+                {%- assign needle = product.handle | append: '|' -%}
+                {%- if matches contains needle -%}
+                  {%- assign coll_handles = product.collections | map: 'handle' | join: ',' -%}
+                  {%- assign pickup_eligible = false -%}
+                  {%- if coll_handles contains 'available-for-pickup' or product.metafields.fulfillment.pickup_eligible -%}
+                    {%- assign pickup_eligible = true -%}
+                  {%- endif -%}
+                  {%- assign ship_eligible = false -%}
+                  {%- if coll_handles contains 'nationwide-shipping' or product.metafields.fulfillment.ship_eligible -%}
+                    {%- assign ship_eligible = true -%}
+                  {%- endif -%}
+                  <article class="collection-menu__card"
+                    role="button" tabindex="0"
+                    data-product-handle="{{ product.handle }}"
+                    data-product-id="{{ product.id }}"
+                    data-product-title="{{ product.title | escape }}"
+                    data-bsb-pickup-eligible="{{ pickup_eligible }}"
+                    data-bsb-ship-eligible="{{ ship_eligible }}"
+                    aria-label="Order {{ product.title | escape }}">
+                    <div class="collection-menu__card-thumb">
+                      {% if product.featured_image %}
+                        <img src="{{ product.featured_image | img_url: '400x400', crop: 'center' }}"
+                             alt="{{ product.featured_image.alt | default: product.title | escape }}"
+                             loading="lazy" width="200" height="200" />
+                      {% endif %}
+                    </div>
+                    <div class="collection-menu__card-body">
+                      <h3 class="collection-menu__card-title">{{ product.title | escape }}</h3>
+                      {%- if product.description != blank -%}
+                        <p class="collection-menu__card-desc">{{ product.description | strip_html | truncate: 120 }}</p>
+                      {%- endif -%}
+                      <p class="collection-menu__card-price">
+                        {% if product.price_varies %}From {% endif %}{{ product.price | money }}
+                      </p>
+                    </div>
+                    <button type="button" class="collection-menu__card-add"
+                            aria-label="Order {{ product.title | escape }}" data-add-button>
+                      <span aria-hidden="true">+</span>
+                    </button>
+                  </article>
+                {%- endif -%}
+              {%- endfor -%}
+            </div>
+          {%- else -%}
+            <p class="collection-menu__empty collection-menu__empty--cat">No items in this category right now.</p>
+          {%- endif -%}
+        </div>
+      {%- endfor -%}
+
+    {%- elsif coll.products.size > 0 -%}
+      <div class="collection-menu__grid" data-grid>
+        {%- for product in coll.products -%}
+          {%- assign coll_handles = product.collections | map: 'handle' | join: ',' -%}
+          {%- assign pickup_eligible = false -%}
+          {%- if coll_handles contains 'available-for-pickup' or product.metafields.fulfillment.pickup_eligible -%}
+            {%- assign pickup_eligible = true -%}
+          {%- endif -%}
+          {%- assign ship_eligible = false -%}
+          {%- if coll_handles contains 'nationwide-shipping' or product.metafields.fulfillment.ship_eligible -%}
+            {%- assign ship_eligible = true -%}
+          {%- endif -%}
+
+          {%- assign type_lc = product.type | downcase -%}
+          {%- assign tags_lc = product.tags | join: ',' | downcase -%}
+          {%- assign cat_value = 'other' -%}
+          {%- if type_lc contains 'candy' or type_lc contains 'chocolate' or tags_lc contains 'candy' or tags_lc contains 'chocolate' -%}
+            {%- assign cat_value = 'candy' -%}
+          {%- elsif type_lc contains 'cake' or tags_lc contains 'cake' -%}
+            {%- assign cat_value = 'cakes' -%}
+          {%- endif -%}
+
+          <article
+            class="collection-menu__card"
+            role="button"
+            tabindex="0"
+            data-product-handle="{{ product.handle }}"
+            data-product-id="{{ product.id }}"
+            data-product-title="{{ product.title | escape }}"
+            data-product-category="{{ cat_value }}"
+            data-bsb-pickup-eligible="{{ pickup_eligible }}"
+            data-bsb-ship-eligible="{{ ship_eligible }}"
+            aria-label="Order {{ product.title | escape }}"
+          >
+            <div class="collection-menu__card-thumb">
+              {% if product.featured_image %}
+                <img src="{{ product.featured_image | img_url: '400x400', crop: 'center' }}"
+                     alt="{{ product.featured_image.alt | default: product.title | escape }}"
+                     loading="lazy"
+                     width="200" height="200" />
+              {% endif %}
+            </div>
+            <div class="collection-menu__card-body">
+              <h3 class="collection-menu__card-title">{{ product.title | escape }}</h3>
+              {%- if product.description != blank -%}
+                <p class="collection-menu__card-desc">{{ product.description | strip_html | truncate: 120 }}</p>
+              {%- endif -%}
+              <p class="collection-menu__card-price">
+                {% if product.price_varies %}From {% endif %}{{ product.price | money }}
+              </p>
+            </div>
+            <button type="button"
+                    class="collection-menu__card-add"
+                    aria-label="Order {{ product.title | escape }}"
+                    data-add-button>
+              <span aria-hidden="true">+</span>
+            </button>
+          </article>
+        {%- endfor -%}
+      </div>
+
+      <p class="collection-menu__no-results" data-no-results hidden>No items match your search.</p>
+    {%- else -%}
+      <p class="collection-menu__empty">No products in this collection yet.</p>
+    {%- endif -%}
+
+  </div>
+</section>
+
+<style>
+  .collection-menu--{{ section.id }} {
+    padding: 24px 16px 56px;
+    background: #fffaf2;
+  }
+  .collection-menu--{{ section.id }} .collection-menu__inner {
+    max-width: 980px;
+    margin: 0 auto;
+  }
+  .collection-menu--{{ section.id }} .collection-menu__header {
+    margin: 0 0 24px;
+  }
+  .collection-menu--{{ section.id }} .collection-menu__hero {
+    aspect-ratio: 16 / 5;
+    overflow: hidden;
+    border-radius: 6px;
+    margin: 0 0 16px;
+    background: #f7ead6;
+  }
+  .collection-menu--{{ section.id }} .collection-menu__hero img {
+    width: 100%; height: 100%; object-fit: cover; display: block;
+  }
+  .collection-menu--{{ section.id }} .collection-menu__title {
+    margin: 0 0 6px;
+    font-size: 32px;
+    font-weight: 800;
+    color: #570522;
+    line-height: 1.15;
+  }
+  .collection-menu--{{ section.id }} .collection-menu__desc {
+    margin: 0 0 8px;
+    font-size: 15px;
+    line-height: 1.5;
+    color: rgba(87, 5, 34, 0.78);
+  }
+  .collection-menu--{{ section.id }} .collection-menu__tagline {
+    display: inline-block;
+    margin: 0 0 10px;
+    padding: 4px 10px;
+    background: #f7ead6;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: #570522;
+  }
+  .collection-menu--{{ section.id }} .collection-menu__count {
+    margin: 0;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(87, 5, 34, 0.55);
+  }
+
+  .collection-menu--{{ section.id }} .collection-menu__tabs {
+    display: flex;
+    gap: 8px;
+    margin: 0 0 14px;
+    padding: 0;
+    border-bottom: 1px solid rgba(87, 5, 34, 0.12);
+  }
+  .collection-menu--{{ section.id }} .collection-menu__tab {
+    background: none;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    padding: 8px 14px;
+    margin-bottom: -1px;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: rgba(87, 5, 34, 0.55);
+    cursor: pointer;
+    transition: color 140ms ease, border-color 140ms ease;
+  }
+  .collection-menu--{{ section.id }} .collection-menu__tab:hover {
+    color: #570522;
+  }
+  .collection-menu--{{ section.id }} .collection-menu__tab.is-active {
+    color: #570522;
+    border-bottom-color: #570522;
+  }
+
+  .collection-menu--{{ section.id }} .collection-menu__search {
+    margin: 0 0 18px;
+  }
+  .collection-menu--{{ section.id }} .collection-menu__search-input {
+    width: 100%;
+    padding: 12px 16px;
+    font: inherit;
+    font-size: 15px;
+    background: #ffffff;
+    color: #570522;
+    border: 1px solid rgba(87, 5, 34, 0.18);
+    border-radius: 4px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  }
+  .collection-menu--{{ section.id }} .collection-menu__search-input:focus {
+    outline: none;
+    border-color: #ba5b28;
+  }
+
+  /* Multi-category nav pills (sticky to top) */
+  .collection-menu--{{ section.id }} .collection-menu__cat-nav {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 12px 0;
+    margin: 0 0 14px;
+    background: #fffaf2;
+    border-bottom: 1px solid rgba(87, 5, 34, 0.12);
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+  .collection-menu--{{ section.id }} .collection-menu__cat-pill {
+    flex: 0 0 auto;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #570522;
+    background: #fffaf2;
+    border: 1px solid rgba(87, 5, 34, 0.18);
+    border-radius: 999px;
+    text-decoration: none;
+    transition: background 140ms ease, color 140ms ease;
+    white-space: nowrap;
+  }
+  .collection-menu--{{ section.id }} .collection-menu__cat-pill:hover {
+    background: #570522;
+    color: #fffaf2;
+  }
+
+  /* Multi-category section spacing */
+  .collection-menu--{{ section.id }} .collection-menu__category {
+    margin: 0 0 28px;
+    scroll-margin-top: 60px;
+  }
+  .collection-menu--{{ section.id }} .collection-menu__category-title {
+    margin: 0 0 12px;
+    font-size: 22px;
+    font-weight: 800;
+    color: #570522;
+  }
+  .collection-menu--{{ section.id }} .collection-menu__empty--cat {
+    margin: 0;
+    padding: 16px;
+    background: #f7ead6;
+    border-radius: 4px;
+    font-size: 13px;
+    color: rgba(87, 5, 34, 0.62);
+    text-align: center;
+  }
+
+  .collection-menu--{{ section.id }} .collection-menu__grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  @media (min-width: 720px) {
+    .collection-menu--{{ section.id }} .collection-menu__grid {
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+  }
+
+  .collection-menu--{{ section.id }} .collection-menu__card {
+    position: relative;
+    display: grid;
+    grid-template-columns: 100px 1fr;
+    gap: 12px;
+    padding: 12px;
+    background: #ffffff;
+    border: 1px solid rgba(87, 5, 34, 0.14);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: box-shadow 160ms ease, transform 160ms ease, border-color 160ms ease;
+    align-items: stretch;
+  }
+  .collection-menu--{{ section.id }} .collection-menu__card:hover,
+  .collection-menu--{{ section.id }} .collection-menu__card:focus-visible {
+    box-shadow: 0 6px 18px rgba(87, 5, 34, 0.10);
+    border-color: rgba(87, 5, 34, 0.28);
+    outline: none;
+  }
+  .collection-menu--{{ section.id }} .collection-menu__card-thumb {
+    width: 100px; height: 100px;
+    border-radius: 4px;
+    overflow: hidden;
+    background: #f7ead6;
+  }
+  .collection-menu--{{ section.id }} .collection-menu__card-thumb img {
+    width: 100%; height: 100%; object-fit: cover; display: block;
+  }
+  .collection-menu--{{ section.id }} .collection-menu__card-body {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 0;
+    padding-right: 40px; /* space for + button */
+  }
+  .collection-menu--{{ section.id }} .collection-menu__card-title {
+    margin: 0 0 4px;
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #570522;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .collection-menu--{{ section.id }} .collection-menu__card-desc {
+    margin: 0 0 4px;
+    font-size: 12px;
+    line-height: 1.45;
+    color: rgba(87, 5, 34, 0.6);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .collection-menu--{{ section.id }} .collection-menu__card-price {
+    margin: auto 0 0;
+    font-size: 14px;
+    font-weight: 800;
+    color: #570522;
+  }
+  .collection-menu--{{ section.id }} .collection-menu__card-add {
+    position: absolute;
+    right: 12px;
+    bottom: 12px;
+    width: 32px; height: 32px;
+    border: 0;
+    border-radius: 999px;
+    background: linear-gradient(180deg, #6c0a2e 0%, #570522 60%, #45041b 100%);
+    color: #fffaf2;
+    font: inherit;
+    font-size: 20px;
+    font-weight: 800;
+    line-height: 1;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(87, 5, 34, 0.22);
+    transition: background 140ms ease, transform 140ms ease;
+  }
+  .collection-menu--{{ section.id }} .collection-menu__card-add:hover {
+    background: linear-gradient(180deg, #e68c3b 0%, #ba5b28 100%);
+  }
+  .collection-menu--{{ section.id }} .collection-menu__card[data-hidden] {
+    display: none;
+  }
+  .collection-menu--{{ section.id }} .collection-menu__no-results,
+  .collection-menu--{{ section.id }} .collection-menu__empty {
+    margin: 24px 0 0;
+    font-size: 14px;
+    color: rgba(87, 5, 34, 0.62);
+    text-align: center;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .collection-menu--{{ section.id }} .collection-menu__card,
+    .collection-menu--{{ section.id }} .collection-menu__card-add {
+      transition: none;
+    }
+  }
+</style>
+
+<script>
+  (function () {
+    var section = document.querySelector('.collection-menu--{{ section.id }}');
+    if (!section) return;
+
+    function openProductModal(card) {
+      document.dispatchEvent(new CustomEvent('bsb:open-product-modal', {
+        detail: {
+          handle:          card.getAttribute('data-product-handle'),
+          productId:       card.getAttribute('data-product-id'),
+          title:           card.getAttribute('data-product-title'),
+          pickupEligible:  card.getAttribute('data-bsb-pickup-eligible') === 'true',
+          shipEligible:    card.getAttribute('data-bsb-ship-eligible')   === 'true',
+          source:          'collection-menu'
+        }
+      }));
+    }
+
+    section.addEventListener('click', function (e) {
+      var card = e.target.closest('.collection-menu__card');
+      if (!card) return;
+      openProductModal(card);
+    });
+
+    section.addEventListener('keydown', function (e) {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      var card = e.target.closest('.collection-menu__card');
+      if (!card) return;
+      e.preventDefault();
+      openProductModal(card);
+    });
+
+    var grid = section.querySelector('[data-grid]');
+    var noResults = section.querySelector('[data-no-results]');
+    var countLine = section.querySelector('[data-count-line]');
+    var allCards = grid ? Array.from(grid.querySelectorAll('.collection-menu__card')) : [];
+    var totalCount = countLine ? countLine.textContent : '';
+    var state = { q: '', tab: 'all' };
+
+    function applyFilters() {
+      var shown = 0;
+      allCards.forEach(function (card) {
+        var title = (card.getAttribute('data-product-title') || '').toLowerCase();
+        var cat = card.getAttribute('data-product-category') || 'other';
+        var matchesSearch = !state.q || title.indexOf(state.q) !== -1;
+        var matchesTab = state.tab === 'all' || cat === state.tab;
+        if (matchesSearch && matchesTab) { card.removeAttribute('data-hidden'); shown++; }
+        else { card.setAttribute('data-hidden', ''); }
+      });
+      if (noResults) noResults.hidden = shown !== 0;
+      if (countLine) {
+        countLine.textContent = (state.q || state.tab !== 'all')
+          ? (shown + ' match' + (shown === 1 ? '' : 'es'))
+          : totalCount;
+      }
+    }
+
+    var input = section.querySelector('[data-search-input]');
+    if (input) {
+      input.addEventListener('input', function () {
+        state.q = (input.value || '').trim().toLowerCase();
+        applyFilters();
+      });
+    }
+
+    var tabs = Array.from(section.querySelectorAll('.collection-menu__tab'));
+    tabs.forEach(function (tab) {
+      tab.addEventListener('click', function () {
+        tabs.forEach(function (t) {
+          t.classList.remove('is-active');
+          t.setAttribute('aria-selected', 'false');
+        });
+        tab.classList.add('is-active');
+        tab.setAttribute('aria-selected', 'true');
+        state.tab = tab.getAttribute('data-tab') || 'all';
+        applyFilters();
+      });
+    });
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "Collection Menu",
+  "tag": "section",
+  "class": "collection-menu-section",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Source"
+    },
+    {
+      "type": "collection",
+      "id": "collection_handle",
+      "label": "Collection (only needed on non-collection templates like /pages/)"
+    },
+    {
+      "type": "text",
+      "id": "heading_override",
+      "label": "Heading override (optional)"
+    },
+    {
+      "type": "richtext",
+      "id": "description",
+      "label": "Description override (optional)"
+    },
+    {
+      "type": "select",
+      "id": "description_style",
+      "label": "Description style",
+      "options": [
+        { "value": "full", "label": "Full (rich text)" },
+        { "value": "tagline", "label": "Tagline (one-liner pill)" }
+      ],
+      "default": "full"
+    },
+    {
+      "type": "header",
+      "content": "Display"
+    },
+    {
+      "type": "checkbox",
+      "id": "hide_header",
+      "label": "Hide header (title, description, count)",
+      "default": false
+    },
+    {
+      "type": "checkbox",
+      "id": "show_collection_image",
+      "label": "Show collection hero image",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "search_enabled",
+      "label": "Show search input",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_category_tabs",
+      "label": "Show All / Cakes / Candy filter tabs",
+      "default": false
+    }
+  ],
+  "presets": [
+    { "name": "Collection Menu" }
+  ]
+}
+{% endschema %}

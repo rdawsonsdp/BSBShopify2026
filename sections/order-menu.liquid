@@ -1,0 +1,562 @@
+{%- comment -%}
+  LIFT: Clarity + Value — single scrollable menu like Toast/Tilly; cards make the offer obvious without a click.
+
+  Renders the full BSB ordering menu as Toast-style product cards grouped by collection.
+  Click on a card (or its + button) dispatches `bsb:open-product-modal` on document.
+  The product-customizer modal (owned by another agent) listens for that event.
+{%- endcomment -%}
+
+<section
+  class="order-menu order-menu--{{ section.id }}"
+  data-section-id="{{ section.id }}"
+  data-section-type="order-menu"
+  style="background-color: {{ section.settings.background_color }}; color: {{ section.settings.text_color }};"
+>
+  <div class="order-menu__inner order-menu__inner--{{ section.id }}">
+    {% if section.settings.heading != blank %}
+      <h2 class="order-menu__heading order-menu__heading--{{ section.id }}">{{ section.settings.heading | escape }}</h2>
+    {% endif %}
+
+    {%- if section.blocks.size > 0 -%}
+      <nav class="order-menu__nav order-menu__nav--{{ section.id }}" aria-label="Menu categories">
+        <div class="order-menu__nav-inner order-menu__nav-inner--{{ section.id }}">
+          {%- for block in section.blocks -%}
+            {%- assign nav_label = block.settings.heading_override -%}
+            {%- if nav_label == blank -%}
+              {%- assign nav_label = block.settings.collection.title -%}
+            {%- endif -%}
+            {%- if nav_label == blank -%}
+              {%- assign nav_label = 'Category' -%}
+            {%- endif -%}
+            <a
+              href="#cat-{{ block.id }}"
+              class="order-menu__nav-pill order-menu__nav-pill--{{ section.id }}"
+              data-target="cat-{{ block.id }}"
+            >{{ nav_label | escape }}</a>
+          {%- endfor -%}
+        </div>
+      </nav>
+
+      {% if section.settings.search_enabled %}
+        <div class="order-menu__search order-menu__search--{{ section.id }}">
+          <label class="order-menu__search-label order-menu__search-label--{{ section.id }}" for="order-menu-search-{{ section.id }}">Search the menu</label>
+          <input
+            id="order-menu-search-{{ section.id }}"
+            type="search"
+            class="order-menu__search-input order-menu__search-input--{{ section.id }}"
+            placeholder="Search the menu…"
+            autocomplete="off"
+            data-order-menu-search
+          />
+        </div>
+      {% endif %}
+
+      <div class="order-menu__categories order-menu__categories--{{ section.id }}">
+        {%- for block in section.blocks -%}
+          {%- assign cat_collection = block.settings.collection -%}
+          {%- assign cat_title = block.settings.heading_override -%}
+          {%- if cat_title == blank -%}
+            {%- assign cat_title = cat_collection.title -%}
+          {%- endif -%}
+          {%- if cat_title == blank -%}
+            {%- assign cat_title = 'Category' -%}
+          {%- endif -%}
+
+          <div class="order-menu__category order-menu__category--{{ section.id }}" data-category-id="cat-{{ block.id }}" {{ block.shopify_attributes }}>
+            <h2 id="cat-{{ block.id }}" class="order-menu__category-title order-menu__category-title--{{ section.id }}">{{ cat_title | escape }}</h2>
+            {% if block.settings.description != blank %}
+              <div class="order-menu__category-desc order-menu__category-desc--{{ section.id }}">{{ block.settings.description }}</div>
+            {% endif %}
+
+            {%- if cat_collection != blank and cat_collection.products_count > 0 -%}
+              <div class="order-menu__grid order-menu__grid--{{ section.id }}">
+                {%- for product in cat_collection.products -%}
+                  {%- assign coll_handles = product.collections | map: 'handle' | join: ',' -%}
+                  {%- assign pickup_eligible = false -%}
+                  {%- if coll_handles contains 'available-for-pickup' or product.metafields.fulfillment.pickup_eligible -%}
+                    {%- assign pickup_eligible = true -%}
+                  {%- endif -%}
+                  {%- assign ship_eligible = false -%}
+                  {%- if coll_handles contains 'nationwide-shipping' or product.metafields.fulfillment.ship_eligible -%}
+                    {%- assign ship_eligible = true -%}
+                  {%- endif -%}
+                  {%- comment -%} Order menu is pickup/delivery only — skip shipping-only products. {%- endcomment -%}
+                  {%- unless pickup_eligible -%}{%- continue -%}{%- endunless -%}
+
+                  <article
+                    class="order-menu__card order-menu__card--{{ section.id }}"
+                    role="button"
+                    tabindex="0"
+                    data-product-handle="{{ product.handle }}"
+                    data-product-id="{{ product.id }}"
+                    data-product-title="{{ product.title | escape }}"
+                    data-bsb-pickup-eligible="{{ pickup_eligible }}"
+                    data-bsb-ship-eligible="{{ ship_eligible }}"
+                    aria-label="Add {{ product.title | escape }} to order"
+                  >
+                    <div class="order-menu__card-thumb order-menu__card-thumb--{{ section.id }}">
+                      {% if product.featured_image %}
+                        <img
+                          src="{{ product.featured_image | img_url: '200x200', crop: 'center' }}"
+                          alt="{{ product.featured_image.alt | default: product.title | escape }}"
+                          loading="lazy"
+                          width="100"
+                          height="100"
+                        />
+                      {% endif %}
+                    </div>
+                    <div class="order-menu__card-body order-menu__card-body--{{ section.id }}">
+                      <h3 class="order-menu__card-title order-menu__card-title--{{ section.id }}">{{ product.title | escape }}</h3>
+                      {% if product.description != blank %}
+                        <p class="order-menu__card-desc order-menu__card-desc--{{ section.id }}">{{ product.description | strip_html | truncate: 120 }}</p>
+                      {% endif %}
+                      <p class="order-menu__card-price order-menu__card-price--{{ section.id }}">
+                        {% if product.price_varies %}From {% endif %}{{ product.price | money }}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      class="order-menu__card-add order-menu__card-add--{{ section.id }}"
+                      aria-label="Add {{ product.title | escape }}"
+                      data-add-button
+                    >
+                      <span aria-hidden="true">+</span>
+                    </button>
+                  </article>
+                {%- endfor -%}
+              </div>
+            {%- else -%}
+              <p class="order-menu__empty order-menu__empty--{{ section.id }}">No items in this category yet.</p>
+            {%- endif -%}
+          </div>
+        {%- endfor -%}
+      </div>
+
+      <p class="order-menu__no-results order-menu__no-results--{{ section.id }}" hidden>No items match your search.</p>
+    {%- else -%}
+      <p class="order-menu__empty order-menu__empty--{{ section.id }}">Add a category block to start building the menu.</p>
+    {%- endif -%}
+  </div>
+</section>
+
+<style>
+  .order-menu--{{ section.id }} {
+    padding: 24px 16px 56px;
+    position: relative;
+  }
+  .order-menu--{{ section.id }} .order-menu__inner--{{ section.id }} {
+    max-width: 980px;
+    margin: 0 auto;
+  }
+  .order-menu--{{ section.id }} .order-menu__heading--{{ section.id }} {
+    font-size: clamp(22px, 4vw, 30px);
+    font-weight: 800;
+    margin: 0 0 16px;
+    text-align: center;
+    color: #570522;
+  }
+  .order-menu--{{ section.id }} .order-menu__nav--{{ section.id }} {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background-color: {{ section.settings.background_color }};
+    padding: 10px 0;
+    margin: 0 -16px 16px;
+    border-bottom: 1px solid rgba(91, 37, 18, 0.12);
+  }
+  .order-menu--{{ section.id }} .order-menu__nav-inner--{{ section.id }} {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 4px 16px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+  .order-menu--{{ section.id }} .order-menu__nav-pill--{{ section.id }} {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 16px;
+    border-radius: 999px;
+    border: 1px solid rgba(91, 37, 18, 0.22);
+    background: #fffaf2;
+    color: #570522;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background 160ms ease, color 160ms ease, border-color 160ms ease;
+  }
+  .order-menu--{{ section.id }} .order-menu__nav-pill--{{ section.id }}:hover {
+    background: #f7ead6;
+    border-color: rgba(91, 37, 18, 0.4);
+  }
+  .order-menu--{{ section.id }} .order-menu__nav-pill--{{ section.id }}.is-active {
+    background: #570522;
+    color: #fffaf2;
+    border-color: #570522;
+  }
+
+  .order-menu--{{ section.id }} .order-menu__search--{{ section.id }} {
+    margin: 0 0 24px;
+  }
+  .order-menu--{{ section.id }} .order-menu__search-label--{{ section.id }} {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+  .order-menu--{{ section.id }} .order-menu__search-input--{{ section.id }} {
+    width: 100%;
+    padding: 12px 16px;
+    border-radius: 4px;
+    border: 1px solid rgba(91, 37, 18, 0.22);
+    background: #fffaf2;
+    color: #570522;
+    font-size: 15px;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.8),
+      inset 0 -1px 0 rgba(91, 37, 18, 0.05),
+      0 1px 2px rgba(91, 37, 18, 0.08);
+  }
+  .order-menu--{{ section.id }} .order-menu__search-input--{{ section.id }}:focus {
+    outline: 2px solid #ba5b28;
+    outline-offset: 1px;
+  }
+
+  .order-menu--{{ section.id }} .order-menu__category--{{ section.id }} {
+    margin: 0 0 40px;
+    scroll-margin-top: 72px;
+  }
+  .order-menu--{{ section.id }} .order-menu__category-title--{{ section.id }} {
+    font-size: clamp(20px, 3vw, 26px);
+    font-weight: 800;
+    margin: 0 0 6px;
+    color: #570522;
+    scroll-margin-top: 72px;
+  }
+  .order-menu--{{ section.id }} .order-menu__category-desc--{{ section.id }} {
+    font-size: 14px;
+    line-height: 1.55;
+    color: #570522;
+    opacity: 0.78;
+    margin: 0 0 16px;
+  }
+  .order-menu--{{ section.id }} .order-menu__category-desc--{{ section.id }} p {
+    margin: 0 0 8px;
+  }
+
+  .order-menu--{{ section.id }} .order-menu__grid--{{ section.id }} {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  @media screen and (min-width: 720px) {
+    .order-menu--{{ section.id }} .order-menu__grid--{{ section.id }} {
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+  }
+
+  .order-menu--{{ section.id }} .order-menu__card--{{ section.id }} {
+    position: relative;
+    display: grid;
+    grid-template-columns: 100px 1fr;
+    gap: 12px;
+    align-items: stretch;
+    padding: 0;
+    background: #ffffff;
+    border: 1px solid rgba(91, 37, 18, 0.18);
+    border-radius: 4px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 140ms ease, box-shadow 160ms ease, border-color 160ms ease;
+    box-shadow: 0 1px 2px rgba(91, 37, 18, 0.06);
+  }
+  .order-menu--{{ section.id }} .order-menu__card--{{ section.id }}:hover,
+  .order-menu--{{ section.id }} .order-menu__card--{{ section.id }}:focus-visible {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(91, 37, 18, 0.14);
+    border-color: rgba(91, 37, 18, 0.32);
+    outline: none;
+  }
+  .order-menu--{{ section.id }} .order-menu__card-thumb--{{ section.id }} {
+    width: 100px;
+    height: 100px;
+    background: #f7ead6;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .order-menu--{{ section.id }} .order-menu__card-thumb--{{ section.id }} img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .order-menu--{{ section.id }} .order-menu__card-body--{{ section.id }} {
+    padding: 10px 56px 10px 4px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 0;
+  }
+  .order-menu--{{ section.id }} .order-menu__card-title--{{ section.id }} {
+    font-size: 14px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: #570522;
+    margin: 0 0 4px;
+    line-height: 1.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+  .order-menu--{{ section.id }} .order-menu__card-desc--{{ section.id }} {
+    font-size: 12px;
+    line-height: 1.4;
+    color: #6b5b53;
+    margin: 0 0 6px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+  .order-menu--{{ section.id }} .order-menu__card-price--{{ section.id }} {
+    font-size: 14px;
+    font-weight: 800;
+    color: #570522;
+    margin: 0;
+  }
+  .order-menu--{{ section.id }} .order-menu__card-add--{{ section.id }} {
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1px solid #2e0212;
+    background: linear-gradient(180deg, #6c0a2e 0%, #570522 60%, #45041b 100%);
+    color: #fffaf2;
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.22),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.28),
+      0 2px 4px rgba(46, 2, 18, 0.28);
+    transition: background 160ms ease, transform 80ms ease;
+    padding: 0;
+  }
+  .order-menu--{{ section.id }} .order-menu__card-add--{{ section.id }}:hover {
+    background: linear-gradient(180deg, #d2682d 0%, #ba5b28 60%, #9a4a20 100%);
+    border-color: #6e3514;
+  }
+  .order-menu--{{ section.id }} .order-menu__card-add--{{ section.id }}:active {
+    transform: translateY(1px);
+  }
+  .order-menu--{{ section.id }} .order-menu__card-add--{{ section.id }} span {
+    display: block;
+    margin-top: -2px;
+  }
+
+  .order-menu--{{ section.id }} .order-menu__empty--{{ section.id }} {
+    text-align: center;
+    color: #570522;
+    opacity: 0.7;
+    font-size: 14px;
+    padding: 16px 0;
+  }
+  .order-menu--{{ section.id }} .order-menu__no-results--{{ section.id }} {
+    text-align: center;
+    color: #570522;
+    font-size: 15px;
+    padding: 24px 0;
+  }
+  .order-menu--{{ section.id }} .order-menu__card--{{ section.id }}.is-hidden,
+  .order-menu--{{ section.id }} .order-menu__category--{{ section.id }}.is-hidden {
+    display: none;
+  }
+</style>
+
+<script>
+  (function () {
+    var root = document.querySelector('[data-section-id="{{ section.id }}"][data-section-type="order-menu"]');
+    if (!root) return;
+
+    // Open product modal on card click / "+" click / Enter key
+    function openModal(card, ev) {
+      if (!card) return;
+      if (ev) ev.preventDefault();
+      var detail = {
+        handle: card.getAttribute('data-product-handle') || '',
+        productId: card.getAttribute('data-product-id') || '',
+        title: card.getAttribute('data-product-title') || '',
+        pickupEligible: card.getAttribute('data-bsb-pickup-eligible') === 'true',
+        shipEligible: card.getAttribute('data-bsb-ship-eligible') === 'true',
+        source: 'order-menu'
+      };
+      document.dispatchEvent(new CustomEvent('bsb:open-product-modal', { detail: detail }));
+    }
+
+    root.addEventListener('click', function (e) {
+      var addBtn = e.target.closest('[data-add-button]');
+      if (addBtn) {
+        openModal(addBtn.closest('.order-menu__card--{{ section.id }}'), e);
+        return;
+      }
+      var card = e.target.closest('.order-menu__card--{{ section.id }}');
+      if (card) openModal(card, e);
+    });
+
+    root.addEventListener('keydown', function (e) {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      var card = e.target.closest('.order-menu__card--{{ section.id }}');
+      if (card && card === document.activeElement) {
+        openModal(card, e);
+      }
+    });
+
+    // Live search
+    var searchInput = root.querySelector('[data-order-menu-search]');
+    var noResults = root.querySelector('.order-menu__no-results--{{ section.id }}');
+    var cards = Array.prototype.slice.call(root.querySelectorAll('.order-menu__card--{{ section.id }}'));
+    var categories = Array.prototype.slice.call(root.querySelectorAll('.order-menu__category--{{ section.id }}'));
+
+    function applyFilter(query) {
+      var q = (query || '').trim().toLowerCase();
+      var anyVisible = false;
+      cards.forEach(function (card) {
+        var title = (card.getAttribute('data-product-title') || '').toLowerCase();
+        var match = !q || title.indexOf(q) !== -1;
+        card.classList.toggle('is-hidden', !match);
+        if (match) anyVisible = true;
+      });
+      categories.forEach(function (cat) {
+        var visibleCards = cat.querySelectorAll('.order-menu__card--{{ section.id }}:not(.is-hidden)');
+        cat.classList.toggle('is-hidden', q && visibleCards.length === 0);
+      });
+      if (noResults) noResults.hidden = anyVisible || !q;
+    }
+
+    if (searchInput) {
+      searchInput.addEventListener('input', function (e) {
+        applyFilter(e.target.value);
+      });
+    }
+
+    // Sticky-nav active state on scroll
+    var pills = Array.prototype.slice.call(root.querySelectorAll('.order-menu__nav-pill--{{ section.id }}'));
+    function setActive(targetId) {
+      pills.forEach(function (p) {
+        p.classList.toggle('is-active', p.getAttribute('data-target') === targetId);
+      });
+    }
+
+    if ('IntersectionObserver' in window && categories.length) {
+      var observer = new IntersectionObserver(function (entries) {
+        // Pick the entry closest to the top that is intersecting
+        var visible = entries
+          .filter(function (en) { return en.isIntersecting; })
+          .sort(function (a, b) { return a.boundingClientRect.top - b.boundingClientRect.top; });
+        if (visible.length) {
+          setActive(visible[0].target.getAttribute('data-category-id'));
+        }
+      }, { rootMargin: '-80px 0px -60% 0px', threshold: 0 });
+      categories.forEach(function (cat) { observer.observe(cat); });
+    }
+
+    // Click on a pill should also set active immediately for snappier feel
+    pills.forEach(function (p) {
+      p.addEventListener('click', function () {
+        setActive(p.getAttribute('data-target'));
+      });
+    });
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "Order menu",
+  "tag": "section",
+  "class": "order-menu-section",
+  "max_blocks": 12,
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading (optional — banner already heads the page)"
+    },
+    {
+      "type": "checkbox",
+      "id": "search_enabled",
+      "label": "Show live search input",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "Colors"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background",
+      "default": "#fffaf2"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text",
+      "default": "#570522"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "category",
+      "name": "Category",
+      "settings": [
+        {
+          "type": "collection",
+          "id": "collection",
+          "label": "Collection"
+        },
+        {
+          "type": "text",
+          "id": "heading_override",
+          "label": "Heading override (defaults to collection title)"
+        },
+        {
+          "type": "richtext",
+          "id": "description",
+          "label": "Description"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Order menu",
+      "category": "BSB landing pages",
+      "blocks": [
+        { "type": "category" },
+        { "type": "category" },
+        { "type": "category" },
+        { "type": "category" }
+      ]
+    }
+  ]
+}
+{% endschema %}

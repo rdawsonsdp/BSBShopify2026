@@ -74,12 +74,22 @@
     </div>
 
     {% if cart.item_count > 0 %}
-      <div class="bsb-cart-drawer__zapiet">
-        {% comment %} Zapiet Pickup + Delivery — auto-injects into these hook points {% endcomment %}
-        <div id="zapiet-pickup-delivery-shipping"></div>
-        <div data-zapiet-pickup-delivery="picker"></div>
-        <div data-zapiet-pickup-delivery-cart></div>
-      </div>
+      {%- if settings.fulfillment_engine == 'bsb' -%}
+        {% comment %} BSB-native summary populated by JS from cart.attributes — see Phase 2b. {% endcomment %}
+        <div class="bsb-cart-drawer__fulfillment" data-bsb-fulfillment-summary hidden>
+          <div class="bsb-cart-drawer__fulfillment-row">
+            <span class="bsb-cart-drawer__fulfillment-label" data-bsb-fulfillment-label></span>
+            <button type="button" class="bsb-cart-drawer__fulfillment-edit" data-bsb-fulfillment-edit>Edit</button>
+          </div>
+        </div>
+      {%- else -%}
+        <div class="bsb-cart-drawer__zapiet">
+          {% comment %} Zapiet Pickup + Delivery — auto-injects into these hook points {% endcomment %}
+          <div id="zapiet-pickup-delivery-shipping"></div>
+          <div data-zapiet-pickup-delivery="picker"></div>
+          <div data-zapiet-pickup-delivery-cart></div>
+        </div>
+      {%- endif -%}
       <footer class="bsb-cart-drawer__footer">
         <div class="bsb-cart-drawer__subtotal-row">
           <span class="bsb-cart-drawer__subtotal-label">Subtotal</span>
@@ -96,6 +106,8 @@
 </aside>
 
 <style>
+  /* Toast/Tilly-inspired cart drawer — flat cream surface, hairline dividers,
+     typographic hierarchy over ornament. Brand palette only. */
   .bsb-cart-drawer {
     position: fixed;
     inset: 0;
@@ -111,7 +123,7 @@
   .bsb-cart-drawer__overlay {
     position: absolute;
     inset: 0;
-    background: rgba(29, 10, 4, 0.4);
+    background: rgba(29, 10, 4, 0.32);
     opacity: 0;
     transition: opacity 280ms ease;
   }
@@ -126,12 +138,12 @@
     bottom: 0;
     width: 100%;
     max-width: 420px;
-    background: #ffffff;
+    background: #fffaf2;
     color: #570522;
     font-family: 'Arsenal', sans-serif;
     transform: translateX(100%);
     transition: transform 280ms cubic-bezier(0.2, 0.8, 0.2, 1);
-    box-shadow: -12px 0 36px rgba(87, 5, 34, 0.2);
+    box-shadow: -16px 0 40px rgba(87, 5, 34, 0.14);
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -140,67 +152,53 @@
     transform: translateX(0);
   }
 
-  /* Maroon accent stripe at the very top — matches the home header's stripe */
+  /* Hide the legacy maroon top stripe — Toast aesthetic has no top accent bar */
   .bsb-cart-drawer__top-stripe {
-    display: block;
-    height: 3px;
-    background: #570522;
-    flex: 0 0 auto;
+    display: none;
   }
+
   .bsb-cart-drawer__header {
     flex: 0 0 auto;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    padding: 14px 18px;
-    border-bottom: 1px solid rgba(87, 5, 34, 0.14);
+    height: 52px;
+    padding: 0 20px;
+    border-bottom: 1px solid rgba(87, 5, 34, 0.12);
     background: #fffaf2;
   }
   .bsb-cart-drawer__brand {
     display: inline-flex;
     align-items: center;
-    gap: 12px;
+    gap: 0;
     text-decoration: none;
     color: inherit;
     min-width: 0;
   }
-  .bsb-cart-drawer__logo {
-    width: 44px;
-    height: 44px;
-    object-fit: contain;
-    border-radius: 6px;
-    flex-shrink: 0;
-    background: transparent;
-  }
   .bsb-cart-drawer__brand-text {
     display: flex;
     flex-direction: column;
-    line-height: 1.1;
+    line-height: 1;
     min-width: 0;
   }
   .bsb-cart-drawer__brand-name {
-    font-family: 'Arsenal', sans-serif;
-    font-weight: 700;
-    font-size: 14px;
-    letter-spacing: 0.04em;
-    color: #570522;
+    display: none; /* simplify header — single eyebrow "YOUR CART" */
   }
   .bsb-cart-drawer__brand-sub {
     font-family: 'Arsenal', sans-serif;
     font-weight: 700;
-    font-size: 11px;
-    letter-spacing: 0.22em;
+    font-size: 12px;
+    letter-spacing: 0.24em;
     text-transform: uppercase;
-    color: rgba(87, 5, 34, 0.65);
-    margin-top: 2px;
+    color: #570522;
   }
   .bsb-cart-drawer__close {
     background: transparent;
-    border: 1px solid rgba(87, 5, 34, 0.2);
-    border-radius: 4px;
-    width: 36px;
-    height: 36px;
+    border: 0;
+    border-radius: 999px;
+    width: 32px;
+    height: 32px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -210,13 +208,14 @@
     transition: background 160ms ease;
   }
   .bsb-cart-drawer__close:hover {
-    background: rgba(87, 5, 34, 0.06);
+    background: rgba(87, 5, 34, 0.08);
   }
 
   .bsb-cart-drawer__body {
     flex: 1 1 auto;
     overflow-y: auto;
     padding: 0;
+    background: #fffaf2;
   }
 
   .bsb-cart-drawer__items {
@@ -226,16 +225,20 @@
   }
   .bsb-cart-item {
     display: grid;
-    grid-template-columns: 80px 1fr auto;
-    gap: 14px;
-    padding: 16px 20px;
+    grid-template-columns: 72px 1fr auto;
+    gap: 16px;
+    padding: 20px;
     border-bottom: 1px solid rgba(87, 5, 34, 0.10);
+    background: transparent;
+  }
+  .bsb-cart-item:last-child {
+    border-bottom: 0;
   }
   .bsb-cart-item__image {
     display: block;
-    width: 80px;
-    height: 80px;
-    border-radius: 6px;
+    width: 72px;
+    height: 72px;
+    border-radius: 4px;
     overflow: hidden;
     background: #f7ead6;
   }
@@ -249,15 +252,16 @@
     min-width: 0;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 3px;
   }
   .bsb-cart-item__title {
     font-family: 'Arsenal', sans-serif;
     font-weight: 700;
     color: #570522;
     text-decoration: none;
-    font-size: 15px;
+    font-size: 16px;
     line-height: 1.25;
+    letter-spacing: 0.005em;
   }
   .bsb-cart-item__title:hover {
     text-decoration: underline;
@@ -266,26 +270,29 @@
   .bsb-cart-item__variant,
   .bsb-cart-item__property {
     font-size: 12px;
-    color: rgba(87, 5, 34, 0.72);
+    color: rgba(87, 5, 34, 0.6);
     margin: 0;
-    line-height: 1.3;
+    line-height: 1.35;
   }
   .bsb-cart-item__property span {
-    font-weight: 600;
+    font-weight: 500;
+    color: rgba(87, 5, 34, 0.55);
   }
   .bsb-cart-item__form {
-    margin: 4px 0 0;
+    margin: 6px 0 0;
   }
   .bsb-cart-item__remove {
     background: none;
     border: none;
     padding: 0;
-    color: rgba(87, 5, 34, 0.7);
+    color: rgba(87, 5, 34, 0.55);
     text-decoration: underline;
     text-underline-offset: 2px;
-    font-size: 12px;
+    font-size: 11px;
     font-family: 'Arsenal', sans-serif;
+    letter-spacing: 0.02em;
     cursor: pointer;
+    transition: color 120ms ease;
   }
   .bsb-cart-item__remove:hover {
     color: #570522;
@@ -295,8 +302,8 @@
     flex-direction: column;
     align-items: flex-end;
     justify-content: space-between;
-    gap: 8px;
-    min-width: 90px;
+    gap: 10px;
+    min-width: 80px;
   }
   .bsb-cart-item__qty-form {
     margin: 0;
@@ -304,18 +311,18 @@
   .bsb-cart-item__qty {
     display: inline-flex;
     align-items: center;
-    border: 1px solid rgba(87, 5, 34, 0.2);
-    border-radius: 4px;
+    border: 1px solid rgba(87, 5, 34, 0.18);
+    border-radius: 3px;
     overflow: hidden;
     background: #ffffff;
   }
   .bsb-cart-item__qty-btn {
     background: transparent;
     border: none;
-    width: 28px;
-    height: 30px;
+    width: 24px;
+    height: 26px;
     color: #570522;
-    font-size: 16px;
+    font-size: 14px;
     line-height: 1;
     cursor: pointer;
     transition: background 120ms ease;
@@ -324,23 +331,25 @@
     background: rgba(87, 5, 34, 0.06);
   }
   .bsb-cart-item__qty-value {
-    min-width: 28px;
+    min-width: 22px;
     text-align: center;
     font-weight: 600;
-    font-size: 14px;
+    font-size: 13px;
     color: #570522;
   }
   .bsb-cart-item__total {
     margin: 0;
     font-weight: 700;
     color: #570522;
-    font-size: 14px;
+    font-size: 15px;
+    letter-spacing: 0.005em;
+    font-variant-numeric: tabular-nums;
   }
 
   .bsb-cart-drawer__zapiet {
     padding: 12px 20px;
     border-top: 1px solid rgba(87, 5, 34, 0.10);
-    background: #ffffff;
+    background: #fffaf2;
   }
   .bsb-cart-drawer__zapiet:empty {
     display: none;
@@ -352,12 +361,12 @@
   }
 
   .bsb-cart-drawer__empty {
-    padding: 60px 24px;
+    padding: 72px 24px;
     text-align: center;
-    color: rgba(87, 5, 34, 0.7);
+    color: rgba(87, 5, 34, 0.65);
   }
   .bsb-cart-drawer__empty p {
-    margin: 0 0 16px;
+    margin: 0 0 18px;
     font-size: 16px;
   }
   .bsb-cart-drawer__shop-link {
@@ -366,11 +375,14 @@
     text-decoration: underline;
     text-underline-offset: 3px;
     font-weight: 600;
+    font-size: 13px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
   }
 
   .bsb-cart-drawer__footer {
     flex: 0 0 auto;
-    padding: 16px 20px 20px;
+    padding: 18px 20px 22px;
     background: #fffaf2;
     border-top: 1px solid rgba(87, 5, 34, 0.12);
   }
@@ -378,15 +390,27 @@
     display: flex;
     justify-content: space-between;
     align-items: baseline;
-    font-size: 16px;
-    font-weight: 700;
+    font-size: 18px;
     color: #570522;
+    margin: 0 0 4px;
+  }
+  .bsb-cart-drawer__subtotal-label {
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    font-size: 13px;
+    color: rgba(87, 5, 34, 0.7);
+  }
+  .bsb-cart-drawer__subtotal-value {
+    font-weight: 700;
+    font-size: 20px;
+    letter-spacing: 0.005em;
+    font-variant-numeric: tabular-nums;
   }
   .bsb-cart-drawer__taxes {
-    margin: 4px 0 14px;
+    margin: 0 0 16px;
     font-size: 12px;
-    color: rgba(87, 5, 34, 0.65);
-    font-style: italic;
+    color: rgba(87, 5, 34, 0.55);
   }
   .bsb-cart-drawer__actions {
     display: grid;
@@ -397,42 +421,39 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 12px 14px;
+    padding: 13px 14px;
     font-family: 'Arsenal', sans-serif;
     font-weight: 700;
-    font-size: 13px;
-    letter-spacing: 0.08em;
+    font-size: 12px;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
     color: #570522;
     background: transparent;
-    border: 1.5px solid #570522;
-    border-radius: 4px;
+    border: 1px solid rgba(87, 5, 34, 0.5);
+    border-radius: 6px;
     text-decoration: none;
-    transition: background 160ms ease;
+    transition: background 160ms ease, border-color 160ms ease;
   }
   .bsb-cart-drawer__view-cart:hover {
     background: rgba(87, 5, 34, 0.06);
+    border-color: #570522;
   }
   .bsb-cart-drawer__checkout {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 12px 14px;
+    padding: 13px 14px;
     font-family: 'Arsenal', sans-serif;
     font-weight: 700;
-    font-size: 14px;
-    letter-spacing: 0.08em;
+    font-size: 13px;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
     color: #fffaf2;
     background: linear-gradient(180deg, #6c0a2e 0%, #570522 60%, #45041b 100%);
     border: 1px solid #2e0212;
-    border-radius: 4px;
+    border-radius: 6px;
     text-decoration: none;
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.20),
-      inset 0 -1px 0 rgba(0, 0, 0, 0.28),
-      0 2px 0 rgba(46, 2, 18, 0.5);
-    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.35);
+    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.25);
     transition: filter 160ms ease;
   }
   .bsb-cart-drawer__checkout:hover {
@@ -444,18 +465,19 @@
       max-width: 100vw;
     }
     .bsb-cart-item {
-      grid-template-columns: 70px 1fr auto;
-      padding: 14px 16px;
+      grid-template-columns: 64px 1fr auto;
+      gap: 14px;
+      padding: 16px;
     }
     .bsb-cart-item__image {
-      width: 70px;
-      height: 70px;
+      width: 64px;
+      height: 64px;
     }
     .bsb-cart-drawer__header {
-      padding: 14px 16px;
+      padding: 0 16px;
     }
     .bsb-cart-drawer__footer {
-      padding: 14px 16px 18px;
+      padding: 16px 16px 20px;
     }
   }
 
@@ -463,6 +485,49 @@
     .bsb-cart-drawer__panel,
     .bsb-cart-drawer__overlay {
       transition: none;
+    }
+  }
+
+  /* BSB fulfillment summary — flat white card with hairline border, no inset highlight */
+  .bsb-cart-drawer__fulfillment {
+    margin: 0 20px 14px;
+    background: #ffffff;
+    border: 1px solid rgba(87, 5, 34, 0.12);
+    border-radius: 4px;
+    padding: 12px 14px;
+    color: #570522;
+    font-size: 13px;
+  }
+  .bsb-cart-drawer__fulfillment[hidden] { display: none; }
+  .bsb-cart-drawer__fulfillment-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .bsb-cart-drawer__fulfillment-label {
+    font-weight: 600;
+    line-height: 1.35;
+    letter-spacing: 0.01em;
+  }
+  .bsb-cart-drawer__fulfillment-edit {
+    background: none;
+    border: 0;
+    color: #ba5b28;
+    font: inherit;
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    cursor: pointer;
+    padding: 0;
+  }
+  .bsb-cart-drawer__fulfillment-edit:hover { color: #e68c3b; }
+  @media (max-width: 480px) {
+    .bsb-cart-drawer__fulfillment {
+      margin: 0 16px 12px;
     }
   }
 </style>
@@ -474,12 +539,70 @@
     function openDrawer() {
       document.body.classList.add('bsb-cart-drawer-open');
       document.documentElement.style.overflow = 'hidden';
+      refreshFulfillmentSummary();
+    }
+
+    var DOW_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    var MONTH_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+    function formatDateISO(iso) {
+      // iso = "YYYY-MM-DD" — parse as local date, not UTC
+      var parts = (iso || '').split('-');
+      if (parts.length !== 3) return iso || '';
+      var d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+      if (isNaN(d.getTime())) return iso || '';
+      return DOW_SHORT[d.getDay()] + ' ' + MONTH_SHORT[d.getMonth()] + ' ' + d.getDate();
+    }
+
+    function refreshFulfillmentSummary() {
+      var block = document.querySelector('[data-bsb-fulfillment-summary]');
+      if (!block) return; // flag is 'zapiet' — block not rendered
+      var label = block.querySelector('[data-bsb-fulfillment-label]');
+      if (!label) return;
+      fetch('/cart.js', { headers: { 'Accept': 'application/json' } })
+        .then(function (res) { return res.json(); })
+        .then(function (cart) {
+          var attrs = cart.attributes || {};
+          var method = attrs['Checkout-Method'];
+          var date = attrs['Pickup-Date'];
+          var time = attrs['Pickup-Time'];
+          if (!method) { block.hidden = true; return; }
+          var dateStr = formatDateISO(date);
+          var text;
+          if (String(method).toLowerCase() === 'pickup') {
+            text = 'Pickup · ' + (dateStr || 'date pending') + (time ? ' at ' + time : '');
+          } else {
+            text = 'Ship · ' + (dateStr ? 'arrives ' + dateStr : 'date pending');
+          }
+          label.textContent = text;
+          block.hidden = false;
+        })
+        .catch(function () { block.hidden = true; });
     }
     function closeDrawer() {
       document.body.classList.remove('bsb-cart-drawer-open');
       document.documentElement.style.overflow = '';
       try { sessionStorage.removeItem(BSB_CART_KEY); } catch (e) {}
     }
+
+    // Edit button on the cart-drawer fulfillment summary: closes the drawer and
+    // navigates to the first cart item's PDP, where the picker pre-fills from
+    // cart.attributes so the user can change the date/time inline.
+    document.addEventListener('click', function (e) {
+      var btn = e.target.closest('[data-bsb-fulfillment-edit]');
+      if (!btn) return;
+      e.preventDefault();
+      fetch('/cart.js', { headers: { 'Accept': 'application/json' } })
+        .then(function (res) { return res.json(); })
+        .then(function (cart) {
+          var items = (cart && cart.items) || [];
+          if (!items.length) return;
+          var url = items[0].url || ('/products/' + items[0].handle);
+          closeDrawer();
+          window.location.assign(url);
+        })
+        .catch(function () {});
+    });
 
     // Hijack any existing cart icon link / button
     document.addEventListener('click', function (e) {
@@ -513,14 +636,60 @@
 
     // Hijack any /cart/add form on the page → AJAX add → reload → drawer
     // auto-opens via the sessionStorage flag, with the new item rendered.
+    // CAPTURE phase so this runs BEFORE any form-level listener (e.g. the "Fresh"
+    // theme.js add-to-cart handler that would navigate to /cart). stopPropagation in the
+    // capture phase prevents the event from reaching the form's own listeners.
     document.addEventListener('submit', function (e) {
       var form = e.target.closest('form[action$="/cart/add"]');
       if (!form) return;
       // Skip if this is the drawer's own form
       if (form.classList.contains('bsb-cart-item__form') || form.classList.contains('bsb-cart-item__qty-form')) return;
+      console.log('[BSBadd] submit captured', form.id);
       e.preventDefault();
       e.stopPropagation();
+      if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
 
+      // BSB fulfillment gate: refuse mixing pickup-only and ship-only in one cart.
+      // The cart-validation.js helper reads eligibility data attrs stamped by the PDP
+      // picker. If the helper is not present (legacy pages), we proceed without blocking.
+      var BSBF = window.BSBFulfillment;
+      console.log('[BSBadd] BSBFulfillment loaded?', !!BSBF);
+      if (BSBF) {
+        var eligibility = BSBF.eligibilityFromForm(form);
+        console.log('[BSBadd] eligibility', eligibility);
+        if (eligibility.known) {
+          BSBF.fetchCartMethod().then(function (cartMethod) {
+            var check = BSBF.compatibilityCheck(cartMethod, eligibility);
+            console.log('[BSBadd] cart method:', cartMethod, 'check:', check);
+            if (check.ok) {
+              proceedWithAdd(form);
+            } else {
+              console.log('[BSBadd] showing conflict modal');
+              BSBF.showConflictModal({
+                cartMethod: check.cartMethod,
+                productMethod: check.productMethod,
+                onEmptyAndAdd: function () {
+                  fetch('/cart/clear.js', { method: 'POST', headers: { 'Accept': 'application/json' } })
+                    .then(function () { proceedWithAdd(form); })
+                    .catch(function () { proceedWithAdd(form); });
+                },
+                onCancel: function () { /* user kept current cart */ }
+              });
+            }
+          }, function(err) {
+            console.error('[BSBadd] fetchCartMethod failed', err);
+            proceedWithAdd(form);
+          });
+          return;
+        }
+      }
+      console.log('[BSBadd] fallback path → proceedWithAdd');
+      proceedWithAdd(form);
+    }, true); // capture phase — see comment above
+
+    // Proceed with the actual /cart/add.js fetch + reload + drawer reopen
+    function proceedWithAdd(form) {
+      console.log('[BSBadd] proceedWithAdd → POST /cart/add.js');
       // Disable submit button to prevent double-clicks
       var submitBtn = form.querySelector('[type="submit"]');
       var originalLabel;
@@ -553,7 +722,7 @@
         var msg = (err && err.description) || (err && err.message) || 'Could not add to cart. Please try again.';
         alert(msg);
       });
-    });
+    }
 
     document.addEventListener('DOMContentLoaded', function () {
       try {

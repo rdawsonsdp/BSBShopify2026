@@ -1,0 +1,946 @@
+{% comment %}
+  LIFT: Anxiety + Clarity — opens a focused modal that lets a visitor configure
+  a product (variant, cake writing, pickup/ship date) without leaving the page
+  they're browsing (e.g. a same-day catalog or collection grid). Mirrors the
+  Tilly-style "configure item" pattern.
+
+  Trigger: any code on the page dispatches
+    document.dispatchEvent(new CustomEvent('bsb:open-product-modal', {
+      detail: { handle, id, pickupEligible, shipEligible }
+    }));
+
+  After successful add, dispatches `bsb:product-added` so the cart drawer can
+  refresh and open. Mutually-exclusive pickup/ship enforcement uses the shared
+  window.BSBFulfillment helper (assets/cart-validation.js).
+
+  Includes a SIMPLIFIED fulfillment picker (HTML5 date input + select for
+  pickup time) — leaner than snippets/product-fulfillment.liquid but writes
+  the same cart attributes (Pickup-Date, Pickup-Time, Checkout-Method) and the
+  same per-item properties[Special-Pickup-Date / Special-Pickup-Time]. The full
+  calendar / blackouts / ship-arrival math stays on the PDP for now.
+{% endcomment %}
+
+<div class="bsb-product-modal" data-bsb-product-modal hidden aria-hidden="true">
+  <div class="bsb-product-modal__overlay" data-bsb-pm-overlay></div>
+  <div
+    class="bsb-product-modal__panel"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="bsb-pm-title"
+    data-bsb-pm-panel
+  >
+    <button type="button" class="bsb-product-modal__close" aria-label="Close" data-bsb-pm-close>
+      <span aria-hidden="true">&times;</span>
+    </button>
+
+    <div class="bsb-product-modal__drag-handle" data-bsb-pm-drag aria-hidden="true"></div>
+
+    <div class="bsb-product-modal__scroll" data-bsb-pm-scroll>
+      {% comment %} Skeleton state (shown while /products/{handle}.js fetches) {% endcomment %}
+      <div class="bsb-product-modal__skeleton" data-bsb-pm-skeleton>
+        <div class="bsb-product-modal__sk-img"></div>
+        <div class="bsb-product-modal__sk-line bsb-product-modal__sk-line--lg"></div>
+        <div class="bsb-product-modal__sk-line"></div>
+        <div class="bsb-product-modal__sk-line"></div>
+        <div class="bsb-product-modal__sk-block"></div>
+        <div class="bsb-product-modal__sk-block"></div>
+      </div>
+
+      {% comment %} Body (populated by JS once product loads) {% endcomment %}
+      <div class="bsb-product-modal__body" data-bsb-pm-body hidden>
+        <div class="bsb-product-modal__hero">
+          <img class="bsb-product-modal__img" data-bsb-pm-img alt="" />
+        </div>
+        <div class="bsb-product-modal__head">
+          <h2 class="bsb-product-modal__title" id="bsb-pm-title" data-bsb-pm-title></h2>
+          <p class="bsb-product-modal__desc" data-bsb-pm-desc></p>
+        </div>
+
+        <form class="bsb-product-modal__form" data-bsb-pm-form novalidate>
+          <input type="hidden" name="id" data-bsb-pm-variant-id value="" />
+          <input type="hidden" name="quantity" value="1" />
+
+          <h3 class="bsb-product-modal__section-title">Customize your item</h3>
+
+          <div class="bsb-product-modal__options" data-bsb-pm-options>
+            {% comment %} Option cards rendered by JS {% endcomment %}
+          </div>
+
+          {% comment %} Cake writing — rendered unconditionally for now. Tag-gate later. {% endcomment %}
+          <div class="bsb-product-modal__card" data-bsb-pm-writing>
+            <div class="bsb-product-modal__card-head">
+              <span class="bsb-product-modal__card-title">Cake writing</span>
+              <span class="bsb-product-modal__pill bsb-product-modal__pill--soft">Optional</span>
+            </div>
+            <p class="bsb-product-modal__card-help">Up to 100 characters. Leave blank if you don't want writing.</p>
+            <textarea
+              class="bsb-product-modal__textarea"
+              name="properties[Cake Writing]"
+              data-bsb-pm-writing-text
+              maxlength="100"
+              rows="2"
+              placeholder="e.g. Happy Birthday Stephanie!"
+            ></textarea>
+            <p class="bsb-product-modal__card-help bsb-product-modal__card-help--right">
+              <span data-bsb-pm-writing-count>0</span>/100
+            </p>
+          </div>
+
+          <div class="bsb-product-modal__card" data-bsb-pm-writing-color>
+            <div class="bsb-product-modal__card-head">
+              <span class="bsb-product-modal__card-title">Writing color</span>
+              <span class="bsb-product-modal__pill bsb-product-modal__pill--soft">Optional</span>
+            </div>
+            <div class="bsb-product-modal__rows" data-bsb-pm-color-rows>
+              {%- assign writing_colors = 'Pink,Maroon,Caramel,Cream,Black' | split: ',' -%}
+              {%- for c in writing_colors -%}
+                <label class="bsb-product-modal__row">
+                  <span class="bsb-product-modal__row-label">{{ c }}</span>
+                  <input
+                    type="radio"
+                    name="properties[Writing-Color]"
+                    value="{{ c }}"
+                    class="bsb-product-modal__radio"
+                  />
+                  <span class="bsb-product-modal__radio-circle" aria-hidden="true"></span>
+                </label>
+              {%- endfor -%}
+            </div>
+          </div>
+
+          {% comment %} Simplified fulfillment picker {% endcomment %}
+          <div class="bsb-product-modal__card" data-bsb-pm-fulfillment>
+            <div class="bsb-product-modal__card-head">
+              <span class="bsb-product-modal__card-title">When do you want it?</span>
+              <span class="bsb-product-modal__pill">Required</span>
+            </div>
+
+            <div class="bsb-product-modal__methods" data-bsb-pm-methods role="radiogroup" aria-label="Pickup or ship">
+              <button type="button" class="bsb-product-modal__method" data-bsb-pm-method="pickup" aria-pressed="false">
+                <span class="bsb-product-modal__method-title">Store Pickup</span>
+                <span class="bsb-product-modal__method-sub">328 E 75th, Chicago</span>
+              </button>
+              <button type="button" class="bsb-product-modal__method" data-bsb-pm-method="ship" aria-pressed="false">
+                <span class="bsb-product-modal__method-title">Ship</span>
+                <span class="bsb-product-modal__method-sub">UPS, nationwide</span>
+              </button>
+            </div>
+
+            <div class="bsb-product-modal__date-row" data-bsb-pm-date-row hidden>
+              <label class="bsb-product-modal__field">
+                <span class="bsb-product-modal__field-label" data-bsb-pm-date-label>Pickup date</span>
+                <input
+                  type="date"
+                  class="bsb-product-modal__input"
+                  data-bsb-pm-date
+                  name="properties[Special-Pickup-Date]"
+                />
+              </label>
+              <label class="bsb-product-modal__field" data-bsb-pm-time-wrap hidden>
+                <span class="bsb-product-modal__field-label">Pickup time</span>
+                <select class="bsb-product-modal__input" data-bsb-pm-time name="properties[Special-Pickup-Time]">
+                  <option value="">Select a time…</option>
+                </select>
+              </label>
+            </div>
+
+            <p class="bsb-product-modal__error" data-bsb-pm-error hidden></p>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="bsb-product-modal__footer" data-bsb-pm-footer>
+      <button type="button" class="bsb-product-modal__cta" data-bsb-pm-add disabled>
+        <span data-bsb-pm-cta-label>Add to cart</span>
+        <span class="bsb-product-modal__cta-price" data-bsb-pm-price></span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<style>
+  .bsb-product-modal { position: fixed; inset: 0; z-index: 100010; font-family: inherit; }
+  .bsb-product-modal[hidden] { display: none; }
+  .bsb-product-modal__overlay {
+    position: absolute; inset: 0;
+    background: rgba(87, 5, 34, 0.55);
+    opacity: 0; transition: opacity 200ms ease;
+  }
+  .bsb-product-modal.is-open .bsb-product-modal__overlay { opacity: 1; }
+
+  .bsb-product-modal__panel {
+    position: absolute;
+    background: #fffaf2;
+    color: #570522;
+    border: 1px solid rgba(87, 5, 34, 0.18);
+    box-shadow: 0 18px 60px rgba(87, 5, 34, 0.32);
+    display: flex; flex-direction: column;
+    overflow: hidden;
+    transform: translateY(20px);
+    opacity: 0;
+    transition: transform 220ms ease, opacity 200ms ease;
+    /* Desktop: centered */
+    top: 50%; left: 50%;
+    width: calc(100% - 32px);
+    max-width: 560px;
+    max-height: 90vh;
+    border-radius: 8px;
+    transform: translate(-50%, calc(-50% + 20px));
+  }
+  .bsb-product-modal.is-open .bsb-product-modal__panel {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+
+  .bsb-product-modal__close {
+    position: absolute; top: 10px; right: 10px; z-index: 2;
+    width: 34px; height: 34px;
+    border-radius: 999px;
+    background: #fffaf2;
+    border: 1px solid rgba(87, 5, 34, 0.18);
+    color: #570522;
+    font-size: 22px; line-height: 1;
+    cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+    box-shadow: 0 2px 6px rgba(87, 5, 34, 0.18);
+    transition: background 140ms ease, color 140ms ease, border-color 140ms ease;
+  }
+  .bsb-product-modal__close:hover { background: #570522; color: #fffaf2; border-color: #570522; }
+
+  .bsb-product-modal__drag-handle { display: none; }
+
+  .bsb-product-modal__scroll {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    flex: 1 1 auto;
+  }
+
+  /* Skeleton */
+  .bsb-product-modal__skeleton { padding: 24px; }
+  .bsb-product-modal__sk-img,
+  .bsb-product-modal__sk-line,
+  .bsb-product-modal__sk-block {
+    background: linear-gradient(90deg, rgba(87,5,34,0.06) 0%, rgba(87,5,34,0.12) 50%, rgba(87,5,34,0.06) 100%);
+    background-size: 200% 100%;
+    animation: bsbPmShimmer 1400ms linear infinite;
+    border-radius: 4px;
+  }
+  .bsb-product-modal__sk-img { width: calc(100% + 44px); aspect-ratio: 1/1; margin: 0 -22px 18px; }
+  .bsb-product-modal__sk-line { height: 14px; margin: 0 auto 10px; max-width: 320px; }
+  .bsb-product-modal__sk-line--lg { height: 22px; max-width: 220px; margin-bottom: 14px; }
+  .bsb-product-modal__sk-block { height: 70px; margin: 14px 0; }
+  @keyframes bsbPmShimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  /* Body */
+  .bsb-product-modal__body { padding: 0 22px 16px; }
+  .bsb-product-modal__hero { text-align: center; margin: 0 -22px 14px; }
+  .bsb-product-modal__img {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    height: auto;
+    max-height: 50vh;
+    object-fit: cover;
+    border-radius: 0;
+    border: 0;
+    border-bottom: 1px solid rgba(87, 5, 34, 0.12);
+    background: #f7ead6;
+    display: block;
+  }
+  .bsb-product-modal__head { text-align: center; margin-bottom: 18px; }
+  .bsb-product-modal__title {
+    margin: 0 0 6px;
+    font-size: 22px; font-weight: 800; line-height: 1.2;
+    color: #570522;
+    letter-spacing: 0.01em;
+  }
+  .bsb-product-modal__desc {
+    margin: 0; font-size: 13px; line-height: 1.5;
+    color: rgba(87, 5, 34, 0.65);
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .bsb-product-modal__form { margin: 0; }
+  .bsb-product-modal__section-title {
+    margin: 8px 0 12px;
+    font-size: 15px; font-weight: 800;
+    color: #570522;
+    letter-spacing: 0.02em;
+  }
+
+  /* Option card */
+  .bsb-product-modal__card {
+    background: #fffaf2;
+    border: 1px solid rgba(87, 5, 34, 0.18);
+    border-radius: 6px;
+    padding: 14px 14px 8px;
+    margin: 0 0 12px;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.7),
+      0 1px 2px rgba(87, 5, 34, 0.06);
+  }
+  .bsb-product-modal__card-head {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 8px; margin-bottom: 4px;
+  }
+  .bsb-product-modal__card-title {
+    font-size: 14px; font-weight: 800; color: #570522;
+    letter-spacing: 0.02em;
+  }
+  .bsb-product-modal__pill {
+    font-size: 10px; font-weight: 800;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    padding: 3px 8px; border-radius: 999px;
+    background: rgba(87, 5, 34, 0.08); color: #570522;
+  }
+  .bsb-product-modal__pill--soft {
+    background: rgba(87, 5, 34, 0.05);
+    color: rgba(87, 5, 34, 0.65);
+  }
+  .bsb-product-modal__card-help {
+    margin: 0 0 8px;
+    font-size: 12px; color: rgba(87, 5, 34, 0.65);
+    line-height: 1.4;
+  }
+  .bsb-product-modal__card-help--right { text-align: right; }
+
+  /* Radio row list */
+  .bsb-product-modal__rows {
+    margin: 0; padding: 0;
+    border-top: 1px solid rgba(87, 5, 34, 0.10);
+  }
+  .bsb-product-modal__row {
+    position: relative;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 4px;
+    border-bottom: 1px solid rgba(87, 5, 34, 0.10);
+    cursor: pointer;
+    transition: background 140ms ease;
+  }
+  .bsb-product-modal__row:hover { background: rgba(247, 234, 214, 0.6); }
+  .bsb-product-modal__row-label {
+    font-size: 14px; font-weight: 600; color: #570522;
+  }
+  .bsb-product-modal__radio {
+    position: absolute; opacity: 0; inset: 0;
+    cursor: pointer; margin: 0;
+  }
+  .bsb-product-modal__radio-circle {
+    width: 20px; height: 20px;
+    border-radius: 999px;
+    border: 2px solid rgba(87, 5, 34, 0.35);
+    background: #fffaf2;
+    transition: border-color 140ms ease, background 140ms ease, box-shadow 140ms ease;
+    flex: 0 0 auto;
+  }
+  .bsb-product-modal__row:has(.bsb-product-modal__radio:checked) {
+    background: rgba(247, 234, 214, 0.85);
+  }
+  .bsb-product-modal__row:has(.bsb-product-modal__radio:checked) .bsb-product-modal__radio-circle {
+    border-color: #570522;
+    background: #570522;
+    box-shadow: inset 0 0 0 4px #fffaf2;
+  }
+  .bsb-product-modal__row:has(.bsb-product-modal__radio:focus-visible) .bsb-product-modal__radio-circle {
+    outline: 2px solid #e68c3b;
+    outline-offset: 2px;
+  }
+
+  /* Textarea */
+  .bsb-product-modal__textarea {
+    width: 100%;
+    font: inherit; font-size: 14px;
+    padding: 10px 12px;
+    background: #ffffff;
+    border: 1px solid rgba(87, 5, 34, 0.22);
+    border-radius: 4px;
+    color: #570522;
+    resize: vertical; min-height: 56px;
+    box-sizing: border-box;
+    transition: border-color 140ms ease;
+  }
+  .bsb-product-modal__textarea:focus-visible { outline: none; border-color: #ba5b28; }
+
+  /* Method pickers */
+  .bsb-product-modal__methods {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 8px; margin: 6px 0 12px;
+  }
+  .bsb-product-modal__method {
+    font: inherit;
+    background: #fffaf2;
+    border: 1px solid rgba(87, 5, 34, 0.18);
+    border-radius: 4px;
+    padding: 10px 12px;
+    color: #570522; cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+    transition: background 140ms ease, border-color 140ms ease, color 140ms ease;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.7),
+      0 1px 2px rgba(87, 5, 34, 0.06);
+  }
+  .bsb-product-modal__method:hover { border-color: #ba5b28; }
+  .bsb-product-modal__method[aria-pressed="true"] {
+    background: #570522;
+    border-color: #570522;
+    color: #fffaf2;
+  }
+  .bsb-product-modal__method[disabled] {
+    opacity: 0.4; cursor: not-allowed;
+  }
+  .bsb-product-modal__method-title { font-size: 14px; font-weight: 800; letter-spacing: 0.02em; }
+  .bsb-product-modal__method-sub { font-size: 11px; opacity: 0.75; }
+
+  /* Date row */
+  .bsb-product-modal__date-row {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .bsb-product-modal__field {
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .bsb-product-modal__field-label {
+    font-size: 11px; font-weight: 800;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: #570522; opacity: 0.7;
+  }
+  .bsb-product-modal__input {
+    font: inherit; font-size: 14px;
+    padding: 8px 10px;
+    background: #ffffff;
+    border: 1px solid rgba(87, 5, 34, 0.22);
+    border-radius: 4px;
+    color: #570522;
+    min-height: 38px;
+  }
+  .bsb-product-modal__input:focus-visible { outline: none; border-color: #ba5b28; }
+
+  .bsb-product-modal__error {
+    margin: 8px 0 0;
+    padding: 8px 12px;
+    background: rgba(230, 140, 59, 0.12);
+    border-left: 3px solid #e68c3b;
+    border-radius: 3px;
+    font-size: 13px; color: #570522;
+  }
+
+  /* Footer / CTA */
+  .bsb-product-modal__footer {
+    flex: 0 0 auto;
+    padding: 12px 16px 16px;
+    background: #fffaf2;
+    border-top: 1px solid rgba(87, 5, 34, 0.12);
+    box-shadow: 0 -2px 8px rgba(87, 5, 34, 0.06);
+  }
+  .bsb-product-modal__cta {
+    width: 100%;
+    font: inherit; font-size: 15px; font-weight: 800;
+    letter-spacing: 0.04em; text-transform: uppercase;
+    padding: 14px 18px;
+    background: linear-gradient(180deg, #6c0a2e 0%, #570522 60%, #45041b 100%);
+    color: #fffaf2;
+    border: 1px solid #570522;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.15),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.2),
+      0 2px 8px rgba(87, 5, 34, 0.22);
+    transition: background 160ms ease, transform 120ms ease;
+  }
+  .bsb-product-modal__cta:hover:not([disabled]) {
+    background: linear-gradient(180deg, #e68c3b 0%, #ba5b28 100%);
+    border-color: #ba5b28;
+  }
+  .bsb-product-modal__cta[disabled] { opacity: 0.55; cursor: not-allowed; }
+  .bsb-product-modal__cta-price:empty { display: none; }
+  .bsb-product-modal__cta-price::before { content: '·'; margin-right: 4px; opacity: 0.7; }
+
+  /* Mobile bottom-sheet */
+  @media (max-width: 767px) {
+    .bsb-product-modal__panel {
+      top: auto; left: 0; right: 0; bottom: 0;
+      width: 100%; max-width: 100%;
+      max-height: 95vh;
+      border-radius: 14px 14px 0 0;
+      transform: translateY(100%);
+    }
+    .bsb-product-modal.is-open .bsb-product-modal__panel {
+      transform: translateY(0);
+    }
+    .bsb-product-modal__drag-handle {
+      display: block;
+      width: 44px; height: 4px;
+      background: rgba(87, 5, 34, 0.22);
+      border-radius: 999px;
+      margin: 8px auto 4px;
+      flex: 0 0 auto;
+    }
+    .bsb-product-modal__img { width: 100%; height: auto; aspect-ratio: 1/1; max-width: none; }
+    .bsb-product-modal__close { top: 6px; right: 10px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .bsb-product-modal__overlay,
+    .bsb-product-modal__panel { transition: none; }
+    .bsb-product-modal__sk-img,
+    .bsb-product-modal__sk-line,
+    .bsb-product-modal__sk-block { animation: none; }
+  }
+</style>
+
+<script>
+  (function () {
+    if (window.__BSBProductModalInit) return;
+    window.__BSBProductModalInit = true;
+    window.__BSBProductCache = window.__BSBProductCache || {};
+
+    var modal = document.querySelector('[data-bsb-product-modal]');
+    if (!modal) return;
+
+    var overlay   = modal.querySelector('[data-bsb-pm-overlay]');
+    var panel     = modal.querySelector('[data-bsb-pm-panel]');
+    var closeBtn  = modal.querySelector('[data-bsb-pm-close]');
+    var dragH     = modal.querySelector('[data-bsb-pm-drag]');
+    var scrollEl  = modal.querySelector('[data-bsb-pm-scroll]');
+    var skel      = modal.querySelector('[data-bsb-pm-skeleton]');
+    var bodyEl    = modal.querySelector('[data-bsb-pm-body]');
+    var imgEl     = modal.querySelector('[data-bsb-pm-img]');
+    var titleEl   = modal.querySelector('[data-bsb-pm-title]');
+    var descEl    = modal.querySelector('[data-bsb-pm-desc]');
+    var formEl    = modal.querySelector('[data-bsb-pm-form]');
+    var variantIn = modal.querySelector('[data-bsb-pm-variant-id]');
+    var optsEl    = modal.querySelector('[data-bsb-pm-options]');
+    var writingEl = modal.querySelector('[data-bsb-pm-writing]');
+    var writingTx = modal.querySelector('[data-bsb-pm-writing-text]');
+    var writingCt = modal.querySelector('[data-bsb-pm-writing-count]');
+    var methodsEl = modal.querySelector('[data-bsb-pm-methods]');
+    var methodBtns = modal.querySelectorAll('[data-bsb-pm-method]');
+    var dateRow   = modal.querySelector('[data-bsb-pm-date-row]');
+    var dateLabel = modal.querySelector('[data-bsb-pm-date-label]');
+    var dateIn    = modal.querySelector('[data-bsb-pm-date]');
+    var timeWrap  = modal.querySelector('[data-bsb-pm-time-wrap]');
+    var timeIn    = modal.querySelector('[data-bsb-pm-time]');
+    var errEl     = modal.querySelector('[data-bsb-pm-error]');
+    var ctaBtn    = modal.querySelector('[data-bsb-pm-add]');
+    var ctaLabel  = modal.querySelector('[data-bsb-pm-cta-label]');
+    var ctaPrice  = modal.querySelector('[data-bsb-pm-price]');
+
+    var state = {
+      product: null,
+      selectedOpts: {},   // option-name -> value
+      variant: null,
+      method: null,       // 'pickup' | 'ship'
+      date: '',
+      time: '',
+      pickupEligible: true,
+      shipEligible: true
+    };
+
+    // ----- helpers -----
+    function fmtMoney(cents) {
+      if (typeof cents !== 'number') return '';
+      return '$' + (cents / 100).toFixed(2);
+    }
+    function escapeHtml(s) {
+      return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+      });
+    }
+    function ymdToday(offsetDays) {
+      var d = new Date();
+      d.setDate(d.getDate() + (offsetDays || 0));
+      var m = d.getMonth() + 1, day = d.getDate();
+      return d.getFullYear() + '-' + (m < 10 ? '0' + m : m) + '-' + (day < 10 ? '0' + day : day);
+    }
+    function showError(msg) {
+      if (!errEl) return;
+      if (msg) { errEl.textContent = msg; errEl.hidden = false; }
+      else     { errEl.textContent = ''; errEl.hidden = true; }
+    }
+
+    // ----- open / close -----
+    function openModal() {
+      modal.hidden = false;
+      modal.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+      requestAnimationFrame(function () { modal.classList.add('is-open'); });
+      document.addEventListener('keydown', onKeydown);
+    }
+    function closeModal() {
+      modal.classList.remove('is-open');
+      document.removeEventListener('keydown', onKeydown);
+      document.body.style.overflow = '';
+      setTimeout(function () {
+        modal.hidden = true;
+        modal.setAttribute('aria-hidden', 'true');
+        resetUI();
+      }, 220);
+    }
+    function onKeydown(e) {
+      if (e.key === 'Escape') closeModal();
+    }
+
+    function resetUI() {
+      state = {
+        product: null, selectedOpts: {}, variant: null,
+        method: null, date: '', time: '',
+        pickupEligible: true, shipEligible: true
+      };
+      if (optsEl) optsEl.innerHTML = '';
+      if (variantIn) variantIn.value = '';
+      if (writingTx) writingTx.value = '';
+      if (writingCt) writingCt.textContent = '0';
+      modal.querySelectorAll('input[name="properties[Writing-Color]"]').forEach(function (r) { r.checked = false; });
+      methodBtns.forEach(function (b) { b.setAttribute('aria-pressed', 'false'); b.disabled = false; });
+      if (dateIn) dateIn.value = '';
+      if (timeIn) timeIn.innerHTML = '<option value="">Select a time…</option>';
+      if (dateRow) dateRow.hidden = true;
+      if (timeWrap) timeWrap.hidden = true;
+      showError('');
+      if (skel) skel.hidden = false;
+      if (bodyEl) bodyEl.hidden = true;
+      if (ctaBtn) ctaBtn.disabled = true;
+      if (ctaPrice) ctaPrice.textContent = '';
+    }
+
+    // ----- product loading -----
+    function loadProduct(handle) {
+      if (window.__BSBProductCache[handle]) {
+        return Promise.resolve(window.__BSBProductCache[handle]);
+      }
+      return fetch('/products/' + encodeURIComponent(handle) + '.js', {
+        credentials: 'same-origin',
+        headers: { 'Accept': 'application/json' }
+      }).then(function (r) {
+        if (!r.ok) throw new Error('product fetch failed');
+        return r.json();
+      }).then(function (p) {
+        window.__BSBProductCache[handle] = p;
+        return p;
+      });
+    }
+
+    function populate(product) {
+      state.product = product;
+      if (titleEl) titleEl.textContent = product.title || '';
+      if (descEl) {
+        // product.description is HTML; strip tags for the short intro
+        var tmp = document.createElement('div');
+        tmp.innerHTML = product.description || '';
+        descEl.textContent = (tmp.textContent || '').trim();
+      }
+      if (imgEl) {
+        var src = product.featured_image || (product.images && product.images[0]) || '';
+        if (src && src.indexOf('//') === 0) src = window.location.protocol + src;
+        imgEl.src = src;
+        imgEl.alt = product.title || '';
+      }
+
+      // Build option groups
+      if (optsEl) {
+        optsEl.innerHTML = '';
+        var opts = product.options || [];
+        // Shopify /products/{handle}.js returns options as either ['Size','Color'] or
+        // an array of { name, position, values }. Normalize.
+        var optionDefs = [];
+        if (opts.length && typeof opts[0] === 'object') {
+          optionDefs = opts.map(function (o) { return { name: o.name, values: o.values || [] }; });
+        } else {
+          optionDefs = opts.map(function (name, i) {
+            var values = [];
+            (product.variants || []).forEach(function (v) {
+              var val = v['option' + (i + 1)];
+              if (val && values.indexOf(val) === -1) values.push(val);
+            });
+            return { name: name, values: values };
+          });
+        }
+        // Skip the dummy "Title" option when there's only one variant
+        if (optionDefs.length === 1 && optionDefs[0].name === 'Title') {
+          optionDefs = [];
+          state.variant = product.variants && product.variants[0];
+        }
+
+        optionDefs.forEach(function (def) {
+          var card = document.createElement('div');
+          card.className = 'bsb-product-modal__card';
+          card.setAttribute('data-bsb-pm-option-card', def.name);
+          card.innerHTML =
+            '<div class="bsb-product-modal__card-head">' +
+              '<span class="bsb-product-modal__card-title">' + escapeHtml(def.name) + '</span>' +
+              '<span class="bsb-product-modal__pill">Required</span>' +
+            '</div>' +
+            '<p class="bsb-product-modal__card-help">Select 1</p>' +
+            '<div class="bsb-product-modal__rows"></div>';
+          var rows = card.querySelector('.bsb-product-modal__rows');
+          def.values.forEach(function (val) {
+            var label = document.createElement('label');
+            label.className = 'bsb-product-modal__row';
+            label.innerHTML =
+              '<span class="bsb-product-modal__row-label">' + escapeHtml(val) + '</span>' +
+              '<input type="radio" class="bsb-product-modal__radio" ' +
+                'name="bsb-pm-opt-' + escapeHtml(def.name) + '" value="' + escapeHtml(val) + '" />' +
+              '<span class="bsb-product-modal__radio-circle" aria-hidden="true"></span>';
+            var radio = label.querySelector('input');
+            radio.addEventListener('change', function () {
+              if (radio.checked) {
+                state.selectedOpts[def.name] = val;
+                resolveVariant();
+                updateCta();
+              }
+            });
+            rows.appendChild(label);
+          });
+          optsEl.appendChild(card);
+        });
+
+        // If no real options, just resolve the single variant
+        if (!optionDefs.length && state.variant) {
+          if (variantIn) variantIn.value = state.variant.id;
+        }
+      }
+
+      // Eligibility -> method buttons
+      methodBtns.forEach(function (btn) {
+        var m = btn.getAttribute('data-bsb-pm-method');
+        var allow = (m === 'pickup') ? state.pickupEligible : state.shipEligible;
+        btn.disabled = !allow;
+      });
+
+      // If only one method eligible, pre-select it
+      if (state.pickupEligible && !state.shipEligible) selectMethod('pickup');
+      else if (state.shipEligible && !state.pickupEligible) selectMethod('ship');
+
+      if (skel) skel.hidden = true;
+      if (bodyEl) bodyEl.hidden = false;
+      updateCta();
+    }
+
+    function resolveVariant() {
+      var p = state.product;
+      if (!p) return;
+      var opts = p.options || [];
+      var names = (opts.length && typeof opts[0] === 'object')
+        ? opts.map(function (o) { return o.name; })
+        : opts;
+      if (names.length === 1 && names[0] === 'Title') {
+        state.variant = p.variants && p.variants[0];
+      } else {
+        state.variant = (p.variants || []).find(function (v) {
+          for (var i = 0; i < names.length; i++) {
+            if (v['option' + (i + 1)] !== state.selectedOpts[names[i]]) return false;
+          }
+          return true;
+        }) || null;
+      }
+      if (variantIn) variantIn.value = state.variant ? state.variant.id : '';
+      if (ctaPrice) ctaPrice.textContent = state.variant ? fmtMoney(state.variant.price) : '';
+    }
+
+    function selectMethod(m) {
+      state.method = m;
+      methodBtns.forEach(function (btn) {
+        btn.setAttribute('aria-pressed', btn.getAttribute('data-bsb-pm-method') === m ? 'true' : 'false');
+      });
+      if (dateRow) dateRow.hidden = false;
+      if (dateLabel) dateLabel.textContent = m === 'pickup' ? 'Pickup date' : 'Arrival date';
+      if (timeWrap) timeWrap.hidden = (m !== 'pickup');
+      if (dateIn) {
+        dateIn.name = (m === 'pickup')
+          ? 'properties[Special-Pickup-Date]'
+          : 'properties[Arrival-Date]';
+        dateIn.min = ymdToday(2); // simple 2-day lead floor; PDP has the full math
+      }
+      // Cake writing isn't supported on shipped cakes (writing doesn't survive transit).
+      // Hide both cards and clear values when ship is selected.
+      var writingCard = modal.querySelector('[data-bsb-pm-writing]');
+      var colorCard = modal.querySelector('[data-bsb-pm-writing-color]');
+      var isShip = (m === 'ship');
+      if (writingCard) writingCard.hidden = isShip;
+      if (colorCard)   colorCard.hidden   = isShip;
+      if (isShip) {
+        var txt = modal.querySelector('[data-bsb-pm-writing-text]');
+        if (txt) txt.value = '';
+        modal.querySelectorAll('input[name="properties[Writing-Color]"]').forEach(function (r) { r.checked = false; });
+      }
+      // Refresh time options for current date (if any)
+      refreshTimes();
+      updateCta();
+    }
+
+    // Simple default pickup slots — mirrors fulfillment_pickup_slots fallback shape.
+    function refreshTimes() {
+      if (!timeIn) return;
+      var cur = timeIn.value;
+      timeIn.innerHTML = '<option value="">Select a time…</option>';
+      if (state.method !== 'pickup' || !dateIn || !dateIn.value) return;
+      var slots = ['10:00 AM', '11:00 AM', '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM'];
+      // Try to use settings-based slots if available
+      var cfg = window.BSBFulfillmentConfig;
+      if (cfg && cfg.pickupSlots) {
+        var d = new Date(dateIn.value + 'T12:00:00');
+        var dow = ['sun','mon','tue','wed','thu','fri','sat'][d.getDay()];
+        if (cfg.pickupSlots[dow] && cfg.pickupSlots[dow].length) {
+          slots = cfg.pickupSlots[dow];
+        } else {
+          slots = [];
+        }
+      }
+      slots.forEach(function (s) {
+        var o = document.createElement('option');
+        o.value = s; o.textContent = s;
+        if (s === cur) o.selected = true;
+        timeIn.appendChild(o);
+      });
+    }
+
+    function updateCta() {
+      if (!ctaBtn) return;
+      var ok = !!state.variant && !!state.method && !!(dateIn && dateIn.value);
+      if (state.method === 'pickup') ok = ok && !!(timeIn && timeIn.value);
+      ctaBtn.disabled = !ok;
+    }
+
+    // ----- add to cart -----
+    function postAdd() {
+      showError('');
+      var fd = new FormData(formEl);
+      // ensure variant id
+      if (state.variant && !fd.get('id')) fd.set('id', state.variant.id);
+
+      // also stash cart attributes after the add
+      var attrs = {
+        'Checkout-Method': state.method === 'pickup' ? 'Pickup' : 'Ship',
+        'Pickup-Date': dateIn && dateIn.value ? dateIn.value : '',
+        'Pickup-Time': state.method === 'pickup' && timeIn && timeIn.value ? timeIn.value : ''
+      };
+
+      return fetch('/cart/add.js', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Accept': 'application/json' },
+        body: fd
+      }).then(function (r) {
+        if (!r.ok) return r.json().then(function (j) { throw j; });
+        return r.json();
+      }).then(function () {
+        return fetch('/cart/update.js', {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify({ attributes: attrs })
+        });
+      }).then(function () {
+        document.dispatchEvent(new CustomEvent('bsb:product-added', {
+          detail: {
+            handle: state.product && state.product.handle,
+            title: state.product && state.product.title
+          }
+        }));
+        closeModal();
+      }).catch(function (err) {
+        var msg = (err && err.description) || (err && err.message) || 'We couldn\'t add this. Please try again.';
+        showError(msg);
+      });
+    }
+
+    function handleAddClick() {
+      if (ctaBtn.disabled) return;
+      var BSB = window.BSBFulfillment;
+      if (!BSB) { postAdd(); return; }
+      // Compatibility check against current cart
+      BSB.fetchCartMethod().then(function (cartMethod) {
+        var eligibility = { pickup: state.pickupEligible, ship: state.shipEligible, known: true };
+        var check = BSB.compatibilityCheck(cartMethod, eligibility);
+        // Also: this item's method must match the cart's method if cart is non-empty
+        if (check.ok && cartMethod && state.method && cartMethod.toLowerCase() !== state.method) {
+          check = {
+            ok: false,
+            cartMethod: cartMethod.charAt(0).toUpperCase() + cartMethod.slice(1).toLowerCase(),
+            productMethod: state.method.charAt(0).toUpperCase() + state.method.slice(1)
+          };
+        }
+        if (check.ok) {
+          postAdd();
+        } else {
+          BSB.showConflictModal({
+            cartMethod: check.cartMethod,
+            productMethod: check.productMethod,
+            onEmptyAndAdd: function () {
+              fetch('/cart/clear.js', {
+                method: 'POST', credentials: 'same-origin',
+                headers: { 'Accept': 'application/json' }
+              }).then(postAdd);
+            }
+          });
+        }
+      });
+    }
+
+    // ----- listeners -----
+    if (overlay)  overlay.addEventListener('click', closeModal);
+    if (closeBtn) closeBtn.addEventListener('click', closeModal);
+    if (ctaBtn)   ctaBtn.addEventListener('click', handleAddClick);
+
+    methodBtns.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        if (btn.disabled) return;
+        selectMethod(btn.getAttribute('data-bsb-pm-method'));
+      });
+    });
+
+    if (dateIn) dateIn.addEventListener('change', function () { refreshTimes(); updateCta(); });
+    if (timeIn) timeIn.addEventListener('change', updateCta);
+
+    if (writingTx && writingCt) {
+      writingTx.addEventListener('input', function () {
+        writingCt.textContent = writingTx.value.length;
+      });
+    }
+
+    // Mobile swipe-down dismiss
+    (function () {
+      var startY = null;
+      function isMobile() { return window.matchMedia('(max-width: 767px)').matches; }
+      function onTouchStart(e) {
+        if (!isMobile()) return;
+        // Only start tracking if the touch begins near the top of the panel or on the drag handle
+        var t = e.touches[0];
+        var rect = panel.getBoundingClientRect();
+        if (e.target === dragH || t.clientY - rect.top < 60) {
+          startY = t.clientY;
+        } else {
+          startY = null;
+        }
+      }
+      function onTouchEnd(e) {
+        if (startY == null) return;
+        var endY = (e.changedTouches && e.changedTouches[0] && e.changedTouches[0].clientY) || startY;
+        if (endY - startY > 100) closeModal();
+        startY = null;
+      }
+      panel.addEventListener('touchstart', onTouchStart, { passive: true });
+      panel.addEventListener('touchend', onTouchEnd, { passive: true });
+    })();
+
+    // ----- entrypoint -----
+    document.addEventListener('bsb:open-product-modal', function (e) {
+      var detail = (e && e.detail) || {};
+      if (!detail.handle) return;
+      resetUI();
+      state.pickupEligible = detail.pickupEligible !== false;
+      state.shipEligible   = detail.shipEligible   !== false;
+      openModal();
+      loadProduct(detail.handle).then(populate).catch(function () {
+        showError('Sorry, we couldn\'t load this item. Please try again.');
+        if (skel) skel.hidden = true;
+      });
+    });
+  })();
+</script>

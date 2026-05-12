@@ -2177,5 +2177,174 @@
                 }
             }
         ]
+    },
+    {
+        "name": "Fulfillment",
+        "settings": [
+            {
+                "type": "header",
+                "content": "Fulfillment engine"
+            },
+            {
+                "type": "select",
+                "id": "fulfillment_engine",
+                "label": "Fulfillment engine",
+                "options": [
+                    { "value": "zapiet", "label": "Zapiet (current)" },
+                    { "value": "bsb", "label": "BSB custom" }
+                ],
+                "default": "zapiet",
+                "info": "Cutover switch. Leave on Zapiet until the BSB custom system is fully tested."
+            },
+            {
+                "type": "header",
+                "content": "Pickup time slots"
+            },
+            {
+                "type": "textarea",
+                "id": "fulfillment_pickup_slots_mon",
+                "label": "Monday",
+                "default": "Closed",
+                "info": "Comma-separated 12-hour times. Example: 10am, 11am, 12pm, 1pm. Use the word \"Closed\" for closed days."
+            },
+            {
+                "type": "textarea",
+                "id": "fulfillment_pickup_slots_tue",
+                "label": "Tuesday",
+                "default": "10am, 11am, 12pm, 1pm, 2pm, 3pm, 4pm, 5pm"
+            },
+            {
+                "type": "textarea",
+                "id": "fulfillment_pickup_slots_wed",
+                "label": "Wednesday",
+                "default": "10am, 11am, 12pm, 1pm, 2pm, 3pm, 4pm, 5pm"
+            },
+            {
+                "type": "textarea",
+                "id": "fulfillment_pickup_slots_thu",
+                "label": "Thursday",
+                "default": "10am, 11am, 12pm, 1pm, 2pm, 3pm, 4pm, 5pm"
+            },
+            {
+                "type": "textarea",
+                "id": "fulfillment_pickup_slots_fri",
+                "label": "Friday",
+                "default": "10am, 11am, 12pm, 1pm, 2pm, 3pm, 4pm, 5pm"
+            },
+            {
+                "type": "textarea",
+                "id": "fulfillment_pickup_slots_sat",
+                "label": "Saturday",
+                "default": "10am, 11am, 12pm, 1pm, 2pm, 3pm, 4pm, 5pm"
+            },
+            {
+                "type": "textarea",
+                "id": "fulfillment_pickup_slots_sun",
+                "label": "Sunday",
+                "default": "12pm, 1pm, 2pm, 3pm, 4pm"
+            },
+            {
+                "type": "header",
+                "content": "Shipping"
+            },
+            {
+                "type": "checkbox",
+                "id": "fulfillment_ship_day_mon",
+                "label": "Monday",
+                "default": true,
+                "info": "Which weekdays the store ships orders."
+            },
+            {
+                "type": "checkbox",
+                "id": "fulfillment_ship_day_tue",
+                "label": "Tuesday",
+                "default": true
+            },
+            {
+                "type": "checkbox",
+                "id": "fulfillment_ship_day_wed",
+                "label": "Wednesday",
+                "default": true
+            },
+            {
+                "type": "checkbox",
+                "id": "fulfillment_ship_day_thu",
+                "label": "Thursday",
+                "default": false
+            },
+            {
+                "type": "checkbox",
+                "id": "fulfillment_ship_day_fri",
+                "label": "Friday",
+                "default": false
+            },
+            {
+                "type": "checkbox",
+                "id": "fulfillment_ship_day_sat",
+                "label": "Saturday",
+                "default": false
+            },
+            {
+                "type": "checkbox",
+                "id": "fulfillment_ship_day_sun",
+                "label": "Sunday",
+                "default": false
+            },
+            {
+                "type": "text",
+                "id": "fulfillment_ship_cutoff",
+                "label": "Ship cutoff time (CT)",
+                "default": "12:00pm",
+                "info": "Orders placed after this time on a ship day ship the next ship day."
+            },
+            {
+                "type": "range",
+                "id": "fulfillment_ship_transit_days",
+                "label": "Transit time",
+                "min": 0,
+                "max": 7,
+                "step": 1,
+                "unit": "day",
+                "default": 2,
+                "info": "Days from ship day to arrival (standard service). Used to compute arrival dates for the Ship calendar."
+            },
+            {
+                "type": "range",
+                "id": "fulfillment_ship_horizon_days",
+                "label": "Booking horizon",
+                "min": 14,
+                "max": 100,
+                "step": 1,
+                "unit": "day",
+                "default": 60,
+                "info": "How far ahead customers can book a shipping arrival date."
+            },
+            {
+                "type": "header",
+                "content": "Lead times"
+            },
+            {
+                "type": "range",
+                "id": "fulfillment_default_lead_days",
+                "label": "Default lead time",
+                "min": 0,
+                "max": 14,
+                "step": 1,
+                "unit": "day",
+                "default": 1,
+                "info": "Earliest fulfillment offset from today, in days. Custom products can override via the product's lead_time_days metafield."
+            },
+            {
+                "type": "header",
+                "content": "Blackout dates"
+            },
+            {
+                "type": "textarea",
+                "id": "fulfillment_blackouts",
+                "label": "Closed dates (one per line)",
+                "info": "ISO format: YYYY-MM-DD. The store is closed for pickup AND shipping on these dates.",
+                "default": "2026-01-01\n2026-05-25\n2026-07-04\n2026-09-07\n2026-11-26\n2026-12-25\n2027-01-01"
+            }
+        ]
     }
 ]

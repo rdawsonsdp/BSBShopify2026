@@ -1,0 +1,29 @@
+{% comment %}
+  Thin section wrapper (refactored to snippet for inline render in template--product).
+  Actual rendering lives in snippets/product-fulfillment.liquid
+  so the picker can render inline inside the product form (template--product.liquid)
+  above the Add to Cart button. This section remains so legacy product.json references
+  don't 404; preferred placement is via the snippet render in template--product.liquid.
+{% endcomment %}
+
+{% render 'product-fulfillment' %}
+
+{% schema %}
+{
+  "name": "Product Fulfillment",
+  "templates": ["product"],
+  "settings": [
+    {
+      "type": "text",
+      "id": "eyebrow_label",
+      "label": "Eyebrow label",
+      "default": "When would you like your cake?"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Product Fulfillment"
+    }
+  ]
+}
+{% endschema %}

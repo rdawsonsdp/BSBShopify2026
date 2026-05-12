@@ -33,6 +33,11 @@
       </div>
     </noscript>
 
+    {%- if section.settings.start_collapsed -%}
+    <details class="events-form__details">
+      <summary class="events-form__summary">{{ section.settings.collapse_trigger_label | default: 'Open the form' | escape }}</summary>
+    {%- endif -%}
+
     <form id="{{ form_id }}" class="events-form__form" novalidate
           data-endpoint="{{ section.settings.endpoint_url }}"
           data-anon-key="{{ section.settings.supabase_anon_key }}">
@@ -119,12 +124,15 @@
       </fieldset>
 
       <div class="events-form__submit-row">
-        <button type="submit" class="events-form__submit">Send my event details</button>
+        <button type="submit" class="events-form__submit">{{ section.settings.submit_label | default: 'Send my event details' | escape }}</button>
         <p class="events-form__microcopy"><em>We will respond within 48 hours.</em></p>
       </div>
 
       <div class="events-form__status" id="{{ form_id }}-status" role="status" aria-live="polite"></div>
     </form>
+    {%- if section.settings.start_collapsed -%}
+    </details>
+    {%- endif -%}
   </div>
 </section>
 
@@ -174,6 +182,46 @@
     line-height: 1.5;
   }
   .events-form--{{ section.id }} .events-form__noscript p { margin: 0; }
+
+  /* Collapsible-form details/summary trigger */
+  .events-form--{{ section.id }} .events-form__details {
+    margin: 0;
+  }
+  .events-form--{{ section.id }} .events-form__summary {
+    list-style: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 22px;
+    background: linear-gradient(180deg, #6c0a2e 0%, #570522 60%, #45041b 100%);
+    color: #fffaf2;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    border-radius: 4px;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.15),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.2),
+      0 2px 6px rgba(87, 5, 34, 0.22);
+    transition: background 140ms ease;
+  }
+  .events-form--{{ section.id }} .events-form__summary:hover {
+    background: linear-gradient(180deg, #e68c3b 0%, #ba5b28 100%);
+  }
+  .events-form--{{ section.id }} .events-form__summary::-webkit-details-marker { display: none; }
+  .events-form--{{ section.id }} .events-form__summary::after {
+    content: "▾";
+    font-size: 11px;
+    transition: transform 160ms ease;
+  }
+  .events-form--{{ section.id }} .events-form__details[open] .events-form__summary {
+    margin-bottom: 18px;
+  }
+  .events-form--{{ section.id }} .events-form__details[open] .events-form__summary::after {
+    transform: rotate(180deg);
+  }
   .events-form--{{ section.id }} .events-form__noscript a { color: inherit; font-weight: 700; }
 
   .events-form--{{ section.id }} .events-form__honeypot {
@@ -567,6 +615,28 @@
       "id": "subheading",
       "label": "Subheading",
       "default": "The more we know, the better we can plan. Takes about two minutes."
+    },
+    {
+      "type": "header",
+      "content": "Collapse behavior"
+    },
+    {
+      "type": "checkbox",
+      "id": "start_collapsed",
+      "label": "Start collapsed (click to expand)",
+      "default": false
+    },
+    {
+      "type": "text",
+      "id": "collapse_trigger_label",
+      "label": "Collapsed-state trigger label",
+      "default": "Open the form"
+    },
+    {
+      "type": "text",
+      "id": "submit_label",
+      "label": "Submit button label",
+      "default": "Send my event details"
     },
     {
       "type": "header",

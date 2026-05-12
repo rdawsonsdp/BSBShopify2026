@@ -1,0 +1,1354 @@
+{% comment %}
+  LIFT: Anxiety — answers "when can I get this?" before commit. Eliminates the
+  uncertainty gap between selecting a cake and discovering — three steps into
+  checkout — that the date doesn't work. By forcing the pickup/ship method and
+  the calendar date up to the PDP, the visitor knows exactly what they're
+  buying before they click Add to Cart.
+
+  Renders only when settings.fulfillment_engine == 'bsb'. Until then this is
+  dead code in production — set the kill switch back to 'zapiet' and the entire
+  section vanishes from the page (Zapiet's drawer hooks in bsb-cart-drawer.liquid
+  remain untouched during the cutover, so reverting is one schema flip).
+
+  Product metafields read:
+    - product.metafields.fulfillment.pickup_eligible  (boolean, default true)
+    - product.metafields.fulfillment.ship_eligible    (boolean, default true)
+    - product.metafields.fulfillment.lead_time_days   (integer, default = settings.fulfillment_default_lead_days)
+    - product.metafields.fulfillment.pickup_only_reason (single_line_text, optional)
+
+  Eligibility logic:
+    - If both pickup and ship eligible → method radio is shown.
+    - If only one is eligible → static badge shown, that method is forced.
+    - If neither is eligible → section renders nothing (fall back to whatever
+      else the PDP shows).
+{% endcomment %}
+
+{%- if settings.fulfillment_engine == 'bsb' -%}
+
+  {%- liquid
+    comment
+      Eligibility precedence:
+        1. Product metafields (when provisioned) override collection membership.
+        2. Otherwise: pickup and ship are MUTUALLY EXCLUSIVE, derived from collections.
+           - in 'available-for-pickup'  (title: Available for Local Pickup or Delivery) → pickup_ok = true
+           - in 'nationwide-shipping'                                                    → ship_ok   = true
+           - in neither → both false; section does not render.
+        Per Stephanie: a Shipping Cake is never pickupable, and a Pickup Cake never ships.
+    endcomment
+
+    assign coll_handles = product.collections | map: 'handle' | join: ','
+    assign in_pickup_coll = false
+    assign in_ship_coll = false
+    if coll_handles contains 'available-for-pickup'
+      assign in_pickup_coll = true
+    endif
+    if coll_handles contains 'nationwide-shipping'
+      assign in_ship_coll = true
+    endif
+
+    assign pickup_ok = product.metafields.fulfillment.pickup_eligible
+    if pickup_ok == blank
+      assign pickup_ok = in_pickup_coll
+    endif
+
+    assign ship_ok = product.metafields.fulfillment.ship_eligible
+    if ship_ok == blank
+      assign ship_ok = in_ship_coll
+    endif
+
+    assign lead_days = product.metafields.fulfillment.lead_time_days | default: settings.fulfillment_default_lead_days
+    if lead_days == blank
+      assign lead_days = 0
+    endif
+
+    assign pickup_reason = product.metafields.fulfillment.pickup_only_reason
+    assign eyebrow_label = section.settings.eyebrow_label | default: 'When would you like your cake?'
+
+    assign render_section = false
+    if pickup_ok or ship_ok
+      assign render_section = true
+    endif
+  -%}
+
+  {%- if render_section -%}
+    <section
+      class="product-fulfillment product-fulfillment--{{ section.id }}"
+      data-section-id="{{ section.id }}"
+      data-lead-days="{{ lead_days }}"
+      data-pickup-ok="{{ pickup_ok }}"
+      data-ship-ok="{{ ship_ok }}"
+      aria-label="Choose fulfillment"
+    >
+      <div class="product-fulfillment__inner">
+        <p class="product-fulfillment__eyebrow" data-eyebrow>{{ eyebrow_label | escape }}</p>
+
+        {%- if pickup_ok and ship_ok -%}
+          <fieldset class="product-fulfillment__methods" role="radiogroup" aria-label="Choose pickup or shipping">
+            <legend class="product-fulfillment__methods-legend">How would you like this?</legend>
+            <label class="product-fulfillment__method" data-method="pickup">
+              <input type="radio" name="bsb-fulfillment-method-{{ section.id }}" value="pickup" data-fulfillment-method="pickup" />
+              <span class="product-fulfillment__method-label">
+                <span class="product-fulfillment__method-title">Store Pickup</span>
+                <span class="product-fulfillment__method-sub">328 E 75th, Chicago</span>
+              </span>
+            </label>
+            <label class="product-fulfillment__method" data-method="ship">
+              <input type="radio" name="bsb-fulfillment-method-{{ section.id }}" value="ship" data-fulfillment-method="ship" />
+              <span class="product-fulfillment__method-label">
+                <span class="product-fulfillment__method-title">Ship</span>
+                <span class="product-fulfillment__method-sub">UPS, nationwide</span>
+              </span>
+            </label>
+          </fieldset>
+        {%- elsif pickup_ok -%}
+          <div class="product-fulfillment__badge" data-method="pickup" data-locked-method="pickup">
+            <span class="product-fulfillment__badge-title">Store Pickup</span>
+            <span class="product-fulfillment__badge-sub">328 E 75th, Chicago</span>
+          </div>
+        {%- elsif ship_ok -%}
+          <div class="product-fulfillment__badge" data-method="ship" data-locked-method="ship">
+            <span class="product-fulfillment__badge-title">Ships nationwide</span>
+            <span class="product-fulfillment__badge-sub">UPS, Mon-Wed dispatch</span>
+          </div>
+        {%- endif -%}
+
+        {%- if pickup_ok and pickup_reason != blank -%}
+          <p class="product-fulfillment__note" data-method-note="pickup">{{ pickup_reason | escape }}</p>
+        {%- endif -%}
+
+        <div class="product-fulfillment__cart-lock" data-cart-lock hidden>
+          <p class="product-fulfillment__cart-lock-msg" data-cart-lock-msg></p>
+          <button type="button" class="product-fulfillment__cart-lock-btn" data-cart-lock-clear>Switch &amp; empty cart</button>
+        </div>
+
+        <button type="button" class="product-fulfillment__cal-toggle" data-cal-toggle aria-expanded="false" aria-controls="bsb-cal-{{ section.id }}">
+          <span class="product-fulfillment__cal-toggle-text" data-cal-toggle-text>Pick a date</span>
+          <span class="product-fulfillment__cal-toggle-chevron" aria-hidden="true">▾</span>
+        </button>
+
+        <div class="product-fulfillment__calendar" data-calendar id="bsb-cal-{{ section.id }}" hidden>
+          <div class="product-fulfillment__cal-nav">
+            <button type="button" class="product-fulfillment__cal-arrow" data-cal-prev aria-label="Previous month">
+              <span aria-hidden="true">&larr;</span>
+            </button>
+            <h3 class="product-fulfillment__cal-month" data-cal-month aria-live="polite">Month YYYY</h3>
+            <button type="button" class="product-fulfillment__cal-arrow" data-cal-next aria-label="Next month">
+              <span aria-hidden="true">&rarr;</span>
+            </button>
+          </div>
+          <div class="product-fulfillment__cal-weekdays" aria-hidden="true">
+            <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+          </div>
+          <div class="product-fulfillment__cal-grid" data-cal-grid role="grid" aria-label="Available dates"></div>
+        </div>
+
+        <div class="product-fulfillment__slots" data-slots hidden>
+          <p class="product-fulfillment__slots-label">Pickup time</p>
+          <div class="product-fulfillment__slots-grid" data-slots-grid role="radiogroup" aria-label="Pickup time"></div>
+        </div>
+
+        {%- comment -%}
+          Ship status block — visible only when method is Ship.
+          DOM scaffold only. Business logic (compute ship date from arrival, reachability check,
+          timezone-aware cutoff) lands in a later phase. JS currently writes the selected arrival
+          date as a placeholder.
+        {%- endcomment -%}
+        <div class="product-fulfillment__ship-status" data-ship-status hidden>
+          <p class="product-fulfillment__ship-status-line" data-ship-status-line></p>
+          <p class="product-fulfillment__ship-status-warn" data-ship-status-warn hidden></p>
+        </div>
+
+        <div class="product-fulfillment__error" data-error hidden></div>
+
+        <input type="hidden" name="properties[Special-Pickup-Date]" data-prop-date value="" />
+        <input type="hidden" name="properties[Special-Pickup-Time]" data-prop-time value="" />
+
+        <p class="product-fulfillment__status" data-status aria-live="polite"></p>
+      </div>
+    </section>
+
+    <style>
+      .product-fulfillment--{{ section.id }} {
+        margin: 16px 0 20px;
+        font-family: inherit;
+        color: #570522;
+      }
+      .product-fulfillment--{{ section.id }} .product-fulfillment__inner {
+        background: #fffaf2;
+        border: 1px solid rgba(87, 5, 34, 0.18);
+        border-radius: 4px;
+        padding: 16px 18px 18px;
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.7),
+          inset 0 -1px 0 rgba(87, 5, 34, 0.05),
+          0 1px 2px rgba(87, 5, 34, 0.08);
+      }
+      .product-fulfillment--{{ section.id }} .product-fulfillment__eyebrow {
+        font-size: 11px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        font-weight: 800;
+        margin: 0 0 12px;
+        color: #570522;
+        opacity: 0.7;
+      }
+
+      /* Method picker — enamelware tabs */
+      .product-fulfillment--{{ section.id }} .product-fulfillment__methods {
+        border: 0;
+        padding: 0;
+        margin: 0 0 14px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+      .product-fulfillment--{{ section.id }} .product-fulfillment__methods-legend {
+        position: absolute;
+        width: 1px; height: 1px;
+        padding: 0; margin: -1px;
+        overflow: hidden; clip: rect(0,0,0,0);
+        white-space: nowrap; border: 0;
+      }
+      .product-fulfillment--{{ section.id }} .product-fulfillment__method {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 10px 12px;
+        background: #fffaf2;
+        border: 1px solid rgba(87, 5, 34, 0.18);
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background 160ms ease, border-color 160ms ease, color 160ms ease, transform 160ms ease;
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.7),
+          0 1px 2px rgba(87, 5, 34, 0.06);
+      }
+      .product-fulfillment--{{ section.id }} .product-fulfillment__method input {
+        position: absolute;
+        opacity: 0;
+        inset: 0;
+        cursor: pointer;
+      }
+      .product-fulfillment--{{ section.id }} .product-fulfillment__method:hover {
+        border-color: #ba5b28;
+      }
+      .product-fulfillment--{{ section.id }} .product-fulfillment__method:has(input:focus-visible) {
+        outline: 2px solid #e68c3b;
+        outline-offset: 2px;
+      }
+      .product-fulfillment--{{ section.id }} .product-fulfillment__method:has(input:checked) {
+        background: #570522;
+        border-color: #570522;
+        color: #fffaf2;
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.15),
+          inset 0 -1px 0 rgba(0, 0, 0, 0.2),
+          0 2px 6px rgba(87, 5, 34, 0.22);
+      }
+      .product-fulfillment--{{ section.id }} .product-fulfillment__method-label {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2px;
+        line-height: 1.2;
+        text-align: center;
+      }
+      .product-fulfillment--{{ section.id }} .product-fulfillment__method-title {
+        font-size: 14px;
+        font-weight: 800;
+        letter-spacing: 0.02em;
+      }
+      .product-fulfillment--{{ section.id }} .product-fulfillment__method-sub {
+        font-size: 11px;
+        opacity: 0.75;
+      }
+      .product-fulfillment--{{ section.id }} .product-fulfillment__method.is-locked {
+        opacity: 0.55;
+        cursor: not-allowed;
+      }
+      .product-fulfillment--{{ section.id }} .product-fulfillment__method.is-locked input {
+        cursor: not-allowed;
+      }
+
+      /* Static single-method badge */
+      .product-fulfillment--{{ section.id }} .product-fulfillment__badge {
+        display: inline-flex;
+        flex-direction: column;
+        gap: 2px;
+        padding: 10px 14px;
+        margin: 0 0 14px;
+        background: #f7ead6;
+        border: 1px solid rgba(87, 5, 34, 0.18);
+        border-radius: 4px;
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.6),
+          0 1px 2px rgba(87, 5, 34, 0.06);
+      }
+      .product-fulfillment--{{ section.id }} .product-fulfillment__badge-title {
+        font-size: 14px;
+        font-weight: 800;
+        color: #570522;
+        letter-spacing: 0.02em;
+      }
+      .product-fulfillment--{{ section.id }} .product-fulfillment__badge-sub {
+        font-size: 12px;
+        color: #570522;
+        opacity: 0.75;
+      }
+
+      /* Method-only inline note */
+      .product-fulfillment--{{ section.id }} .product-fulfillment__note {
+        margin: 0 0 12px;
+        padding: 8px 12px;
+        background: #f7ead6;
+        border-left: 3px solid #ba5b28;
+        border-radius: 3px;
+        font-size: 13px;
+        line-height: 1.45;
+        color: #570522;
+      }
+
+      /* Cart-method lock notice */
+      .product-fulfillment--{{ section.id }} .product-fulfillment__cart-lock {
+        margin: 0 0 12px;
+        padding: 10px 12px;
+        background: rgba(230, 140, 59, 0.12);
+        border: 1px solid rgba(186, 91, 40, 0.35);
+        border-radius: 4px;
+      }
+      .product-fulfillment--{{ section.id }} .product-fulfillment__cart-lock-msg {
+        margin: 0 0 6px;
+        font-size: 13px;
+        color: #570522;
+        line-height: 1.4;
+      }
+      .product-fulfillment--{{ section.id }} .product-fulfillment__cart-lock-btn {
+        font: inherit;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        background: transparent;
+        border: 1px solid #570522;
+        color: #570522;
+        padding: 6px 10px;
+        border-radius: 3px;
+        cursor: pointer;
+        transition: background 140ms ease, color 140ms ease;
+      }
+      .product-fulfillment--{{ section.id }} .product-fulfillment__cart-lock-btn:hover,
+      .product-fulfillment--{{ section.id }} .product-fulfillment__cart-lock-btn:focus-visible {
+        background: #570522;
+        color: #fffaf2;
+        outline: none;
+      }
+
+      /* Calendar */
+      /* Calendar reveal toggle */
+      .product-fulfillment--{{ section.id }} .product-fulfillment__cal-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font: inherit;
+        font-size: 13px;
+        font-weight: 700;
+        padding: 8px 14px;
+        background: #fffaf2;
+        border: 1px solid rgba(87, 5, 34, 0.18);
+        border-radius: 4px;
+        color: #570522;
+        cursor: pointer;
+        margin: 0 0 12px;
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.7),
+          0 1px 2px rgba(87, 5, 34, 0.08);
+        transition: background 140ms ease, border-color 140ms ease;
+      }
+      .product-fulfillment--{{ section.id }} .product-fulfillment__cal-toggle:hover,
+      .product-fulfillment--{{ section.id }} .product-fulfillment__cal-toggle:focus-visible {
+        border-color: #ba5b28;
+        outline: none;
+      }
+      .product-fulfillment--{{ section.id }} .product-fulfillment__cal-toggle[aria-expanded="true"] .product-fulfillment__cal-toggle-chevron {
+        transform: rotate(180deg);
+      }
+      .product-fulfillment--{{ section.id }} .product-fulfillment__cal-toggle-chevron {
+        font-size: 11px;
+        line-height: 1;
+        transition: transform 160ms ease;
+      }
+
+      .product-fulfillment--{{ section.id }} .product-fulfillment__calendar {
+        margin: 0 0 12px;
+        max-width: 300px;
+      }
+      .product-fulfillment--{{ section.id }} .product-fulfillment__cal-nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        margin: 0 0 8px;
+      }
+      .product-fulfillment--{{ section.id }} .product-fulfillment__cal-month {
+        margin: 0;
+        font-size: 14px;
+        font-weight: 800;
+        letter-spacing: 0.04em;
+        color: #570522;
+        text-transform: uppercase;
+      }
+      .product-fulfillment--{{ section.id }} .product-fulfillment__cal-arrow {
+        font: inherit;
+        font-size: 14px;
+        line-height: 1;
+        width: 26px;
+        height: 26px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: #fffaf2;
+        border: 1px solid rgba(87, 5, 34, 0.18);
+        border-radius: 4px;
+        color: #570522;
+        cursor: pointer;
+        transition: background 140ms ease, border-color 140ms ease, color 140ms ease;
+      }
+      .product-fulfillment--{{ section.id }} .product-fulfillment__cal-arrow:hover,
+      .product-fulfillment--{{ section.id }} .product-fulfillment__cal-arrow:focus-visible {
+        background: #570522;
+        border-color: #570522;
+        color: #fffaf2;
+        outline: none;
+      }
+      .product-fulfillment--{{ section.id }} .product-fulfillment__cal-arrow[disabled] {
+        opacity: 0.35;
+        cursor: not-allowed;
+      }
+      .product-fulfillment--{{ section.id }} .product-fulfillment__cal-arrow[disabled]:hover {
+        background: #fffaf2;
+        color: #570522;
+        border-color: rgba(87, 5, 34, 0.18);
+      }
+      .product-fulfillment--{{ section.id }} .product-fulfillment__cal-weekdays {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 2px;
+        margin: 0 0 2px;
+      }
+      .product-fulfillment--{{ section.id }} .product-fulfillment__cal-weekdays span {
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        text-align: center;
+        color: #570522;
+        opacity: 0.6;
+        padding: 4px 0;
+      }
+      .product-fulfillment--{{ section.id }} .product-fulfillment__cal-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 2px;
+      }
+      .product-fulfillment--{{ section.id }} .product-fulfillment__cal-cell {
+        position: relative;
+        aspect-ratio: 1 / 1;
+        min-height: 30px;
+        font: inherit;
+        font-size: 12px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: #ffffff;
+        border: 1px solid rgba(87, 5, 34, 0.14);
+        border-radius: 4px;
+        color: #570522;
+        cursor: pointer;
+        transition: background 140ms ease, border-color 140ms ease, color 140ms ease, transform 140ms ease;
+      }
+      .product-fulfillment--{{ section.id }} .product-fulfillment__cal-cell:hover,
+      .product-fulfillment--{{ section.id }} .product-fulfillment__cal-cell:focus-visible {
+        border-color: #ba5b28;
+        outline: none;
+      }
+      .product-fulfillment--{{ section.id }} .product-fulfillment__cal-cell.is-empty {
+        background: transparent;
+        border-color: transparent;
+        cursor: default;
+        pointer-events: none;
+      }
+      .product-fulfillment--{{ section.id }} .product-fulfillment__cal-cell.is-disabled {
+        background: rgba(87, 5, 34, 0.04);
+        color: rgba(87, 5, 34, 0.35);
+        cursor: not-allowed;
+        border-color: rgba(87, 5, 34, 0.08);
+      }
+      .product-fulfillment--{{ section.id }} .product-fulfillment__cal-cell.is-disabled:hover {
+        border-color: rgba(87, 5, 34, 0.08);
+      }
+      .product-fulfillment--{{ section.id }} .product-fulfillment__cal-cell.is-blackout {
+        background: rgba(87, 5, 34, 0.04);
+        color: rgba(87, 5, 34, 0.35);
+        cursor: not-allowed;
+        border-color: rgba(87, 5, 34, 0.08);
+        text-decoration: line-through;
+      }
+      .product-fulfillment--{{ section.id }} .product-fulfillment__cal-cell.is-today {
+        outline: 1px solid rgba(186, 91, 40, 0.5);
+        outline-offset: -2px;
+      }
+      .product-fulfillment--{{ section.id }} .product-fulfillment__cal-cell.is-selected {
+        background: #570522;
+        border-color: #570522;
+        color: #fffaf2;
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.15),
+          inset 0 -1px 0 rgba(0, 0, 0, 0.2),
+          0 2px 6px rgba(87, 5, 34, 0.22);
+        animation: product-fulfillment-pop-{{ section.id }} 220ms ease-out;
+      }
+      @keyframes product-fulfillment-pop-{{ section.id }} {
+        0%   { transform: scale(1); }
+        45%  { transform: scale(1.18); }
+        100% { transform: scale(1); }
+      }
+
+      /* Time slot pills */
+      .product-fulfillment--{{ section.id }} .product-fulfillment__slots {
+        margin: 0 0 12px;
+      }
+      .product-fulfillment--{{ section.id }} .product-fulfillment__slots-label {
+        margin: 0 0 8px;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: #570522;
+        opacity: 0.7;
+      }
+      .product-fulfillment--{{ section.id }} .product-fulfillment__slots-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .product-fulfillment--{{ section.id }} .product-fulfillment__slot {
+        font: inherit;
+        font-size: 13px;
+        font-weight: 700;
+        padding: 7px 12px;
+        background: #fffaf2;
+        border: 1px solid rgba(87, 5, 34, 0.18);
+        border-radius: 999px;
+        color: #570522;
+        cursor: pointer;
+        transition: background 140ms ease, border-color 140ms ease, color 140ms ease;
+      }
+      .product-fulfillment--{{ section.id }} .product-fulfillment__slot:hover,
+      .product-fulfillment--{{ section.id }} .product-fulfillment__slot:focus-visible {
+        border-color: #ba5b28;
+        outline: none;
+      }
+      .product-fulfillment--{{ section.id }} .product-fulfillment__slot.is-selected {
+        background: #570522;
+        border-color: #570522;
+        color: #fffaf2;
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.15),
+          inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+        animation: product-fulfillment-slot-pop-{{ section.id }} 220ms ease-out;
+      }
+      @keyframes product-fulfillment-slot-pop-{{ section.id }} {
+        0%   { transform: scale(1); }
+        45%  { transform: scale(1.10); }
+        100% { transform: scale(1); }
+      }
+      .product-fulfillment--{{ section.id }} .product-fulfillment__slots-empty {
+        font-size: 13px;
+        color: rgba(87, 5, 34, 0.7);
+        margin: 0;
+      }
+
+      /* Ship status block (shown when method is Ship and a date is picked) */
+      .product-fulfillment--{{ section.id }} .product-fulfillment__ship-status {
+        margin: 0 0 10px;
+        padding: 8px 12px;
+        background: #f7ead6;
+        border: 1px solid rgba(87, 5, 34, 0.18);
+        border-radius: 4px;
+        color: #570522;
+      }
+      .product-fulfillment--{{ section.id }} .product-fulfillment__ship-status[hidden] { display: none; }
+      .product-fulfillment--{{ section.id }} .product-fulfillment__ship-status-line {
+        margin: 0;
+        font-size: 13px;
+        font-weight: 700;
+        line-height: 1.4;
+      }
+      .product-fulfillment--{{ section.id }} .product-fulfillment__ship-status-warn {
+        margin: 4px 0 0;
+        font-size: 12px;
+        font-weight: 600;
+        line-height: 1.4;
+        color: #ba5b28;
+      }
+      .product-fulfillment--{{ section.id }} .product-fulfillment__ship-status-warn[hidden] { display: none; }
+
+      /* Error + status */
+      .product-fulfillment--{{ section.id }} .product-fulfillment__error {
+        margin: 0 0 10px;
+        padding: 8px 12px;
+        font-size: 13px;
+        background: rgba(230, 140, 59, 0.12);
+        border-left: 3px solid #e68c3b;
+        border-radius: 3px;
+        color: #570522;
+      }
+      .product-fulfillment--{{ section.id }} .product-fulfillment__status {
+        margin: 0;
+        font-size: 13px;
+        line-height: 1.45;
+        color: #570522;
+        min-height: 1.45em;
+      }
+      .product-fulfillment--{{ section.id }} .product-fulfillment__status.is-success {
+        color: #570522;
+        font-weight: 700;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .product-fulfillment--{{ section.id }} .product-fulfillment__method,
+        .product-fulfillment--{{ section.id }} .product-fulfillment__cal-cell,
+        .product-fulfillment--{{ section.id }} .product-fulfillment__cal-arrow,
+        .product-fulfillment--{{ section.id }} .product-fulfillment__slot {
+          transition: none;
+        }
+        .product-fulfillment--{{ section.id }} .product-fulfillment__cal-cell.is-selected,
+        .product-fulfillment--{{ section.id }} .product-fulfillment__slot.is-selected {
+          animation: none;
+        }
+      }
+    </style>
+
+    <script>
+      (function () {
+        function parseSlots(str) {
+          return String(str || '')
+            .split(',')
+            .map(function (s) { return s.trim(); })
+            .filter(function (s) { return s && s.toLowerCase() !== 'closed'; });
+        }
+        window.BSBFulfillmentConfig = window.BSBFulfillmentConfig || {
+        pickupSlots: {
+          mon: parseSlots({{ settings.fulfillment_pickup_slots_mon | default: '' | json }}),
+          tue: parseSlots({{ settings.fulfillment_pickup_slots_tue | default: '' | json }}),
+          wed: parseSlots({{ settings.fulfillment_pickup_slots_wed | default: '' | json }}),
+          thu: parseSlots({{ settings.fulfillment_pickup_slots_thu | default: '' | json }}),
+          fri: parseSlots({{ settings.fulfillment_pickup_slots_fri | default: '' | json }}),
+          sat: parseSlots({{ settings.fulfillment_pickup_slots_sat | default: '' | json }}),
+          sun: parseSlots({{ settings.fulfillment_pickup_slots_sun | default: '' | json }})
+        },
+        shipDays: {
+          mon: {{ settings.fulfillment_ship_day_mon | default: false | json }},
+          tue: {{ settings.fulfillment_ship_day_tue | default: false | json }},
+          wed: {{ settings.fulfillment_ship_day_wed | default: false | json }},
+          thu: {{ settings.fulfillment_ship_day_thu | default: false | json }},
+          fri: {{ settings.fulfillment_ship_day_fri | default: false | json }},
+          sat: {{ settings.fulfillment_ship_day_sat | default: false | json }},
+          sun: {{ settings.fulfillment_ship_day_sun | default: false | json }}
+        },
+        shipCutoff: {{ settings.fulfillment_ship_cutoff | default: '' | json }},
+        shipTransitDays: {{ settings.fulfillment_ship_transit_days | default: 2 | json }},
+        shipHorizonDays: {{ settings.fulfillment_ship_horizon_days | default: 60 | json }},
+        defaultLeadDays: {{ settings.fulfillment_default_lead_days | default: 0 | json }},
+        blackouts: {{ settings.fulfillment_blackouts | default: '' | json }}.split(/[\n,]/).map(function (s) { return s.trim(); }).filter(Boolean)
+      };
+
+      (function () {
+        var root = document.querySelector('.product-fulfillment[data-section-id="{{ section.id }}"]');
+        if (!root) return;
+
+        var cfg = window.BSBFulfillmentConfig || {};
+        var DOW_KEYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+
+        var pickupOk = root.getAttribute('data-pickup-ok') === 'true';
+        var shipOk = root.getAttribute('data-ship-ok') === 'true';
+        var leadDays = parseInt(root.getAttribute('data-lead-days'), 10);
+        if (isNaN(leadDays) || leadDays < 0) leadDays = 0;
+
+        var methodInputs = root.querySelectorAll('[data-fulfillment-method]');
+        var lockedBadge = root.querySelector('[data-locked-method]');
+        var calendarEl = root.querySelector('[data-calendar]');
+        var monthEl = root.querySelector('[data-cal-month]');
+        var gridEl = root.querySelector('[data-cal-grid]');
+        var prevBtn = root.querySelector('[data-cal-prev]');
+        var nextBtn = root.querySelector('[data-cal-next]');
+        var slotsEl = root.querySelector('[data-slots]');
+        var slotsGrid = root.querySelector('[data-slots-grid]');
+        var errorEl = root.querySelector('[data-error]');
+        var statusEl = root.querySelector('[data-status]');
+        var propDate = root.querySelector('[data-prop-date]');
+        var propTime = root.querySelector('[data-prop-time]');
+        var cartLock = root.querySelector('[data-cart-lock]');
+        var cartLockMsg = root.querySelector('[data-cart-lock-msg]');
+        var cartLockClear = root.querySelector('[data-cart-lock-clear]');
+        var eyebrowEl = root.querySelector('[data-eyebrow]');
+        var EYEBROW_BY_METHOD = {
+          pickup: 'When would you like your cake?',
+          ship: 'When do you want your cake to arrive?'
+        };
+        var shipStatusEl = root.querySelector('[data-ship-status]');
+        var shipStatusLineEl = root.querySelector('[data-ship-status-line]');
+        var shipStatusWarnEl = root.querySelector('[data-ship-status-warn]');
+
+        // Gating: Add to Cart stays disabled until the user picks a fulfillment date
+        // (and time, for pickup). Reaches into the PDP form's submit button.
+        function updateAddToCartGate() {
+          var btn = document.querySelector('#add-to-cart-form button[type="submit"], #add-to-cart-form input[type="submit"]');
+          if (!btn) return;
+          var ok = false;
+          var msg = '';
+          if (!state.method) {
+            msg = 'Choose pickup or ship first';
+          } else if (!state.date) {
+            msg = state.method === 'pickup' ? 'Pick a pickup date first' : 'Pick an arrival date first';
+          } else if (state.method === 'pickup' && !state.time) {
+            msg = 'Pick a pickup time first';
+          } else {
+            ok = true;
+          }
+          if (ok) {
+            if (btn.getAttribute('data-bsb-gate') === 'disabled') {
+              btn.disabled = false;
+              btn.removeAttribute('data-bsb-gate');
+              btn.removeAttribute('title');
+            }
+          } else {
+            btn.disabled = true;
+            btn.setAttribute('data-bsb-gate', 'disabled');
+            btn.setAttribute('title', msg);
+          }
+        }
+        var calToggleEl = root.querySelector('[data-cal-toggle]');
+        var calToggleTextEl = root.querySelector('[data-cal-toggle-text]');
+
+        function setCalendarOpen(open) {
+          if (calendarEl) calendarEl.hidden = !open;
+          if (calToggleEl) calToggleEl.setAttribute('aria-expanded', open ? 'true' : 'false');
+        }
+
+        function refreshCalToggleLabel() {
+          if (!calToggleTextEl) return;
+          if (state.date) {
+            var d = parseYmd(state.date);
+            calToggleTextEl.textContent = d ? formatDateLong(d) : state.date;
+          } else if (state.method === 'ship') {
+            calToggleTextEl.textContent = 'Pick an arrival date';
+          } else {
+            calToggleTextEl.textContent = 'Pick a pickup date';
+          }
+        }
+
+        // Adopt hidden line-item-property inputs into the live product form so they
+        // submit on Add to Cart. The section renders outside the form in the current
+        // template wiring; cart-level attributes still write via /cart/update.js
+        // regardless, but per-item Special-Pickup-* needs the inputs inside the form.
+        var productForm = document.getElementById('add-to-cart-form');
+        if (productForm && propDate && propTime) {
+          if (!productForm.contains(propDate)) productForm.appendChild(propDate);
+          if (!productForm.contains(propTime)) productForm.appendChild(propTime);
+        }
+        // Stamp eligibility on the form so the /cart/add interceptor (cart-validation.js)
+        // can refuse conflicting adds without needing a network round-trip.
+        if (productForm) {
+          productForm.setAttribute('data-bsb-pickup-eligible', pickupOk ? 'true' : 'false');
+          productForm.setAttribute('data-bsb-ship-eligible',   shipOk   ? 'true' : 'false');
+        }
+        // Disable the form's Add to Cart button immediately on mount; selectMethod /
+        // selectDate / selectSlot re-enable it once all required values are set.
+        // This guarantees you can never add a Pickup item without a Pickup-Date or
+        // a Ship item without an Arrival-Date.
+        (function () {
+          var btn = document.querySelector('#add-to-cart-form button[type="submit"], #add-to-cart-form input[type="submit"]');
+          if (btn) {
+            btn.disabled = true;
+            btn.setAttribute('data-bsb-gate', 'disabled');
+            btn.setAttribute('title', 'Choose a fulfillment date first');
+          }
+        })();
+
+        var state = {
+          method: null,
+          date: null,     // 'YYYY-MM-DD' in CT
+          time: null,
+          viewYear: 0,
+          viewMonth: 0,   // 0-indexed
+          cartMethod: null,
+          locked: false
+        };
+
+        var MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+        function pad(n) { return n < 10 ? '0' + n : '' + n; }
+        function ymd(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+        function parseYmd(s) {
+          if (!s || typeof s !== 'string') return null;
+          var p = s.split('-');
+          if (p.length !== 3) return null;
+          var y = parseInt(p[0], 10), m = parseInt(p[1], 10) - 1, d = parseInt(p[2], 10);
+          if (isNaN(y) || isNaN(m) || isNaN(d)) return null;
+          return new Date(y, m, d);
+        }
+        function startOfDay(d) { return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
+        function addDays(d, n) { return new Date(d.getFullYear(), d.getMonth(), d.getDate() + n); }
+
+        function showError(msg) {
+          if (!errorEl) return;
+          if (msg) {
+            errorEl.textContent = msg;
+            errorEl.hidden = false;
+          } else {
+            errorEl.textContent = '';
+            errorEl.hidden = true;
+          }
+        }
+
+        function setStatus(msg, success) {
+          if (!statusEl) return;
+          statusEl.textContent = msg || '';
+          if (success) {
+            statusEl.classList.add('is-success');
+          } else {
+            statusEl.classList.remove('is-success');
+          }
+        }
+
+        function isBlackout(dateStr) {
+          if (!cfg.blackouts || !cfg.blackouts.length) return false;
+          return cfg.blackouts.indexOf(dateStr) !== -1;
+        }
+
+        function isShipDay(dateObj) {
+          if (!cfg.shipDays) return false;
+          var dow = DOW_KEYS[dateObj.getDay()];
+          return !!cfg.shipDays[dow];
+        }
+
+        // For an intended arrival date, walk backward by transit days, then
+        // continue backward to the most recent configured ship day that isn't a blackout.
+        // Returns the Date the order would actually ship, or null if no candidate found.
+        function shipDateForArrival(arrivalDate) {
+          var transit = parseInt(cfg.shipTransitDays, 10);
+          if (isNaN(transit) || transit < 0) transit = 2;
+          var candidate = addDays(arrivalDate, -transit);
+          for (var i = 0; i < 14; i++) {
+            var d = addDays(candidate, -i);
+            if (!isShipDay(d)) continue;
+            if (isBlackout(ymd(d))) continue;
+            return d;
+          }
+          return null;
+        }
+
+        function isMethodDayAvailable(date, method) {
+          var dow = DOW_KEYS[date.getDay()];
+          if (method === 'pickup') {
+            var slots = (cfg.pickupSlots && cfg.pickupSlots[dow]) || [];
+            return slots.length > 0;
+          }
+          if (method === 'ship') {
+            // `date` is an intended ARRIVAL date.
+            // Rules:
+            //   1. No weekend deliveries (UPS doesn't deliver Sat/Sun for standard service).
+            //   2. Arrival date itself must not be a blackout.
+            //   3. A valid ship_date must exist within configured ship days + blackouts.
+            //   4. That ship_date must be at least (today + leadDays) — i.e. not in the past.
+            var dow = date.getDay();
+            if (dow === 0 || dow === 6) return false;
+            if (isBlackout(ymd(date))) return false;
+            var ship = shipDateForArrival(date);
+            if (!ship) return false;
+            var floor = addDays(startOfDay(new Date()), leadDays);
+            return ship >= floor;
+          }
+          return false;
+        }
+
+        function earliestEligibleDate(method) {
+          var today = startOfDay(new Date());
+          var min = addDays(today, leadDays);
+          for (var i = 0; i < 90; i++) {
+            var d = addDays(min, i);
+            if (isBlackout(ymd(d))) continue;
+            if (isMethodDayAvailable(d, method)) return d;
+          }
+          return null;
+        }
+
+        function renderCalendar() {
+          if (!gridEl || !state.method) return;
+          gridEl.innerHTML = '';
+
+          var year = state.viewYear;
+          var month = state.viewMonth;
+          monthEl.textContent = MONTH_NAMES[month] + ' ' + year;
+
+          var firstOfMonth = new Date(year, month, 1);
+          var leadingBlanks = firstOfMonth.getDay();
+          var daysInMonth = new Date(year, month + 1, 0).getDate();
+          var today = startOfDay(new Date());
+          var minDate = addDays(today, leadDays);
+          var maxDate = addDays(today, 90);
+
+          for (var b = 0; b < leadingBlanks; b++) {
+            var blank = document.createElement('div');
+            blank.className = 'product-fulfillment__cal-cell is-empty';
+            blank.setAttribute('aria-hidden', 'true');
+            gridEl.appendChild(blank);
+          }
+
+          for (var d = 1; d <= daysInMonth; d++) {
+            var dateObj = new Date(year, month, d);
+            var dateStr = ymd(dateObj);
+            var cell = document.createElement('button');
+            cell.type = 'button';
+            cell.className = 'product-fulfillment__cal-cell';
+            cell.setAttribute('role', 'gridcell');
+            cell.setAttribute('data-date', dateStr);
+            cell.textContent = d;
+
+            var disabled = false;
+            var blackout = isBlackout(dateStr);
+
+            if (dateObj < minDate || dateObj > maxDate) {
+              disabled = true;
+            } else if (!isMethodDayAvailable(dateObj, state.method)) {
+              disabled = true;
+            }
+
+            if (blackout) {
+              cell.classList.add('is-blackout');
+              cell.setAttribute('aria-disabled', 'true');
+              cell.disabled = true;
+            } else if (disabled) {
+              cell.classList.add('is-disabled');
+              cell.setAttribute('aria-disabled', 'true');
+              cell.disabled = true;
+            }
+
+            if (ymd(today) === dateStr) {
+              cell.classList.add('is-today');
+              cell.setAttribute('aria-label', cell.textContent + ' (today)');
+            }
+
+            if (state.date === dateStr) {
+              cell.classList.add('is-selected');
+              cell.setAttribute('aria-selected', 'true');
+            }
+
+            gridEl.appendChild(cell);
+          }
+
+          // Disable prev arrow if previous month is entirely before minDate
+          var prevMonthLast = new Date(year, month, 0);
+          if (prevMonthLast < minDate) {
+            prevBtn.setAttribute('disabled', 'disabled');
+          } else {
+            prevBtn.removeAttribute('disabled');
+          }
+          var nextMonthFirst = new Date(year, month + 1, 1);
+          if (nextMonthFirst > maxDate) {
+            nextBtn.setAttribute('disabled', 'disabled');
+          } else {
+            nextBtn.removeAttribute('disabled');
+          }
+        }
+
+        function renderSlots() {
+          if (!slotsGrid) return;
+          slotsGrid.innerHTML = '';
+
+          if (state.method !== 'pickup' || !state.date) {
+            slotsEl.hidden = true;
+            return;
+          }
+
+          var dateObj = parseYmd(state.date);
+          if (!dateObj) {
+            slotsEl.hidden = true;
+            return;
+          }
+
+          var dow = DOW_KEYS[dateObj.getDay()];
+          var slots = (cfg.pickupSlots && cfg.pickupSlots[dow]) || [];
+
+          if (!slots.length) {
+            slotsEl.hidden = false;
+            var empty = document.createElement('p');
+            empty.className = 'product-fulfillment__slots-empty';
+            empty.textContent = 'No pickup times available that day.';
+            slotsGrid.appendChild(empty);
+            return;
+          }
+
+          slotsEl.hidden = false;
+          slots.forEach(function (slot) {
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'product-fulfillment__slot';
+            btn.setAttribute('role', 'radio');
+            btn.setAttribute('data-slot', slot);
+            btn.textContent = slot;
+            if (state.time === slot) {
+              btn.classList.add('is-selected');
+              btn.setAttribute('aria-checked', 'true');
+            } else {
+              btn.setAttribute('aria-checked', 'false');
+            }
+            slotsGrid.appendChild(btn);
+          });
+        }
+
+        function syncHiddenProps() {
+          if (propDate) propDate.value = state.date || '';
+          if (propTime) propTime.value = state.time || '';
+        }
+
+        function updateStatus() {
+          if (!state.method) {
+            setStatus('Choose pickup or ship to see available dates.');
+            return;
+          }
+          if (!state.date) {
+            setStatus(state.method === 'pickup' ? 'Pick a pickup date.' : 'Pick a ship date.');
+            return;
+          }
+          var dateObj = parseYmd(state.date);
+          if (!dateObj) {
+            setStatus('');
+            return;
+          }
+          var nice = dateObj.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
+          if (state.method === 'pickup') {
+            if (state.time) {
+              setStatus('Pickup ' + nice + ' at ' + state.time + '. We\'ll have it ready.', true);
+            } else {
+              setStatus('Pick a pickup time for ' + nice + '.');
+            }
+          } else {
+            // Ship status (ship date + arrival) is owned by renderShipStatus; clear inline status.
+            setStatus('', false);
+          }
+        }
+
+        function pushCartAttributes() {
+          if (!state.method) return Promise.resolve();
+          var payload = {
+            attributes: {
+              'Checkout-Method': state.method === 'pickup' ? 'Pickup' : 'Ship',
+              'Pickup-Date': state.date || '',
+              'Pickup-Time': state.method === 'pickup' ? (state.time || '') : ''
+            }
+          };
+          return fetch('/cart/update.js', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            body: JSON.stringify(payload)
+          }).then(function (res) {
+            if (!res.ok) throw new Error('cart update failed');
+            return res.json();
+          }).catch(function () {
+            showError('We couldn\'t save that. Please try again.');
+          });
+        }
+
+        function fetchCart() {
+          return fetch('/cart.js', {
+            credentials: 'same-origin',
+            headers: { 'Accept': 'application/json' }
+          }).then(function (res) {
+            if (!res.ok) throw new Error('cart fetch failed');
+            return res.json();
+          }).catch(function () { return null; });
+        }
+
+        function selectMethod(method, opts) {
+          opts = opts || {};
+          if (state.method === method && !opts.force) return;
+          state.method = method;
+          showError('');
+
+          // Reflect on radio inputs
+          methodInputs.forEach(function (input) {
+            input.checked = input.value === method;
+          });
+
+          // Eyebrow text swap by method
+          if (eyebrowEl && EYEBROW_BY_METHOD[method]) {
+            eyebrowEl.textContent = EYEBROW_BY_METHOD[method];
+          }
+
+          // Set initial view month based on earliest eligible date
+          var seed = earliestEligibleDate(method);
+          if (seed) {
+            state.viewYear = seed.getFullYear();
+            state.viewMonth = seed.getMonth();
+          } else {
+            var t = new Date();
+            state.viewYear = t.getFullYear();
+            state.viewMonth = t.getMonth();
+          }
+
+          // Clear date/time if the previously chosen date is no longer valid for this method
+          if (state.date) {
+            var d = parseYmd(state.date);
+            if (!d || !isMethodDayAvailable(d, method) || isBlackout(state.date)) {
+              state.date = null;
+              state.time = null;
+            }
+          }
+
+          // Keep calendar collapsed by default — user opens via the toggle button.
+          renderCalendar();
+          renderSlots();
+          renderShipStatus();
+          refreshCalToggleLabel();
+          syncHiddenProps();
+          updateStatus();
+          updateAddToCartGate();
+
+          if (!opts.skipPush) pushCartAttributes();
+        }
+
+        function selectDate(dateStr) {
+          state.date = dateStr;
+          // Clear time if it doesn't apply to ship, or carry forward for pickup until user picks
+          if (state.method === 'ship') {
+            state.time = null;
+          }
+          renderCalendar();
+          renderSlots();
+          renderShipStatus();
+          refreshCalToggleLabel();
+          setCalendarOpen(false); // collapse calendar after a pick — toggle reopens
+          syncHiddenProps();
+          updateStatus();
+          updateAddToCartGate();
+          pushCartAttributes();
+        }
+
+        // Render the "Ships X · Arrives Y" line under the ship calendar.
+        // Date selected by the user is the ARRIVAL date; ship date is computed backward.
+        function renderShipStatus() {
+          if (!shipStatusEl) return;
+          if (state.method !== 'ship' || !state.date) {
+            shipStatusEl.hidden = true;
+            if (shipStatusWarnEl) shipStatusWarnEl.hidden = true;
+            return;
+          }
+          var arrival = parseYmd(state.date);
+          if (!arrival) { shipStatusEl.hidden = true; return; }
+          var ship = shipDateForArrival(arrival);
+          var arrivalLabel = formatDateLong(arrival);
+          if (ship) {
+            if (shipStatusLineEl) shipStatusLineEl.textContent =
+              'Ships ' + formatDateLong(ship) + ' · Arrives ' + arrivalLabel;
+            if (shipStatusWarnEl) shipStatusWarnEl.hidden = true;
+          } else {
+            // No valid ship date — the arrival is unreachable from any configured ship day
+            if (shipStatusLineEl) shipStatusLineEl.textContent = 'Arrives ' + arrivalLabel;
+            if (shipStatusWarnEl) {
+              shipStatusWarnEl.textContent = 'We can\'t ship in time for this date.';
+              shipStatusWarnEl.hidden = false;
+            }
+          }
+          shipStatusEl.hidden = false;
+        }
+
+        function formatDateLong(d) {
+          var DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+          var MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+          return DOW[d.getDay()] + ' ' + MON[d.getMonth()] + ' ' + d.getDate();
+        }
+
+        function selectSlot(slot) {
+          state.time = slot;
+          renderSlots();
+          syncHiddenProps();
+          updateStatus();
+          updateAddToCartGate();
+          pushCartAttributes();
+        }
+
+        function lockMethodTo(method) {
+          state.locked = true;
+          methodInputs.forEach(function (input) {
+            var wrapper = input.closest('.product-fulfillment__method');
+            if (input.value !== method) {
+              input.disabled = true;
+              if (wrapper) wrapper.classList.add('is-locked');
+            } else {
+              input.checked = true;
+            }
+          });
+          if (cartLock && cartLockMsg) {
+            cartLockMsg.textContent = 'Your cart is set to ' + (method === 'pickup' ? 'Pickup' : 'Ship') + '. Empty cart to change.';
+            cartLock.hidden = false;
+          }
+        }
+
+        function unlockMethod() {
+          state.locked = false;
+          methodInputs.forEach(function (input) {
+            input.disabled = false;
+            var wrapper = input.closest('.product-fulfillment__method');
+            if (wrapper) wrapper.classList.remove('is-locked');
+          });
+          if (cartLock) cartLock.hidden = true;
+        }
+
+        // Wire up method radio inputs
+        methodInputs.forEach(function (input) {
+          input.addEventListener('change', function () {
+            if (input.checked) selectMethod(input.value);
+          });
+        });
+
+        // Locked single-method badge — force method
+        if (lockedBadge) {
+          var forced = lockedBadge.getAttribute('data-locked-method');
+          if (forced === 'pickup' || forced === 'ship') {
+            selectMethod(forced, { skipPush: true });
+          }
+        }
+
+        // Calendar grid clicks (event delegation)
+        if (gridEl) {
+          gridEl.addEventListener('click', function (e) {
+            var target = e.target.closest('.product-fulfillment__cal-cell');
+            if (!target || target.disabled) return;
+            if (target.classList.contains('is-empty')) return;
+            var dateStr = target.getAttribute('data-date');
+            if (dateStr) selectDate(dateStr);
+          });
+        }
+
+        // Calendar toggle button (open / close the calendar)
+        if (calToggleEl) {
+          calToggleEl.addEventListener('click', function () {
+            var isOpen = calToggleEl.getAttribute('aria-expanded') === 'true';
+            setCalendarOpen(!isOpen);
+          });
+        }
+
+        // Slot clicks
+        if (slotsGrid) {
+          slotsGrid.addEventListener('click', function (e) {
+            var target = e.target.closest('.product-fulfillment__slot');
+            if (!target) return;
+            var slot = target.getAttribute('data-slot');
+            if (slot) selectSlot(slot);
+          });
+        }
+
+        // Month nav
+        if (prevBtn) {
+          prevBtn.addEventListener('click', function () {
+            if (prevBtn.hasAttribute('disabled')) return;
+            var m = state.viewMonth - 1;
+            var y = state.viewYear;
+            if (m < 0) { m = 11; y -= 1; }
+            state.viewMonth = m;
+            state.viewYear = y;
+            renderCalendar();
+          });
+        }
+        if (nextBtn) {
+          nextBtn.addEventListener('click', function () {
+            if (nextBtn.hasAttribute('disabled')) return;
+            var m = state.viewMonth + 1;
+            var y = state.viewYear;
+            if (m > 11) { m = 0; y += 1; }
+            state.viewMonth = m;
+            state.viewYear = y;
+            renderCalendar();
+          });
+        }
+
+        // Cart-lock "Switch & empty cart"
+        if (cartLockClear) {
+          cartLockClear.addEventListener('click', function () {
+            fetch('/cart/clear.js', {
+              method: 'POST',
+              credentials: 'same-origin',
+              headers: { 'Accept': 'application/json' }
+            }).then(function (res) {
+              if (!res.ok) throw new Error('clear failed');
+              unlockMethod();
+              state.cartMethod = null;
+              showError('');
+              setStatus('Cart cleared. Choose pickup or ship to start over.');
+            }).catch(function () {
+              showError('We couldn\'t empty the cart. Please try again.');
+            });
+          });
+        }
+
+        // Bootstrap: read existing cart and pre-fill if possible
+        fetchCart().then(function (cart) {
+          if (!cart) {
+            updateStatus();
+            return;
+          }
+          var attrs = cart.attributes || {};
+          var existingMethod = (attrs['Checkout-Method'] || '').toLowerCase();
+          var existingDate = attrs['Pickup-Date'] || '';
+          var existingTime = attrs['Pickup-Time'] || '';
+
+          if (existingMethod === 'pickup') state.cartMethod = 'pickup';
+          else if (existingMethod === 'ship') state.cartMethod = 'ship';
+
+          // If cart has items and a method already, lock to it
+          if (cart.item_count > 0 && state.cartMethod) {
+            // Honor lockedBadge first — if this product only allows one method and it
+            // disagrees, the visitor needs to clear the cart anyway
+            if (lockedBadge) {
+              var forced = lockedBadge.getAttribute('data-locked-method');
+              if (forced && forced !== state.cartMethod) {
+                lockMethodTo(state.cartMethod);
+                setStatus('');
+                return;
+              }
+            }
+
+            // Carry forward existing date/time
+            if (existingDate) state.date = existingDate;
+            if (existingTime) state.time = existingTime;
+            selectMethod(state.cartMethod, { skipPush: true });
+            // Only lock if both methods are eligible on this product (otherwise it's
+            // already a single-method product and the radio doesn't even exist)
+            if (pickupOk && shipOk) {
+              lockMethodTo(state.cartMethod);
+            }
+          } else {
+            // No cart lock — but if the cart attrs carry a date/time, pre-fill
+            if (existingMethod === 'pickup' || existingMethod === 'ship') {
+              if (existingDate) state.date = existingDate;
+              if (existingTime && existingMethod === 'pickup') state.time = existingTime;
+              if (!lockedBadge) selectMethod(existingMethod, { skipPush: true });
+            }
+          }
+
+          updateStatus();
+        });
+      })();
+      })();
+    </script>
+
+    {%- comment -%} Mid-section endif: render_section guard {%- endcomment -%}
+  {%- endif -%}
+
+{%- endif -%}
+

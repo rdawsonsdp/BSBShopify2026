@@ -894,16 +894,20 @@
           if (variantIn) variantIn.value = state.variant.id;
         }
 
-        // Simple mode: no real customization → hide the customize block and
-        // show a quantity selector. Caller-supplied tag check would refine
-        // this further, but "no real options" already covers slices/candy.
+        // Simple mode: no real customization → hide the customize block,
+        // hide the fulfillment picker, show a quantity selector, and
+        // default to in-store pickup. Same-day items don't need date pick.
         var isSimple = !optionDefs.length;
         modal.classList.toggle('is-simple', isSimple);
         if (customizeEl) customizeEl.hidden = isSimple;
+        if (fulfillmentEl) fulfillmentEl.hidden = isSimple;
         if (qtyBlock) qtyBlock.hidden = !isSimple;
-        if (isSimple && qtyInput && qtyHidden) {
-          qtyInput.value = '1';
-          qtyHidden.value = '1';
+        if (isSimple) {
+          if (qtyInput && qtyHidden) {
+            qtyInput.value = '1';
+            qtyHidden.value = '1';
+          }
+          state.method = 'pickup';
         }
       }
 
@@ -915,8 +919,12 @@
       });
 
       // If only one method eligible, pre-select it
-      if (state.pickupEligible && !state.shipEligible) selectMethod('pickup');
-      else if (state.shipEligible && !state.pickupEligible) selectMethod('ship');
+      try {
+        if (state.pickupEligible && !state.shipEligible) selectMethod('pickup');
+        else if (state.shipEligible && !state.pickupEligible) selectMethod('ship');
+      } catch (err) {
+        console.error('bsb-pm: selectMethod failed', err);
+      }
 
       if (skel) skel.hidden = true;
       if (bodyEl) bodyEl.hidden = false;
@@ -1018,8 +1026,15 @@
 
     function updateCta() {
       if (!ctaBtn) return;
-      var ok = !!state.variant && !!state.method && !!(dateIn && dateIn.value);
-      if (state.method === 'pickup') ok = ok && !!(timeIn && timeIn.value);
+      var isSimple = modal.classList.contains('is-simple');
+      var ok;
+      if (isSimple) {
+        // Same-day / no-options items: just need a resolved variant.
+        ok = !!state.variant;
+      } else {
+        ok = !!state.variant && !!state.method && !!(dateIn && dateIn.value);
+        if (state.method === 'pickup') ok = ok && !!(timeIn && timeIn.value);
+      }
       ctaBtn.disabled = !ok;
     }
 
@@ -1184,7 +1199,16 @@
       state.pickupEligible = detail.pickupEligible !== false;
       state.shipEligible   = detail.shipEligible   !== false;
       openModal();
-      loadProduct(detail.handle).then(populate).catch(function () {
+      loadProduct(detail.handle).then(function (p) {
+        try { populate(p); }
+        catch (err) {
+          console.error('bsb-pm: populate failed', err);
+          showError('Sorry, something went wrong loading this item.');
+          if (skel) skel.hidden = true;
+          if (bodyEl) bodyEl.hidden = false;
+        }
+      }).catch(function (err) {
+        console.error('bsb-pm: loadProduct failed', err);
         showError('Sorry, we couldn\'t load this item. Please try again.');
         if (skel) skel.hidden = true;
       });

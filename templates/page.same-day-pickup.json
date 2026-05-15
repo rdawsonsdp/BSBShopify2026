@@ -27,14 +27,14 @@
     "pickup_grid": {
       "type": "collection-menu",
       "settings": {
-        "collection_handle": "same-day-pickup",
+        "collection_handle": "clover",
         "heading_override": "What's available today",
         "show_collection_image": false,
         "show_product_images": false,
         "search_enabled": true,
         "hide_header": false,
         "show_category_tabs": false,
-        "group_by_category": true,
+        "group_by_category": false,
         "description_style": "tagline"
       }
     },

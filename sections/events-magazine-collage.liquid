@@ -207,7 +207,7 @@
     }
   }
 
-  /* Desktop: uniform 3-column grid, all tiles same square aspect ratio. */
+  /* Desktop: uniform 3-column grid by default. */
   @media screen and (min-width: 900px) {
     .events-collage--{{ section.id }} {
       padding: 64px 24px;
@@ -220,6 +220,28 @@
       aspect-ratio: 1 / 1;
     }
   }
+  {% if section.settings.layout == 'magazine' %}
+  /* Magazine pinwheel: feature 2x2 + 2 portraits + landscape row. Block order matters. */
+  @media screen and (min-width: 900px) {
+    .events-collage--{{ section.id }} .events-collage__grid {
+      grid-auto-flow: row;
+    }
+    .events-collage--{{ section.id }} .events-collage__item:first-child {
+      grid-column: span 2;
+      grid-row: span 2;
+    }
+    .events-collage--{{ section.id }} .events-collage__item:first-child .events-collage__media {
+      aspect-ratio: 1 / 1;
+    }
+    .events-collage--{{ section.id }} .events-collage__item:nth-child(2) .events-collage__media,
+    .events-collage--{{ section.id }} .events-collage__item:nth-child(3) .events-collage__media {
+      aspect-ratio: 4 / 5;
+    }
+    .events-collage--{{ section.id }} .events-collage__item:nth-child(n+4) .events-collage__media {
+      aspect-ratio: 4 / 3;
+    }
+  }
+  {% endif %}
 </style>
 
 {% schema %}
@@ -244,6 +266,16 @@
       "id": "subheading",
       "label": "Subheading",
       "default": "Cakes, cupcakes, minis, candy spreads, dessert tables — your concept, your colors, your guest count."
+    },
+    {
+      "type": "select",
+      "id": "layout",
+      "label": "Layout",
+      "options": [
+        { "value": "grid", "label": "Uniform grid (3 columns, square)" },
+        { "value": "magazine", "label": "Magazine pinwheel (feature + portraits + row)" }
+      ],
+      "default": "grid"
     },
     {
       "type": "header",

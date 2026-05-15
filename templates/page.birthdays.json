@@ -43,34 +43,38 @@
       }
     },
     "birthday_inspiration_carousel": {
-      "type": "inspiration-grid",
+      "type": "events-magazine-collage",
       "blocks": {
         "img_1": {
           "type": "image",
           "settings": {
-            "caption": "Customer cake — upload photo",
-            "link": "/collections/birthday-celebration"
+            "fallback_filename": "birthday-dad-caramel.jpg",
+            "kicker": "CARAMEL",
+            "caption": "A birthday cake worth showing off"
           }
         },
         "img_2": {
           "type": "image",
           "settings": {
-            "caption": "Customer cake — upload photo",
-            "link": "/collections/birthday-celebration"
+            "fallback_filename": "birthday-mom-flowers.jpg",
+            "kicker": "FLOWERS",
+            "caption": "Buttercream petals for a milestone"
           }
         },
         "img_3": {
           "type": "image",
           "settings": {
-            "caption": "Customer cake — upload photo",
-            "link": "/collections/birthday-celebration"
+            "fallback_filename": "birthday-caramel-drip.jpg",
+            "kicker": "DRIP",
+            "caption": "Caramel down the sides — every time"
           }
         },
         "img_4": {
           "type": "image",
           "settings": {
-            "caption": "Customer cake — upload photo",
-            "link": "/collections/birthday-celebration"
+            "fallback_filename": "birthday-caramel-loaded.jpg",
+            "kicker": "LOADED",
+            "caption": "Loaded with everything she loves"
           }
         }
       },
@@ -81,10 +85,10 @@
         "img_4"
       ],
       "settings": {
-        "display_mode": "carousel",
+        "layout": "magazine",
         "eyebrow": "",
-        "heading": "INSPIRED BIRTHDAYS",
-        "subheading": "We make memories with cake. Here are some of yours.",
+        "heading": "",
+        "subheading": "",
         "background_color": "#fffaf2",
         "text_color": "#570522"
       }

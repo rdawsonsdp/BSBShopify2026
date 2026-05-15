@@ -27,11 +27,9 @@
     `group_by_category` setting on any other collection.
   endcomment
   assign use_multi_cats = false
-  assign show_empty_cats = false
   if coll.handle == 'available-for-pickup'
     assign use_multi_cats = true
-    assign show_empty_cats = true
-    assign multi_cats_raw = 'same-day-orders-clover|Available same day, in-store||cakes|Cakes||cupcakes|Cupcakes||sheetcakes|Sheetcakes||pudding|Pudding||pies|Pies||mini-cupcakes|Mini cupcakes'
+    assign multi_cats_raw = 'cakes|Cakes||cupcakes|Cupcakes||sheetcakes|Sheetcakes||pudding|Pudding||pies|Pies||mini-cupcakes|Mini cupcakes||same-day-orders-clover|Available same day, in-store'
   elsif section.settings.group_by_category
     assign use_multi_cats = true
     assign multi_cats_raw = 'cakes|Cakes||cupcakes|Cupcakes||mini-cupcakes|Mini cupcakes||sheetcakes|Sheetcakes||pies|Pies||pudding|Pudding||candy|Candy||other|More items'
@@ -97,19 +95,9 @@
       </div>
     {%- endif -%}
 
-    {%- if use_multi_cats and show_empty_cats -%}
-      <nav class="collection-menu__cat-nav" aria-label="Jump to a category">
-        {%- for entry in multi_cats -%}
-          {%- assign parts = entry | split: '|' -%}
-          {%- assign cat_handle = parts[0] -%}
-          {%- assign cat_label = parts[1] -%}
-          <a class="collection-menu__cat-pill" href="#cm-cat-{{ cat_handle }}">{{ cat_label }}</a>
-        {%- endfor -%}
-      </nav>
-    {%- endif -%}
-
     {%- if use_multi_cats -%}
-
+      {%- assign non_empty_cats = '' -%}
+      {%- capture multi_cats_sections_html -%}
       {%- for entry in multi_cats -%}
         {%- assign parts = entry | split: '|' -%}
         {%- assign cat_handle = parts[0] -%}
@@ -159,7 +147,9 @@
               {%- endif -%}
             {%- when 'pies' -%}
               {%- if tt contains 'pie' or pt contains 'pie' -%}
-                {%- assign matched = true -%}
+                {%- unless tt contains 'piece' or pt contains 'piece' -%}
+                  {%- assign matched = true -%}
+                {%- endunless -%}
               {%- endif -%}
             {%- when 'mini-cupcakes' -%}
               {%- if is_mini_cupcake -%}
@@ -174,7 +164,7 @@
               {%- if tt contains 'cake' or pt contains 'cake' -%}{%- assign is_other = false -%}{%- endif -%}
               {%- if tt contains 'cupcake' or pt contains 'cupcake' -%}{%- assign is_other = false -%}{%- endif -%}
               {%- if tt contains 'sheet' or pt contains 'sheet' -%}{%- assign is_other = false -%}{%- endif -%}
-              {%- if tt contains 'pie' or pt contains 'pie' -%}{%- assign is_other = false -%}{%- endif -%}
+              {%- if tt contains 'pie' or pt contains 'pie' -%}{%- unless tt contains 'piece' or pt contains 'piece' -%}{%- assign is_other = false -%}{%- endunless -%}{%- endif -%}
               {%- if tt contains 'pudding' or pt contains 'pudding' -%}{%- assign is_other = false -%}{%- endif -%}
               {%- if pt contains 'candy' or pt contains 'chocolate' or tags_lc contains 'candy' or tags_lc contains 'chocolate' -%}{%- assign is_other = false -%}{%- endif -%}
               {%- if is_other -%}
@@ -186,10 +176,14 @@
           {%- endif -%}
         {%- endfor -%}
 
-        {%- if matches != blank or show_empty_cats -%}
-        <div class="collection-menu__category" id="cm-cat-{{ cat_handle }}">
+        {%- if matches != blank -%}
+        {%- assign non_empty_cats = non_empty_cats | append: '|' | append: cat_handle | append: '|' -%}
+        {%- assign cat_text_only = false -%}
+        {%- if cat_handle == 'same-day-orders-clover' -%}
+          {%- assign cat_text_only = true -%}
+        {%- endif -%}
+        <div class="collection-menu__category{% if cat_text_only %} collection-menu__category--no-thumbs{% endif %}" id="cm-cat-{{ cat_handle }}">
           <h2 class="collection-menu__category-title">{{ cat_label }}</h2>
-          {%- if matches != blank -%}
             <div class="collection-menu__grid" data-grid>
               {%- for product in coll.products -%}
                 {%- assign needle = product.handle | append: '|' -%}
@@ -211,7 +205,7 @@
                     data-bsb-pickup-eligible="{{ pickup_eligible }}"
                     data-bsb-ship-eligible="{{ ship_eligible }}"
                     aria-label="Order {{ product.title | escape }}">
-                    {%- if show_product_images -%}
+                    {%- if show_product_images and cat_text_only == false -%}
                       <div class="collection-menu__card-thumb">
                         {% if product.featured_image %}
                           <img src="{{ product.featured_image | img_url: '400x400', crop: 'center' }}"
@@ -237,12 +231,25 @@
                 {%- endif -%}
               {%- endfor -%}
             </div>
-          {%- else -%}
-            <p class="collection-menu__empty collection-menu__empty--cat">No items in this category right now.</p>
-          {%- endif -%}
         </div>
         {%- endif -%}
       {%- endfor -%}
+      {%- endcapture -%}
+
+      {%- if non_empty_cats != blank -%}
+        <nav class="collection-menu__cat-nav" aria-label="Jump to a category">
+          {%- for entry in multi_cats -%}
+            {%- assign parts = entry | split: '|' -%}
+            {%- assign cat_handle = parts[0] -%}
+            {%- assign cat_label = parts[1] -%}
+            {%- assign needle = '|' | append: cat_handle | append: '|' -%}
+            {%- if non_empty_cats contains needle -%}
+              <a class="collection-menu__cat-pill" href="#cm-cat-{{ cat_handle }}">{{ cat_label }}</a>
+            {%- endif -%}
+          {%- endfor -%}
+        </nav>
+      {%- endif -%}
+      {{ multi_cats_sections_html }}
 
     {%- elsif coll.products.size > 0 -%}
       <div class="collection-menu__grid" data-grid>
@@ -499,12 +506,14 @@
     transition: box-shadow 160ms ease, transform 160ms ease, border-color 160ms ease;
     align-items: stretch;
   }
-  .collection-menu--{{ section.id }}.collection-menu--no-thumbs .collection-menu__card {
+  .collection-menu--{{ section.id }}.collection-menu--no-thumbs .collection-menu__card,
+  .collection-menu--{{ section.id }} .collection-menu__category--no-thumbs .collection-menu__card {
     grid-template-columns: 1fr;
     gap: 0;
     padding: 14px 16px;
   }
-  .collection-menu--{{ section.id }}.collection-menu--no-thumbs .collection-menu__card-body {
+  .collection-menu--{{ section.id }}.collection-menu--no-thumbs .collection-menu__card-body,
+  .collection-menu--{{ section.id }} .collection-menu__category--no-thumbs .collection-menu__card-body {
     padding-right: 48px;
   }
   .collection-menu--{{ section.id }} .collection-menu__card:hover,

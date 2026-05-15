@@ -207,29 +207,17 @@
     }
   }
 
-  /* Desktop: hero (tile 1 = 2×2) + 2 portrait tiles stacked right + 3 landscape tiles bottom row */
+  /* Desktop: uniform 3-column grid, all tiles same square aspect ratio. */
   @media screen and (min-width: 900px) {
     .events-collage--{{ section.id }} {
       padding: 64px 24px;
     }
     .events-collage--{{ section.id }} .events-collage__grid {
       grid-template-columns: repeat(3, 1fr);
-      grid-auto-flow: row;
       gap: 28px 22px;
     }
-    .events-collage--{{ section.id }} .events-collage__item:first-child {
-      grid-column: span 2;
-      grid-row: span 2;
-    }
-    .events-collage--{{ section.id }} .events-collage__item:first-child .events-collage__media {
+    .events-collage--{{ section.id }} .events-collage__item .events-collage__media {
       aspect-ratio: 1 / 1;
-    }
-    .events-collage--{{ section.id }} .events-collage__item:nth-child(2) .events-collage__media,
-    .events-collage--{{ section.id }} .events-collage__item:nth-child(3) .events-collage__media {
-      aspect-ratio: 4 / 5;
-    }
-    .events-collage--{{ section.id }} .events-collage__item:nth-child(n+4) .events-collage__media {
-      aspect-ratio: 4 / 3;
     }
   }
 </style>

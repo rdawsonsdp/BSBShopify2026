@@ -30,9 +30,11 @@
         "collection_handle": "same-day-pickup",
         "heading_override": "What's available today",
         "show_collection_image": false,
+        "show_product_images": false,
         "search_enabled": true,
         "hide_header": false,
-        "show_category_tabs": true,
+        "show_category_tabs": false,
+        "group_by_category": true,
         "description_style": "tagline"
       }
     },

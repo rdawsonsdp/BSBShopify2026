@@ -22,18 +22,27 @@
   assign heading_override = section.settings.heading_override
 
   comment
-    Multi-category mode: hardcoded for the pickup collection so it renders
-    sub-collections as separate sections (Toast/Tilly menu layout).
+    Multi-category mode renders products grouped under category headings.
+    Triggered automatically for the pickup collection (legacy) or by the
+    `group_by_category` setting on any other collection.
   endcomment
   assign use_multi_cats = false
+  assign show_empty_cats = false
   if coll.handle == 'available-for-pickup'
     assign use_multi_cats = true
+    assign show_empty_cats = true
     assign multi_cats_raw = 'same-day-orders-clover|Available same day, in-store||cakes|Cakes||cupcakes|Cupcakes||sheetcakes|Sheetcakes||pudding|Pudding||pies|Pies||mini-cupcakes|Mini cupcakes'
+  elsif section.settings.group_by_category
+    assign use_multi_cats = true
+    assign multi_cats_raw = 'cakes|Cakes||cupcakes|Cupcakes||mini-cupcakes|Mini cupcakes||sheetcakes|Sheetcakes||pies|Pies||pudding|Pudding||candy|Candy||other|More items'
+  endif
+  if use_multi_cats
     assign multi_cats = multi_cats_raw | split: '||'
   endif
 -%}
 
-<section class="collection-menu collection-menu--{{ section.id }}" data-section-id="{{ section.id }}">
+{%- assign show_product_images = section.settings.show_product_images -%}
+<section class="collection-menu collection-menu--{{ section.id }}{% unless show_product_images %} collection-menu--no-thumbs{% endunless %}" data-section-id="{{ section.id }}">
   <div class="collection-menu__inner">
 
     {%- unless hide_header -%}
@@ -88,7 +97,7 @@
       </div>
     {%- endif -%}
 
-    {%- if use_multi_cats -%}
+    {%- if use_multi_cats and show_empty_cats -%}
       <nav class="collection-menu__cat-nav" aria-label="Jump to a category">
         {%- for entry in multi_cats -%}
           {%- assign parts = entry | split: '|' -%}
@@ -97,6 +106,9 @@
           <a class="collection-menu__cat-pill" href="#cm-cat-{{ cat_handle }}">{{ cat_label }}</a>
         {%- endfor -%}
       </nav>
+    {%- endif -%}
+
+    {%- if use_multi_cats -%}
 
       {%- for entry in multi_cats -%}
         {%- assign parts = entry | split: '|' -%}
@@ -153,12 +165,28 @@
               {%- if is_mini_cupcake -%}
                 {%- assign matched = true -%}
               {%- endif -%}
+            {%- when 'candy' -%}
+              {%- if pt contains 'candy' or pt contains 'chocolate' or tags_lc contains 'candy' or tags_lc contains 'chocolate' -%}
+                {%- assign matched = true -%}
+              {%- endif -%}
+            {%- when 'other' -%}
+              {%- assign is_other = true -%}
+              {%- if tt contains 'cake' or pt contains 'cake' -%}{%- assign is_other = false -%}{%- endif -%}
+              {%- if tt contains 'cupcake' or pt contains 'cupcake' -%}{%- assign is_other = false -%}{%- endif -%}
+              {%- if tt contains 'sheet' or pt contains 'sheet' -%}{%- assign is_other = false -%}{%- endif -%}
+              {%- if tt contains 'pie' or pt contains 'pie' -%}{%- assign is_other = false -%}{%- endif -%}
+              {%- if tt contains 'pudding' or pt contains 'pudding' -%}{%- assign is_other = false -%}{%- endif -%}
+              {%- if pt contains 'candy' or pt contains 'chocolate' or tags_lc contains 'candy' or tags_lc contains 'chocolate' -%}{%- assign is_other = false -%}{%- endif -%}
+              {%- if is_other -%}
+                {%- assign matched = true -%}
+              {%- endif -%}
           {%- endcase -%}
           {%- if matched -%}
             {%- assign matches = matches | append: product.handle | append: '|' -%}
           {%- endif -%}
         {%- endfor -%}
 
+        {%- if matches != blank or show_empty_cats -%}
         <div class="collection-menu__category" id="cm-cat-{{ cat_handle }}">
           <h2 class="collection-menu__category-title">{{ cat_label }}</h2>
           {%- if matches != blank -%}
@@ -183,13 +211,15 @@
                     data-bsb-pickup-eligible="{{ pickup_eligible }}"
                     data-bsb-ship-eligible="{{ ship_eligible }}"
                     aria-label="Order {{ product.title | escape }}">
-                    <div class="collection-menu__card-thumb">
-                      {% if product.featured_image %}
-                        <img src="{{ product.featured_image | img_url: '400x400', crop: 'center' }}"
-                             alt="{{ product.featured_image.alt | default: product.title | escape }}"
-                             loading="lazy" width="200" height="200" />
-                      {% endif %}
-                    </div>
+                    {%- if show_product_images -%}
+                      <div class="collection-menu__card-thumb">
+                        {% if product.featured_image %}
+                          <img src="{{ product.featured_image | img_url: '400x400', crop: 'center' }}"
+                               alt="{{ product.featured_image.alt | default: product.title | escape }}"
+                               loading="lazy" width="200" height="200" />
+                        {% endif %}
+                      </div>
+                    {%- endif -%}
                     <div class="collection-menu__card-body">
                       <h3 class="collection-menu__card-title">{{ product.title | escape }}</h3>
                       {%- if product.description != blank -%}
@@ -211,6 +241,7 @@
             <p class="collection-menu__empty collection-menu__empty--cat">No items in this category right now.</p>
           {%- endif -%}
         </div>
+        {%- endif -%}
       {%- endfor -%}
 
     {%- elsif coll.products.size > 0 -%}
@@ -247,14 +278,16 @@
             data-bsb-ship-eligible="{{ ship_eligible }}"
             aria-label="Order {{ product.title | escape }}"
           >
-            <div class="collection-menu__card-thumb">
-              {% if product.featured_image %}
-                <img src="{{ product.featured_image | img_url: '400x400', crop: 'center' }}"
-                     alt="{{ product.featured_image.alt | default: product.title | escape }}"
-                     loading="lazy"
-                     width="200" height="200" />
-              {% endif %}
-            </div>
+            {%- if show_product_images -%}
+              <div class="collection-menu__card-thumb">
+                {% if product.featured_image %}
+                  <img src="{{ product.featured_image | img_url: '400x400', crop: 'center' }}"
+                       alt="{{ product.featured_image.alt | default: product.title | escape }}"
+                       loading="lazy"
+                       width="200" height="200" />
+                {% endif %}
+              </div>
+            {%- endif -%}
             <div class="collection-menu__card-body">
               <h3 class="collection-menu__card-title">{{ product.title | escape }}</h3>
               {%- if product.description != blank -%}
@@ -465,6 +498,14 @@
     cursor: pointer;
     transition: box-shadow 160ms ease, transform 160ms ease, border-color 160ms ease;
     align-items: stretch;
+  }
+  .collection-menu--{{ section.id }}.collection-menu--no-thumbs .collection-menu__card {
+    grid-template-columns: 1fr;
+    gap: 0;
+    padding: 14px 16px;
+  }
+  .collection-menu--{{ section.id }}.collection-menu--no-thumbs .collection-menu__card-body {
+    padding-right: 48px;
   }
   .collection-menu--{{ section.id }} .collection-menu__card:hover,
   .collection-menu--{{ section.id }} .collection-menu__card:focus-visible {
@@ -692,6 +733,12 @@
     },
     {
       "type": "checkbox",
+      "id": "show_product_images",
+      "label": "Show product thumbnails on each card",
+      "default": true
+    },
+    {
+      "type": "checkbox",
       "id": "search_enabled",
       "label": "Show search input",
       "default": true
@@ -700,6 +747,12 @@
       "type": "checkbox",
       "id": "show_category_tabs",
       "label": "Show All / Cakes / Candy filter tabs",
+      "default": false
+    },
+    {
+      "type": "checkbox",
+      "id": "group_by_category",
+      "label": "Group products by category (Cakes, Candy, etc.)",
       "default": false
     }
   ],

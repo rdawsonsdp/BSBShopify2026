@@ -50,6 +50,7 @@
       <div class="bsb-product-modal__body" data-bsb-pm-body hidden>
         <div class="bsb-product-modal__hero">
           <img class="bsb-product-modal__img" data-bsb-pm-img alt="" />
+          <div class="bsb-product-modal__filmstrip" data-bsb-pm-filmstrip hidden></div>
         </div>
         <div class="bsb-product-modal__head">
           <h2 class="bsb-product-modal__title" id="bsb-pm-title" data-bsb-pm-title></h2>
@@ -58,8 +59,20 @@
 
         <form class="bsb-product-modal__form" data-bsb-pm-form novalidate>
           <input type="hidden" name="id" data-bsb-pm-variant-id value="" />
-          <input type="hidden" name="quantity" value="1" />
+          <input type="hidden" name="quantity" data-bsb-pm-quantity value="1" />
 
+          <div class="bsb-product-modal__card bsb-product-modal__qty-card" data-bsb-pm-qty-block hidden>
+            <div class="bsb-product-modal__card-head">
+              <span class="bsb-product-modal__card-title">Quantity</span>
+            </div>
+            <div class="bsb-product-modal__qty-row">
+              <button type="button" class="bsb-product-modal__qty-btn" data-bsb-pm-qty-minus aria-label="Decrease quantity">−</button>
+              <input type="number" class="bsb-product-modal__qty-input" data-bsb-pm-qty-input min="1" step="1" value="1" inputmode="numeric" />
+              <button type="button" class="bsb-product-modal__qty-btn" data-bsb-pm-qty-plus aria-label="Increase quantity">+</button>
+            </div>
+          </div>
+
+          <div data-bsb-pm-customize>
           <h3 class="bsb-product-modal__section-title">Customize your item</h3>
 
           <div class="bsb-product-modal__options" data-bsb-pm-options>
@@ -108,6 +121,8 @@
             </div>
           </div>
 
+          </div>
+
           {% comment %} Simplified fulfillment picker {% endcomment %}
           <div class="bsb-product-modal__card" data-bsb-pm-fulfillment>
             <div class="bsb-product-modal__card-head">
@@ -142,7 +157,12 @@
                   <option value="">Select a time…</option>
                 </select>
               </label>
+              <label class="bsb-product-modal__field" data-bsb-pm-ship-wrap hidden>
+                <span class="bsb-product-modal__field-label">Ships on</span>
+                <input type="text" class="bsb-product-modal__input" data-bsb-pm-ship-date name="properties[Ship-Date]" readonly tabindex="-1" aria-readonly="true" />
+              </label>
             </div>
+            <p class="bsb-product-modal__ship-hint" data-bsb-pm-ship-hint hidden>We ship Mon · Tue · Wed for Wed / Thu / Fri arrival. UPS doesn't deliver weekends.</p>
 
             <p class="bsb-product-modal__error" data-bsb-pm-error hidden></p>
           </div>
@@ -237,17 +257,64 @@
 
   /* Body */
   .bsb-product-modal__body { padding: 0 22px 16px; }
-  .bsb-product-modal__hero { text-align: center; margin: 0 -22px 14px; }
+  .bsb-product-modal__hero {
+    position: relative;
+    text-align: center;
+    margin: 0 -22px 14px;
+    padding: 18px 22px;
+    background: radial-gradient(120% 80% at 50% 0%, rgba(255, 255, 255, 0.85), rgba(255, 250, 242, 0.6) 60%, rgba(247, 234, 214, 0.55) 100%);
+  }
+  .bsb-product-modal__hero::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    box-shadow: inset 0 0 60px 20px rgba(255, 250, 242, 0.55);
+  }
+  .bsb-product-modal__filmstrip {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding: 10px 0 2px;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+  .bsb-product-modal__filmstrip[hidden] { display: none; }
+  .bsb-product-modal__thumb {
+    flex: 0 0 56px;
+    width: 56px;
+    height: 56px;
+    padding: 0;
+    border: 2px solid transparent;
+    border-radius: 4px;
+    overflow: hidden;
+    background: #fffaf2;
+    cursor: pointer;
+    scroll-snap-align: start;
+    transition: border-color 140ms ease, transform 140ms ease;
+  }
+  .bsb-product-modal__thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .bsb-product-modal__thumb:hover { border-color: #ba5b28; }
+  .bsb-product-modal__thumb.is-active { border-color: #570522; }
+  .bsb-product-modal__thumb:focus-visible { outline: 2px solid #ba5b28; outline-offset: 2px; }
   .bsb-product-modal__img {
+    position: relative;
+    z-index: 1;
     width: 100%;
     aspect-ratio: 1 / 1;
     height: auto;
     max-height: 50vh;
     object-fit: cover;
-    border-radius: 0;
-    border: 0;
-    border-bottom: 1px solid rgba(87, 5, 34, 0.12);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 250, 242, 0.6);
     background: #f7ead6;
+    box-shadow:
+      0 12px 36px rgba(46, 2, 18, 0.18),
+      0 2px 8px rgba(46, 2, 18, 0.08),
+      inset 0 0 40px rgba(255, 250, 242, 0.18);
     display: block;
   }
   .bsb-product-modal__head { text-align: center; margin-bottom: 18px; }
@@ -265,6 +332,48 @@
   }
 
   .bsb-product-modal__form { margin: 0; }
+  .bsb-product-modal__hero[hidden] { display: none; }
+  .bsb-product-modal__qty-card { margin: 0 0 16px; }
+  .bsb-product-modal__qty-row {
+    display: inline-flex;
+    align-items: stretch;
+    border: 1px solid rgba(87, 5, 34, 0.18);
+    border-radius: 4px;
+    overflow: hidden;
+    background: #ffffff;
+    margin-top: 8px;
+  }
+  .bsb-product-modal__qty-btn {
+    appearance: none;
+    border: 0;
+    width: 42px;
+    background: #fffaf2;
+    color: #570522;
+    font: inherit;
+    font-size: 20px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: background 140ms ease;
+  }
+  .bsb-product-modal__qty-btn:hover { background: #f7ead6; }
+  .bsb-product-modal__qty-input {
+    width: 56px;
+    border: 0;
+    border-left: 1px solid rgba(87, 5, 34, 0.12);
+    border-right: 1px solid rgba(87, 5, 34, 0.12);
+    text-align: center;
+    font: inherit;
+    font-size: 16px;
+    font-weight: 700;
+    color: #570522;
+    background: #ffffff;
+    -moz-appearance: textfield;
+  }
+  .bsb-product-modal__qty-input::-webkit-outer-spin-button,
+  .bsb-product-modal__qty-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
   .bsb-product-modal__section-title {
     margin: 8px 0 12px;
     font-size: 15px; font-weight: 800;
@@ -511,6 +620,15 @@
     var skel      = modal.querySelector('[data-bsb-pm-skeleton]');
     var bodyEl    = modal.querySelector('[data-bsb-pm-body]');
     var imgEl     = modal.querySelector('[data-bsb-pm-img]');
+    var heroEl    = modal.querySelector('.bsb-product-modal__hero');
+    var stripEl   = modal.querySelector('[data-bsb-pm-filmstrip]');
+    var customizeEl = modal.querySelector('[data-bsb-pm-customize]');
+    var fulfillmentEl = modal.querySelector('[data-bsb-pm-fulfillment]');
+    var qtyBlock  = modal.querySelector('[data-bsb-pm-qty-block]');
+    var qtyInput  = modal.querySelector('[data-bsb-pm-qty-input]');
+    var qtyHidden = modal.querySelector('[data-bsb-pm-quantity]');
+    var qtyMinus  = modal.querySelector('[data-bsb-pm-qty-minus]');
+    var qtyPlus   = modal.querySelector('[data-bsb-pm-qty-plus]');
     var titleEl   = modal.querySelector('[data-bsb-pm-title]');
     var descEl    = modal.querySelector('[data-bsb-pm-desc]');
     var formEl    = modal.querySelector('[data-bsb-pm-form]');
@@ -524,6 +642,9 @@
     var dateRow   = modal.querySelector('[data-bsb-pm-date-row]');
     var dateLabel = modal.querySelector('[data-bsb-pm-date-label]');
     var dateIn    = modal.querySelector('[data-bsb-pm-date]');
+    var shipWrap  = modal.querySelector('[data-bsb-pm-ship-wrap]');
+    var shipDateIn = modal.querySelector('[data-bsb-pm-ship-date]');
+    var shipHint  = modal.querySelector('[data-bsb-pm-ship-hint]');
     var timeWrap  = modal.querySelector('[data-bsb-pm-time-wrap]');
     var timeIn    = modal.querySelector('[data-bsb-pm-time]');
     var errEl     = modal.querySelector('[data-bsb-pm-error]');
@@ -555,8 +676,41 @@
     function ymdToday(offsetDays) {
       var d = new Date();
       d.setDate(d.getDate() + (offsetDays || 0));
+      return ymd(d);
+    }
+    function ymd(d) {
       var m = d.getMonth() + 1, day = d.getDate();
       return d.getFullYear() + '-' + (m < 10 ? '0' + m : m) + '-' + (day < 10 ? '0' + day : day);
+    }
+    // Ship rhythm: BSB ships Mon/Tue/Wed for Wed/Thu/Fri arrival via UPS 2-Day Air.
+    // No Sat/Sun delivery. Given an arrival YYYY-MM-DD, snap forward to the next
+    // valid arrival day (Wed=3, Thu=4, Fri=5) and return the matching ship date.
+    function snapArrival(ymdStr) {
+      if (!ymdStr) return '';
+      var d = new Date(ymdStr + 'T12:00:00');
+      for (var i = 0; i < 7; i++) {
+        var dow = d.getDay();
+        if (dow === 3 || dow === 4 || dow === 5) return ymd(d);
+        d.setDate(d.getDate() + 1);
+      }
+      return ymd(d);
+    }
+    function shipDateFor(arrivalYmd) {
+      if (!arrivalYmd) return '';
+      var d = new Date(arrivalYmd + 'T12:00:00');
+      d.setDate(d.getDate() - 2);
+      return ymd(d);
+    }
+    function nextValidArrival(minOffset) {
+      // First valid arrival is the next Wed/Thu/Fri at least minOffset days out.
+      var d = new Date();
+      d.setDate(d.getDate() + (minOffset || 0));
+      return snapArrival(ymd(d));
+    }
+    function fmtHumanDate(ymdStr) {
+      if (!ymdStr) return '';
+      var d = new Date(ymdStr + 'T12:00:00');
+      return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
     }
     function showError(msg) {
       if (!errEl) return;
@@ -641,6 +795,41 @@
         imgEl.src = src;
         imgEl.alt = product.title || '';
       }
+      if (heroEl) {
+        var hasAnyImage = !!(product.featured_image || (product.images && product.images.length));
+        heroEl.hidden = !hasAnyImage;
+      }
+
+      if (stripEl) {
+        stripEl.innerHTML = '';
+        var images = (product.images || []).map(function (u) {
+          return u && u.indexOf('//') === 0 ? window.location.protocol + u : u;
+        });
+        if (images.length > 1) {
+          images.forEach(function (url, idx) {
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'bsb-product-modal__thumb' + (idx === 0 ? ' is-active' : '');
+            btn.setAttribute('aria-label', 'Show image ' + (idx + 1) + ' of ' + images.length);
+            var thumb = document.createElement('img');
+            thumb.src = url;
+            thumb.alt = '';
+            thumb.loading = 'lazy';
+            btn.appendChild(thumb);
+            btn.addEventListener('click', function () {
+              imgEl.src = url;
+              stripEl.querySelectorAll('.bsb-product-modal__thumb').forEach(function (t) {
+                t.classList.remove('is-active');
+              });
+              btn.classList.add('is-active');
+            });
+            stripEl.appendChild(btn);
+          });
+          stripEl.hidden = false;
+        } else {
+          stripEl.hidden = true;
+        }
+      }
 
       // Build option groups
       if (optsEl) {
@@ -704,6 +893,18 @@
         if (!optionDefs.length && state.variant) {
           if (variantIn) variantIn.value = state.variant.id;
         }
+
+        // Simple mode: no real customization → hide the customize block and
+        // show a quantity selector. Caller-supplied tag check would refine
+        // this further, but "no real options" already covers slices/candy.
+        var isSimple = !optionDefs.length;
+        modal.classList.toggle('is-simple', isSimple);
+        if (customizeEl) customizeEl.hidden = isSimple;
+        if (qtyBlock) qtyBlock.hidden = !isSimple;
+        if (isSimple && qtyInput && qtyHidden) {
+          qtyInput.value = '1';
+          qtyHidden.value = '1';
+        }
       }
 
       // Eligibility -> method buttons
@@ -751,11 +952,26 @@
       if (dateRow) dateRow.hidden = false;
       if (dateLabel) dateLabel.textContent = m === 'pickup' ? 'Pickup date' : 'Arrival date';
       if (timeWrap) timeWrap.hidden = (m !== 'pickup');
+      if (shipWrap) shipWrap.hidden = (m !== 'ship');
+      if (shipHint) shipHint.hidden = (m !== 'ship');
       if (dateIn) {
         dateIn.name = (m === 'pickup')
           ? 'properties[Special-Pickup-Date]'
           : 'properties[Arrival-Date]';
-        dateIn.min = ymdToday(2); // simple 2-day lead floor; PDP has the full math
+        if (m === 'ship') {
+          // First valid arrival = next Wed/Thu/Fri at least 3 days out (2-day ship + 1-day cushion).
+          var minArrival = nextValidArrival(3);
+          dateIn.min = minArrival;
+          if (!dateIn.value || dateIn.value < minArrival) {
+            dateIn.value = minArrival;
+          } else {
+            dateIn.value = snapArrival(dateIn.value);
+          }
+          if (shipDateIn) shipDateIn.value = fmtHumanDate(shipDateFor(dateIn.value));
+        } else {
+          dateIn.min = ymdToday(2);
+          if (shipDateIn) shipDateIn.value = '';
+        }
       }
       // Cake writing isn't supported on shipped cakes (writing doesn't survive transit).
       // Hide both cards and clear values when ship is selected.
@@ -827,8 +1043,14 @@
         headers: { 'Accept': 'application/json' },
         body: fd
       }).then(function (r) {
-        if (!r.ok) return r.json().then(function (j) { throw j; });
-        return r.json();
+        return r.text().then(function (body) {
+          var data = null;
+          if (body) { try { data = JSON.parse(body); } catch (_) {} }
+          if (!r.ok) {
+            throw data || { description: 'We couldn\'t reach the cart (HTTP ' + r.status + '). Please try again.' };
+          }
+          return data || {};
+        });
       }).then(function () {
         return fetch('/cart/update.js', {
           method: 'POST',
@@ -895,8 +1117,33 @@
       });
     });
 
-    if (dateIn) dateIn.addEventListener('change', function () { refreshTimes(); updateCta(); });
+    if (dateIn) dateIn.addEventListener('change', function () {
+      if (state.method === 'ship') {
+        var snapped = snapArrival(dateIn.value);
+        if (snapped && snapped !== dateIn.value) dateIn.value = snapped;
+        if (shipDateIn) shipDateIn.value = fmtHumanDate(shipDateFor(dateIn.value));
+      }
+      refreshTimes();
+      updateCta();
+    });
     if (timeIn) timeIn.addEventListener('change', updateCta);
+
+    function syncQty(delta) {
+      if (!qtyInput || !qtyHidden) return;
+      var v = parseInt(qtyInput.value, 10);
+      if (!Number.isFinite(v) || v < 1) v = 1;
+      v += delta;
+      if (v < 1) v = 1;
+      qtyInput.value = String(v);
+      qtyHidden.value = String(v);
+    }
+    if (qtyMinus) qtyMinus.addEventListener('click', function () { syncQty(-1); });
+    if (qtyPlus)  qtyPlus.addEventListener('click',  function () { syncQty(+1); });
+    if (qtyInput) qtyInput.addEventListener('input', function () {
+      var v = parseInt(qtyInput.value, 10);
+      if (!Number.isFinite(v) || v < 1) v = 1;
+      qtyHidden.value = String(v);
+    });
 
     if (writingTx && writingCt) {
       writingTx.addEventListener('input', function () {

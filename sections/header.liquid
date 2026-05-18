@@ -336,6 +336,32 @@
 		</div>
 
 		<div class="js mobile-side-column mobile-header-wrap--icons mobile-header-right">
+        {% if settings.predictive_search_enabled %}
+          <button
+            type="button"
+            class="icons--inline search-show alt-focus header-link header-link--button"
+            title="{{ 'layout.header.search' | t }}" tabindex="0"
+            aria-label="{{ 'general.search.open_search' | t }}"
+            aria-controls="top-search-wrapper"
+          >
+            <span class="header-icon">
+              {% render 'icon-search' %}
+            </span>
+          </button>
+        {% else %}
+          <a
+            href="{{ routes.search_url }}"
+            class="icons--inline search-show alt-focus header-link"
+            title="{{ 'layout.header.search' | t }}"
+            tabindex="0"
+            aria-label="{{ 'general.search.open_search' | t }}"
+          >
+            <span class="header-icon">
+              {% render 'icon-search' %}
+            </span>
+          </a>
+        {% endif %}
+
         {% if customer %}
           <a
             href="{{ routes.account_url }}"

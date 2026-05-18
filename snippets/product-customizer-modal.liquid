@@ -123,6 +123,18 @@
 
           </div>
 
+          {% comment %} Candy-specific notice — replaces fulfillment picker for candy/chocolate {% endcomment %}
+          <div class="bsb-product-modal__card bsb-product-modal__candy-notice" data-bsb-pm-candy-notice hidden>
+            <div class="bsb-product-modal__card-head">
+              <span class="bsb-product-modal__card-title">Pickup &amp; shipping</span>
+            </div>
+            <p class="bsb-product-modal__candy-line"><strong>Monday · Tuesday · Wednesday</strong></p>
+            <p class="bsb-product-modal__candy-help">
+              Orders over <strong>100 boxes</strong> or custom orders: please allow <strong>8 days</strong> lead time.
+              For custom orders, lead time depends on the customization.
+            </p>
+          </div>
+
           {% comment %} Simplified fulfillment picker {% endcomment %}
           <div class="bsb-product-modal__card" data-bsb-pm-fulfillment>
             <div class="bsb-product-modal__card-head">
@@ -167,6 +179,61 @@
             <p class="bsb-product-modal__error" data-bsb-pm-error hidden></p>
           </div>
         </form>
+
+        {% comment %} Birthday Club inline opt-in — cakes only; hides on prior signup or dismissal {% endcomment %}
+        <aside class="bsb-bday-club" data-bsb-bday hidden>
+          <div class="bsb-bday-club__collapsed" data-bsb-bday-collapsed>
+            <div class="bsb-bday-club__pitch">
+              <span class="bsb-bday-club__icon" aria-hidden="true">🎂</span>
+              <div class="bsb-bday-club__copy">
+                <strong>Join our Birthday Club</strong>
+                <span>30% off on your birthday</span>
+              </div>
+            </div>
+            <div class="bsb-bday-club__actions">
+              <button type="button" class="bsb-bday-club__btn bsb-bday-club__btn--yes" data-bsb-bday-yes>Yes, sign me up</button>
+              <button type="button" class="bsb-bday-club__btn bsb-bday-club__btn--no" data-bsb-bday-no aria-label="Not now">No thanks</button>
+            </div>
+          </div>
+          <div class="bsb-bday-club__form" data-bsb-bday-form hidden>
+            <label class="bsb-bday-club__field">
+              <span class="bsb-bday-club__field-label">Email</span>
+              <input type="email" class="bsb-bday-club__input" data-bsb-bday-email placeholder="you@example.com" autocomplete="email" inputmode="email" />
+            </label>
+            <div class="bsb-bday-club__field">
+              <span class="bsb-bday-club__field-label">Your birthday</span>
+              <div class="bsb-bday-club__mmdd">
+                <select class="bsb-bday-club__input" data-bsb-bday-month aria-label="Birth month">
+                  <option value="">Month</option>
+                  <option value="01">January</option>
+                  <option value="02">February</option>
+                  <option value="03">March</option>
+                  <option value="04">April</option>
+                  <option value="05">May</option>
+                  <option value="06">June</option>
+                  <option value="07">July</option>
+                  <option value="08">August</option>
+                  <option value="09">September</option>
+                  <option value="10">October</option>
+                  <option value="11">November</option>
+                  <option value="12">December</option>
+                </select>
+                <select class="bsb-bday-club__input" data-bsb-bday-day aria-label="Birth day">
+                  <option value="">Day</option>
+                  {%- for i in (1..31) -%}
+                    <option value="{{ i | prepend: '0' | slice: -2, 2 }}">{{ i }}</option>
+                  {%- endfor -%}
+                </select>
+              </div>
+            </div>
+            <p class="bsb-bday-club__error" data-bsb-bday-error hidden></p>
+            <button type="button" class="bsb-bday-club__save" data-bsb-bday-save>Save my birthday</button>
+          </div>
+          <div class="bsb-bday-club__done" data-bsb-bday-done hidden>
+            <span class="bsb-bday-club__icon" aria-hidden="true">✓</span>
+            <span>Saved! We'll add you to the club when your order is complete.</span>
+          </div>
+        </aside>
       </div>
     </div>
 
@@ -601,6 +668,102 @@
     .bsb-product-modal__sk-line,
     .bsb-product-modal__sk-block { animation: none; }
   }
+
+  /* Candy notice — replaces fulfillment picker for candy/chocolate products */
+  .bsb-product-modal__candy-notice .bsb-product-modal__candy-line {
+    margin: 4px 0 8px;
+    font-size: 16px;
+    letter-spacing: 0.02em;
+    color: #570522;
+  }
+  .bsb-product-modal__candy-notice .bsb-product-modal__candy-help {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.45;
+    color: rgba(87, 5, 34, 0.78);
+  }
+
+  /* Birthday Club inline opt-in */
+  .bsb-bday-club {
+    margin: 16px 0 4px;
+    padding: 14px 16px;
+    background: #facac1;
+    border: 1px solid rgba(87, 5, 34, 0.18);
+    border-radius: 8px;
+    color: #570522;
+  }
+  .bsb-bday-club[hidden] { display: none; }
+  .bsb-bday-club__collapsed {
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .bsb-bday-club__pitch {
+    display: flex; align-items: center; gap: 12px;
+  }
+  .bsb-bday-club__icon { font-size: 24px; line-height: 1; }
+  .bsb-bday-club__copy { display: flex; flex-direction: column; line-height: 1.25; }
+  .bsb-bday-club__copy strong { font-weight: 800; font-size: 15px; }
+  .bsb-bday-club__copy span { font-size: 13px; opacity: 0.85; }
+  .bsb-bday-club__actions {
+    display: flex; gap: 8px; flex-wrap: wrap;
+  }
+  .bsb-bday-club__btn {
+    flex: 1 1 auto;
+    min-height: 44px;
+    padding: 10px 14px;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background 140ms ease, color 140ms ease, border-color 140ms ease;
+  }
+  .bsb-bday-club__btn--yes {
+    background: #570522;
+    color: #fffaf2;
+    border: 1px solid #570522;
+  }
+  .bsb-bday-club__btn--yes:hover { background: #ba5b28; border-color: #ba5b28; }
+  .bsb-bday-club__btn--no {
+    background: transparent;
+    color: #570522;
+    border: 1px solid rgba(87, 5, 34, 0.4);
+  }
+  .bsb-bday-club__btn--no:hover { background: rgba(87, 5, 34, 0.08); }
+
+  .bsb-bday-club__form { display: flex; flex-direction: column; gap: 10px; }
+  .bsb-bday-club__field { display: flex; flex-direction: column; gap: 4px; }
+  .bsb-bday-club__mmdd { display: grid; grid-template-columns: 1.4fr 1fr; gap: 8px; }
+  .bsb-bday-club__field-label {
+    font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+  }
+  .bsb-bday-club__input {
+    min-height: 44px;
+    padding: 10px 12px;
+    border: 1px solid rgba(87, 5, 34, 0.25);
+    border-radius: 6px;
+    background: #fffaf2;
+    color: #570522;
+    font-size: 16px; /* prevent iOS zoom */
+    font-family: inherit;
+  }
+  .bsb-bday-club__input:focus { outline: 2px solid #570522; outline-offset: 1px; }
+  .bsb-bday-club__error { color: #570522; font-size: 13px; margin: 0; font-weight: 600; }
+  .bsb-bday-club__save {
+    min-height: 44px;
+    padding: 12px 16px;
+    border-radius: 999px;
+    background: #570522;
+    color: #fffaf2;
+    border: 1px solid #570522;
+    font-weight: 800;
+    font-size: 15px;
+    cursor: pointer;
+    transition: background 140ms ease;
+  }
+  .bsb-bday-club__save:hover { background: #ba5b28; border-color: #ba5b28; }
+  .bsb-bday-club__done {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 14px; font-weight: 600;
+  }
 </style>
 
 <script>
@@ -624,6 +787,7 @@
     var stripEl   = modal.querySelector('[data-bsb-pm-filmstrip]');
     var customizeEl = modal.querySelector('[data-bsb-pm-customize]');
     var fulfillmentEl = modal.querySelector('[data-bsb-pm-fulfillment]');
+    var candyNoticeEl = modal.querySelector('[data-bsb-pm-candy-notice]');
     var qtyBlock  = modal.querySelector('[data-bsb-pm-qty-block]');
     var qtyInput  = modal.querySelector('[data-bsb-pm-qty-input]');
     var qtyHidden = modal.querySelector('[data-bsb-pm-quantity]');
@@ -717,6 +881,100 @@
       if (msg) { errEl.textContent = msg; errEl.hidden = false; }
       else     { errEl.textContent = ''; errEl.hidden = true; }
     }
+
+    // ----- Birthday Club opt-in (cakes only; per-browser suppression) -----
+    var BdayClub = (function () {
+      var DISMISS_DAYS = 30;
+      var root      = modal.querySelector('[data-bsb-bday]');
+      var collapsed = modal.querySelector('[data-bsb-bday-collapsed]');
+      var form      = modal.querySelector('[data-bsb-bday-form]');
+      var done      = modal.querySelector('[data-bsb-bday-done]');
+      var emailIn   = modal.querySelector('[data-bsb-bday-email]');
+      var monthIn   = modal.querySelector('[data-bsb-bday-month]');
+      var dayIn     = modal.querySelector('[data-bsb-bday-day]');
+      var errEl     = modal.querySelector('[data-bsb-bday-error]');
+      var yesBtn    = modal.querySelector('[data-bsb-bday-yes]');
+      var noBtn     = modal.querySelector('[data-bsb-bday-no]');
+      var saveBtn   = modal.querySelector('[data-bsb-bday-save]');
+
+      function lsGet(k) { try { return window.localStorage.getItem(k); } catch (e) { return null; } }
+      function lsSet(k, v) { try { window.localStorage.setItem(k, v); } catch (e) {} }
+      function alreadySigned() { return lsGet('bsb_bday_signed') === '1'; }
+      function dismissedRecently() {
+        var t = parseInt(lsGet('bsb_bday_dismissed_at') || '0', 10);
+        if (!t) return false;
+        return (Date.now() - t) < DISMISS_DAYS * 24 * 60 * 60 * 1000;
+      }
+      function isCake(product) {
+        if (!product) return false;
+        var t = (product.type || product.product_type || '').toLowerCase();
+        if (t.indexOf('candy') !== -1 || t.indexOf('chocolate') !== -1) return false;
+        var tags = (product.tags || []).map(function (x) { return String(x).toLowerCase(); });
+        if (tags.indexOf('candy') !== -1 || tags.indexOf('chocolate') !== -1) return false;
+        return t.indexOf('cake') !== -1 || tags.some(function (tag) { return tag.indexOf('cake') !== -1; });
+      }
+      function setState(view) {
+        if (!root) return;
+        if (collapsed) collapsed.hidden = (view !== 'collapsed');
+        if (form)      form.hidden      = (view !== 'form');
+        if (done)      done.hidden      = (view !== 'done');
+      }
+      function refresh() {
+        if (!root) return;
+        // Pickup cakes only — skip candy and ship-eligible cakes.
+        var eligible = isCake(state.product) && state.pickupEligible && !state.shipEligible;
+        if (!eligible || dismissedRecently() || alreadySigned()) {
+          root.hidden = true;
+          return;
+        }
+        root.hidden = false;
+        setState('collapsed');
+        if (errEl) { errEl.hidden = true; errEl.textContent = ''; }
+        if (emailIn) emailIn.value = '';
+        if (monthIn) monthIn.value = '';
+        if (dayIn)   dayIn.value   = '';
+      }
+      function showErr(msg) {
+        if (!errEl) return;
+        errEl.textContent = msg;
+        errEl.hidden = false;
+      }
+      function isValidEmail(s) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s); }
+      function save() {
+        if (errEl) errEl.hidden = true;
+        var email = (emailIn && emailIn.value || '').trim().toLowerCase();
+        var month = (monthIn && monthIn.value || '').trim();
+        var day   = (dayIn   && dayIn.value   || '').trim();
+        if (!email || !isValidEmail(email)) return showErr('Please enter a valid email.');
+        if (!month || !day) return showErr('Please pick your birth month and day.');
+        var bday = month + '-' + day; // MM-DD
+        saveBtn.disabled = true;
+        var formData = new FormData();
+        formData.append('attributes[Birthday-Club-Email]', email);
+        formData.append('attributes[Birthday-Club-Birthday]', bday);
+        fetch('/cart/update.js', { method: 'POST', body: formData, credentials: 'same-origin' })
+          .then(function (r) { if (!r.ok) throw new Error('cart update failed'); return r.json(); })
+          .then(function () {
+            lsSet('bsb_bday_signed', '1');
+            lsSet('bsb_bday_signed_email', email);
+            setState('done');
+            setTimeout(function () { if (root) root.hidden = true; }, 3500);
+          })
+          .catch(function (err) {
+            console.error('bsb-bday: save failed', err);
+            showErr('Could not save right now. Please try again.');
+          })
+          .then(function () { saveBtn.disabled = false; });
+      }
+      function dismiss() {
+        lsSet('bsb_bday_dismissed_at', String(Date.now()));
+        if (root) root.hidden = true;
+      }
+      if (yesBtn)  yesBtn.addEventListener('click', function () { setState('form'); if (emailIn) emailIn.focus(); });
+      if (noBtn)   noBtn.addEventListener('click', dismiss);
+      if (saveBtn) saveBtn.addEventListener('click', save);
+      return { refresh: refresh };
+    })();
 
     // ----- open / close -----
     function openModal() {
@@ -894,10 +1152,20 @@
           if (variantIn) variantIn.value = state.variant.id;
         }
 
-        // Simple mode: no real customization → hide the customize block,
-        // hide the fulfillment picker, show a quantity selector, and
-        // default to in-store pickup. Same-day items don't need date pick.
-        var isSimple = !optionDefs.length;
+        // Candy / chocolate: replace fulfillment picker with a static notice
+        // (M/T/W pickup & shipping, lead time only on 100+ boxes or custom).
+        var pType = (p && (p.type || p.product_type) || '').toLowerCase();
+        var pTags = ((p && p.tags) || []).map(function (x) { return String(x).toLowerCase(); });
+        var isCandy = pType.indexOf('candy') !== -1 || pType.indexOf('chocolate') !== -1
+                   || pTags.indexOf('candy') !== -1 || pTags.indexOf('chocolate') !== -1;
+        if (candyNoticeEl) candyNoticeEl.hidden = !isCandy;
+
+        // Simple mode: pickup-only items with no variants → in-store same-day.
+        // Hide customize + fulfillment blocks, show quantity, default to pickup.
+        // Ship-eligible products always get the full card (date selector required).
+        var isSimple = !optionDefs.length && state.pickupEligible && !state.shipEligible;
+        // Candy overrides simple mode — always treat as simple (no date picker needed)
+        if (isCandy) isSimple = true;
         modal.classList.toggle('is-simple', isSimple);
         if (customizeEl) customizeEl.hidden = isSimple;
         if (fulfillmentEl) fulfillmentEl.hidden = isSimple;
@@ -929,6 +1197,7 @@
       if (skel) skel.hidden = true;
       if (bodyEl) bodyEl.hidden = false;
       updateCta();
+      try { BdayClub.refresh(); } catch (e) { console.error('bsb-bday: refresh failed', e); }
     }
 
     function resolveVariant() {

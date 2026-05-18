@@ -265,34 +265,21 @@
     transform: scale(1.78);
   }
 
-  /* Delivery partners — minimized footnote (most customers come through the apps) */
+  /* Delivery partners — prominent CTAs, centered */
   .delivery-buttons {
     max-width: 1200px;
-    margin: 0 auto 24px;
+    margin: 0 auto 28px;
     padding: 0 20px;
     text-align: center;
-    font-size: 12px;
-    line-height: 1.5;
     color: #570522;
-    opacity: 0.65;
   }
   .delivery-buttons__label {
-    display: inline;
-    margin: 0 6px 0 0;
-    font-size: 12px;
-    letter-spacing: 0;
-    text-transform: none;
-    color: inherit;
-    opacity: 1;
-    font-weight: 500;
+    display: none;
   }
   .delivery-buttons__row {
-    display: inline;
-  }
-  .delivery-buttons__row {
-    display: inline-flex;
+    display: flex;
     align-items: center;
-    gap: 14px;
+    gap: 24px;
     flex-wrap: wrap;
     justify-content: center;
   }
@@ -301,22 +288,28 @@
     align-items: center;
     justify-content: center;
     background: transparent !important;
-    padding: 4px 8px;
+    padding: 8px 12px;
     height: auto;
     transition: opacity 160ms ease, transform 160ms ease;
   }
   .delivery-button:hover,
   .delivery-button:focus-visible {
-    opacity: 0.8;
+    opacity: 0.85;
     transform: translateY(-1px);
     outline: none;
   }
   .delivery-button__logo {
     display: block;
-    height: 28px;
+    height: 56px;
     width: auto;
-    max-width: 140px;
+    max-width: 220px;
     object-fit: contain;
+  }
+  @media (max-width: 480px) {
+    .delivery-button__logo {
+      height: 48px;
+      max-width: 180px;
+    }
   }
 </style>
 
@@ -330,7 +323,8 @@
         <h2 class="custom-buttons-heading">{{ section.settings.heading | escape }}</h2>
       {% endif %}
       {% if section.settings.attribution != blank %}
-        <p class="custom-buttons-attribution">— {{ section.settings.attribution | escape }}</p>
+        {%- assign attribution_parts = section.settings.attribution | split: '|' -%}
+        <p class="custom-buttons-attribution">— {%- for part in attribution_parts -%}{{ part | strip | escape }}{%- unless forloop.last -%}<br>{%- endunless -%}{%- endfor -%}</p>
       {% endif %}
     </header>
   {% endif %}

@@ -31,8 +31,8 @@
 	{% render 'css-variables' %}
 
 	{% if template == 'index' %}
-  		<link rel="preload" href="{{ 'theme-index.min.css' | asset_url }}" as="style">
-		{{ 'theme-index.min.css' | asset_url | stylesheet_tag }}
+  		<link rel="preload" href="{{ 'theme.min.css' | asset_url }}" as="style">
+		{{ 'theme.min.css' | asset_url | stylesheet_tag }}
 	{% elsif template.name == 'collection' %}
 	    <link rel="preload" href="{{ 'theme-collection.min.css' | asset_url }}" as="style">
 	    {{ 'theme-collection.min.css' | asset_url | stylesheet_tag }}

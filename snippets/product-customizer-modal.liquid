@@ -669,7 +669,12 @@
     .bsb-product-modal__sk-block { animation: none; }
   }
 
-  /* Candy notice — replaces fulfillment picker for candy/chocolate products */
+  /* Candy products: cake-specific ship-rhythm hint isn't relevant — candy notice handles it */
+  .bsb-product-modal.is-candy [data-bsb-pm-ship-hint] {
+    display: none !important;
+  }
+
+  /* Candy notice — informational block on candy/chocolate products */
   .bsb-product-modal__candy-notice .bsb-product-modal__candy-line {
     margin: 4px 0 8px;
     font-size: 16px;
@@ -1152,20 +1157,20 @@
           if (variantIn) variantIn.value = state.variant.id;
         }
 
-        // Candy / chocolate: replace fulfillment picker with a static notice
-        // (M/T/W pickup & shipping, lead time only on 100+ boxes or custom).
-        var pType = (p && (p.type || p.product_type) || '').toLowerCase();
-        var pTags = ((p && p.tags) || []).map(function (x) { return String(x).toLowerCase(); });
+        // Candy / chocolate: show static M/T/W notice; keep Pickup/Ship toggle
+        // visible so customers can still choose shipping. Date picker stays
+        // hidden via the .is-candy class on the modal (see CSS).
+        var pType = ((product && (product.type || product.product_type)) || '').toLowerCase();
+        var pTags = ((product && product.tags) || []).map(function (x) { return String(x).toLowerCase(); });
         var isCandy = pType.indexOf('candy') !== -1 || pType.indexOf('chocolate') !== -1
                    || pTags.indexOf('candy') !== -1 || pTags.indexOf('chocolate') !== -1;
         if (candyNoticeEl) candyNoticeEl.hidden = !isCandy;
+        modal.classList.toggle('is-candy', isCandy);
 
         // Simple mode: pickup-only items with no variants → in-store same-day.
         // Hide customize + fulfillment blocks, show quantity, default to pickup.
         // Ship-eligible products always get the full card (date selector required).
         var isSimple = !optionDefs.length && state.pickupEligible && !state.shipEligible;
-        // Candy overrides simple mode — always treat as simple (no date picker needed)
-        if (isCandy) isSimple = true;
         modal.classList.toggle('is-simple', isSimple);
         if (customizeEl) customizeEl.hidden = isSimple;
         if (fulfillmentEl) fulfillmentEl.hidden = isSimple;
@@ -1226,9 +1231,12 @@
       methodBtns.forEach(function (btn) {
         btn.setAttribute('aria-pressed', btn.getAttribute('data-bsb-pm-method') === m ? 'true' : 'false');
       });
-      if (dateRow) dateRow.hidden = false;
+      // Candy + Pickup: no date/time picker — customer walks in any open M/T/W.
+      var isCandyMode = modal.classList.contains('is-candy');
+      var hideDateForCandyPickup = isCandyMode && m === 'pickup';
+      if (dateRow) dateRow.hidden = hideDateForCandyPickup;
       if (dateLabel) dateLabel.textContent = m === 'pickup' ? 'Pickup date' : 'Arrival date';
-      if (timeWrap) timeWrap.hidden = (m !== 'pickup');
+      if (timeWrap) timeWrap.hidden = (m !== 'pickup') || hideDateForCandyPickup;
       if (shipWrap) shipWrap.hidden = (m !== 'ship');
       if (shipHint) shipHint.hidden = (m !== 'ship');
       if (dateIn) {
@@ -1296,10 +1304,14 @@
     function updateCta() {
       if (!ctaBtn) return;
       var isSimple = modal.classList.contains('is-simple');
+      var isCandyMode = modal.classList.contains('is-candy');
       var ok;
       if (isSimple) {
         // Same-day / no-options items: just need a resolved variant.
         ok = !!state.variant;
+      } else if (isCandyMode && state.method === 'pickup') {
+        // Candy pickup: variant + method only — date/time not required (walk in M/T/W).
+        ok = !!state.variant && !!state.method;
       } else {
         ok = !!state.variant && !!state.method && !!(dateIn && dateIn.value);
         if (state.method === 'pickup') ok = ok && !!(timeIn && timeIn.value);
